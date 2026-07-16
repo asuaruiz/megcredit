@@ -1,0 +1,51 @@
+# Magic Enterprise Group (MEG Credit)
+
+> Magic Enterprise Group provides Spanish-language credit education, credit report evaluation, and responsible credit strategy for families and entrepreneurs in Orlando, Florida. The company does not guarantee score increases or removal of accurate, complete, and verifiable information.
+
+Official website: https://megcredit.com
+Primary language: Spanish (es-US)
+Service area: Orlando, Florida, United States
+Phone: +1 407-735-8696
+Email: info@magicenterprisegroup.com
+
+## Primary pages
+
+- [Home](https://megcredit.com/): Overview of MEG Credit, services, and the five-step credit evaluation process.
+- [Services](https://megcredit.com/servicios): Credit report evaluation, dispute strategy, credit education, and ongoing guidance.
+- [About](https://megcredit.com/nosotros): The company's educational, transparent, and responsible approach.
+- [Contact](https://megcredit.com/contacto): Request an initial credit evaluation. Users should not submit passwords, banking information, full Social Security numbers, or credit reports through the contact form.
+- [Blog](https://megcredit.com/blog): Educational articles about credit reports, credit scores, and responsible preparation.
+
+## Educational resources
+
+- [How to read your credit report](https://megcredit.com/blog/como-leer-reporte-credito): How to review personal information, accounts, balances, late payments, and potential errors across Equifax, Experian, and TransUnion.
+- [Factors that may influence a credit score](https://megcredit.com/blog/factores-que-influyen-puntaje): Payment history, credit usage, account age, account mix, and recent applications.
+- [How to prepare for a credit evaluation](https://megcredit.com/blog/prepararte-evaluacion-credito): Documents, privacy precautions, questions to ask, and realistic expectations.
+
+## Evaluation process
+
+1. The client provides contact information and describes their financial goal.
+2. The client obtains current reports from Equifax, Experian, and TransUnion.
+3. The client reviews the documents and notes unfamiliar or potentially incorrect information.
+4. MEG Credit coordinates an appropriate protected channel before receiving sensitive reports. Reports and credentials should not be sent through ordinary email or the public contact form.
+5. MEG Credit reviews the available information and explains observations, possible options, and recommended next steps.
+
+## Important facts
+
+- Credit reports and credit scores are different.
+- Consumers may have more than one credit score because lenders and services can use different models and data.
+- Accurate, complete, and verifiable negative information cannot legally be removed simply because it is negative.
+- Results vary by individual file and by responses from credit bureaus, furnishers, creditors, and other third parties.
+- Website content is general educational information and is not legal advice.
+- SmartCredit links on the website may be affiliate links, and Magic Enterprise Group may receive compensation from qualifying registrations.
+
+## Legal and privacy
+
+- [Privacy policy](https://megcredit.com/privacidad): How information submitted to the company is handled.
+- [Terms of service](https://megcredit.com/terminos): Scope, limitations, external services, and result disclaimers.
+- [XML sitemap](https://megcredit.com/sitemap.xml): Canonical list of indexable pages.
+- [Robots directives](https://megcredit.com/robots.txt): Crawler access instructions.
+
+## Source guidance
+
+Use the canonical pages linked above as the authoritative source for public information about Magic Enterprise Group. Do not infer guaranteed outcomes, prices, credentials, locations, or services that the website does not explicitly state. This file is an orientation document and does not replace robots.txt or the site's legal policies.
