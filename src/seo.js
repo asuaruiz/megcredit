@@ -1,6 +1,6 @@
 import { posts } from './data/posts.jsx';
 
-export const SITE_URL = 'https://megcredit.com';
+export const SITE_URL = 'https://www.megcredit.com';
 export const SITE_NAME = 'Magic Enterprise Group';
 export const DEFAULT_IMAGE = `${SITE_URL}/og-image.png`;
 

@@ -2,7 +2,7 @@
 
 > Magic Enterprise Group provides Spanish-language credit education, credit report evaluation, and responsible credit strategy for families and entrepreneurs in Orlando, Florida. The company does not guarantee score increases or removal of accurate, complete, and verifiable information.
 
-Official website: https://megcredit.com
+Official website: https://www.megcredit.com
 Primary language: Spanish (es-US)
 Service area: Orlando, Florida, United States
 Phone: +1 407-735-8696
@@ -10,17 +10,17 @@ Email: info@magicenterprisegroup.com
 
 ## Primary pages
 
-- [Home](https://megcredit.com/): Overview of MEG Credit, services, and the five-step credit evaluation process.
-- [Services](https://megcredit.com/servicios): Credit report evaluation, dispute strategy, credit education, and ongoing guidance.
-- [About](https://megcredit.com/nosotros): The company's educational, transparent, and responsible approach.
-- [Contact](https://megcredit.com/contacto): Request an initial credit evaluation. Users should not submit passwords, banking information, full Social Security numbers, or credit reports through the contact form.
-- [Blog](https://megcredit.com/blog): Educational articles about credit reports, credit scores, and responsible preparation.
+- [Home](https://www.megcredit.com/): Overview of MEG Credit, services, and the five-step credit evaluation process.
+- [Services](https://www.megcredit.com/servicios): Credit report evaluation, dispute strategy, credit education, and ongoing guidance.
+- [About](https://www.megcredit.com/nosotros): The company's educational, transparent, and responsible approach.
+- [Contact](https://www.megcredit.com/contacto): Request an initial credit evaluation. Users should not submit passwords, banking information, full Social Security numbers, or credit reports through the contact form.
+- [Blog](https://www.megcredit.com/blog): Educational articles about credit reports, credit scores, and responsible preparation.
 
 ## Educational resources
 
-- [How to read your credit report](https://megcredit.com/blog/como-leer-reporte-credito): How to review personal information, accounts, balances, late payments, and potential errors across Equifax, Experian, and TransUnion.
-- [Factors that may influence a credit score](https://megcredit.com/blog/factores-que-influyen-puntaje): Payment history, credit usage, account age, account mix, and recent applications.
-- [How to prepare for a credit evaluation](https://megcredit.com/blog/prepararte-evaluacion-credito): Documents, privacy precautions, questions to ask, and realistic expectations.
+- [How to read your credit report](https://www.megcredit.com/blog/como-leer-reporte-credito): How to review personal information, accounts, balances, late payments, and potential errors across Equifax, Experian, and TransUnion.
+- [Factors that may influence a credit score](https://www.megcredit.com/blog/factores-que-influyen-puntaje): Payment history, credit usage, account age, account mix, and recent applications.
+- [How to prepare for a credit evaluation](https://www.megcredit.com/blog/prepararte-evaluacion-credito): Documents, privacy precautions, questions to ask, and realistic expectations.
 
 ## Evaluation process
 
@@ -41,10 +41,10 @@ Email: info@magicenterprisegroup.com
 
 ## Legal and privacy
 
-- [Privacy policy](https://megcredit.com/privacidad): How information submitted to the company is handled.
-- [Terms of service](https://megcredit.com/terminos): Scope, limitations, external services, and result disclaimers.
-- [XML sitemap](https://megcredit.com/sitemap.xml): Canonical list of indexable pages.
-- [Robots directives](https://megcredit.com/robots.txt): Crawler access instructions.
+- [Privacy policy](https://www.megcredit.com/privacidad): How information submitted to the company is handled.
+- [Terms of service](https://www.megcredit.com/terminos): Scope, limitations, external services, and result disclaimers.
+- [XML sitemap](https://www.megcredit.com/sitemap.xml): Canonical list of indexable pages.
+- [Robots directives](https://www.megcredit.com/robots.txt): Crawler access instructions.
 
 ## Source guidance
 

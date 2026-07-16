@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://megcredit.com/sitemap.xml
+Sitemap: https://www.megcredit.com/sitemap.xml
