@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#163A5F"/>
+  <circle cx="985" cy="315" r="260" fill="none" stroke="#A67C1B" stroke-width="2" opacity=".35"/>
+  <circle cx="985" cy="315" r="180" fill="none" stroke="#D2AE5C" stroke-width="2" opacity=".25"/>
+  <text x="90" y="190" fill="#D2AE5C" font-family="Georgia,serif" font-size="34" letter-spacing="10">MAGIC</text>
+  <text x="90" y="230" fill="#F8F6F2" font-family="Arial,sans-serif" font-size="18" letter-spacing="6">ENTERPRISE GROUP</text>
+  <text x="90" y="350" fill="#F8F6F2" font-family="Georgia,serif" font-size="62" font-weight="700">Crédito con claridad.</text>
+  <text x="90" y="420" fill="#DCE4EC" font-family="Arial,sans-serif" font-size="28">Evaluación y estrategia en español</text>
+  <rect x="90" y="474" width="130" height="5" fill="#A67C1B"/>
+  <text x="90" y="535" fill="#DCE4EC" font-family="Arial,sans-serif" font-size="22">megcredit.com · Orlando, Florida</text>
+</svg>

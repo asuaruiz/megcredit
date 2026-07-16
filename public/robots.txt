@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://megcredit.com/sitemap.xml
