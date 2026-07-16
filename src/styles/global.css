@@ -952,6 +952,24 @@ img, svg { max-width: 100%; }
 .footer-legal { font-size: 12px; color: rgba(248, 246, 242, 0.62); line-height: 1.8; }
 .footer-legal a { color: rgba(248, 246, 242, 0.78); }
 
+.footer-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 28px;
+  color: rgba(248, 246, 242, 0.55);
+  font-size: 12px;
+}
+.footer-credit .footer-heart { color: var(--gold-300); font-size: 14px; line-height: 1; }
+.footer-credit a {
+  color: rgba(248, 246, 242, 0.9);
+  font-weight: 600;
+  text-underline-offset: 4px;
+  text-decoration-color: transparent;
+  transition: color 0.2s, text-decoration-color 0.2s;
+}
+.footer-credit a:hover { color: var(--gold-300); text-decoration-color: currentColor; }
+
 /* ---------- 404 ---------- */
 
 .notfound { text-align: center; padding: 120px 24px; }

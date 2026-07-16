@@ -27,6 +27,11 @@ export default function Footer() {
         <br />
         Ninguna empresa puede garantizar legalmente la eliminación de información correcta y verificable de un reporte de crédito.
       </p>
+
+      <p className="footer-credit">
+        Made with <span className="footer-heart" aria-hidden="true">♥</span> by{' '}
+        <a href="https://andflow.cl">andflow.cl</a>
+      </p>
     </footer>
   );
 }
