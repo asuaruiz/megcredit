@@ -61,6 +61,7 @@ export default function AdminClientDetail() {
   const [lineItems, setLineItems] = useState([]);
   const [billingType, setBillingType] = useState('one_time');
   const [recurringInterval, setRecurringInterval] = useState('month');
+  const [recurringAmountCents, setRecurringAmountCents] = useState(0);
   const [firstPaymentCents, setFirstPaymentCents] = useState(0);
   const [agreementTitle, setAgreementTitle] = useState(t('adminClientDetail.agreementTitleDefault'));
   const [agreementText, setAgreementText] = useState('');
@@ -77,11 +78,11 @@ export default function AdminClientDetail() {
     proof_of_residency: t('adminClientDetail.documentProof'),
   };
 
-  const defaultAgreementText = (services, billing, interval, firstPayment) => {
+  const defaultAgreementText = (services, billing, interval, firstPayment, recurringAmount) => {
     const total = services.reduce((sum, service) => sum + (Number(service.priceCents) || 0), 0);
     const lines = services.map((service) => `- ${service.name || t('adminClientDetail.unnamed')}: ${formatCents(Number(service.priceCents) || 0)}`);
     const billingLine = billing === 'recurring'
-      ? t('adminClientDetail').agreementRecurringLine(interval || t('adminClientDetail.intervalMonthly'), formatCents(total))
+      ? t('adminClientDetail').agreementRecurringLine(interval || t('adminClientDetail.intervalMonthly'), formatCents(recurringAmount || 0))
       : t('adminClientDetail').agreementOneTimeLine(formatCents(total));
     const firstPaymentLine = billing === 'recurring' && firstPayment > 0
       ? `\n${t('adminClientDetail').agreementFirstPaymentLine(formatCents(firstPayment))}\n`
@@ -126,7 +127,7 @@ export default function AdminClientDetail() {
   };
 
   const generateAgreementText = () => {
-    setAgreementText(defaultAgreementText(lineItems, billingType, recurringInterval, firstPaymentCents));
+    setAgreementText(defaultAgreementText(lineItems, billingType, recurringInterval, firstPaymentCents, recurringAmountCents));
   };
 
   const submitPlan = async (event) => {
@@ -139,6 +140,7 @@ export default function AdminClientDetail() {
         services: lineItems.map((item) => ({ catalogId: item.catalogId, name: item.name, description: item.description, priceCents: Number(item.priceCents) })),
         billingType,
         recurringInterval: billingType === 'recurring' ? recurringInterval : undefined,
+        recurringAmountCents: billingType === 'recurring' ? recurringAmountCents : undefined,
         firstPaymentCents: billingType === 'recurring' && firstPaymentCents > 0 ? firstPaymentCents : undefined,
         agreementTitle,
         agreementText,
@@ -146,6 +148,7 @@ export default function AdminClientDetail() {
       setLineItems([]);
       setAgreementText('');
       setFirstPaymentCents(0);
+      setRecurringAmountCents(0);
       setStatus('idle');
       load();
     } catch (submissionError) {
@@ -232,6 +235,9 @@ export default function AdminClientDetail() {
             <div className="doc-tile" key={plan.id} style={{ marginBottom: 12 }}>
               <span className="status-badge pending">{plan.status}</span>
               <p style={{ fontSize: 14 }}>{plan.billing_type === 'recurring' ? `${t('adminClientDetail.recurring')} (${plan.recurring_interval})` : t('adminClientDetail.oneTime')} — {t('adminClientDetail.contract')}: {plan.agreement?.status || t('adminClientDetail.noContract')}</p>
+              {plan.billing_type === 'recurring' && plan.recurring_amount_cents > 0 && (
+                <p style={{ fontSize: 13 }}>{t('adminClientDetail.recurringAmountLabel')}: {formatCents(plan.recurring_amount_cents)}</p>
+              )}
               {plan.billing_type === 'recurring' && plan.first_payment_cents > 0 && (
                 <p style={{ fontSize: 13 }}>{t('adminClientDetail.firstPaymentLabel')}: {formatCents(plan.first_payment_cents)}</p>
               )}
@@ -240,6 +246,9 @@ export default function AdminClientDetail() {
                   <li key={service.id} style={{ fontSize: 13 }}>{service.name} — {formatCents(service.price_cents)}</li>
                 ))}
               </ul>
+              {plan.billing_type === 'recurring' && (
+                <p className="doc-hint" style={{ marginTop: 4 }}>{t('adminClientDetail.serviceValueHint')}</p>
+              )}
             </div>
           ))
         )}
@@ -268,6 +277,7 @@ export default function AdminClientDetail() {
               <div className="form-group" style={{ flex: 1 }}>
                 <label>{t('adminClientDetail.priceLabel')}</label>
                 <input type="number" min="0" step="0.01" value={item.priceCents / 100} onChange={(event) => updateLineItem(index, { priceCents: Math.round(Number(event.target.value) * 100) })} required />
+                {billingType === 'recurring' && <p className="doc-hint" style={{ margin: '4px 0 0' }}>{t('adminClientDetail.serviceValueHint')}</p>}
               </div>
             </div>
             <div className="form-group">
@@ -286,7 +296,7 @@ export default function AdminClientDetail() {
               <label className="checkbox-item"><input type="radio" name="billingType" checked={billingType === 'recurring'} onChange={() => setBillingType('recurring')} /> {t('adminClientDetail.billingRecurring')}</label>
             </div>
             {billingType === 'recurring' && (
-              <div className="admin-form-row">
+              <>
                 <div className="form-group">
                   <label htmlFor="interval">{t('adminClientDetail.intervalLabel')}</label>
                   <select id="interval" value={recurringInterval} onChange={(event) => setRecurringInterval(event.target.value)}>
@@ -295,18 +305,32 @@ export default function AdminClientDetail() {
                     <option value="year">{t('adminClientDetail.intervalYear')}</option>
                   </select>
                 </div>
-                <div className="form-group">
-                  <label htmlFor="firstPayment">{t('adminClientDetail.firstPaymentLabel')}</label>
-                  <input
-                    id="firstPayment"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={firstPaymentCents / 100}
-                    onChange={(event) => setFirstPaymentCents(Math.round(Number(event.target.value) * 100))}
-                  />
+                <div className="admin-form-row">
+                  <div className="form-group">
+                    <label htmlFor="recurringAmount">{t('adminClientDetail.recurringAmountLabel')}</label>
+                    <input
+                      id="recurringAmount"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      required
+                      value={recurringAmountCents / 100}
+                      onChange={(event) => setRecurringAmountCents(Math.round(Number(event.target.value) * 100))}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="firstPayment">{t('adminClientDetail.firstPaymentLabel')}</label>
+                    <input
+                      id="firstPayment"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={firstPaymentCents / 100}
+                      onChange={(event) => setFirstPaymentCents(Math.round(Number(event.target.value) * 100))}
+                    />
+                  </div>
                 </div>
-              </div>
+              </>
             )}
             <div className="form-group">
               <label htmlFor="agreementTitle">{t('adminClientDetail.agreementTitleLabel')}</label>
