@@ -21,7 +21,7 @@ export default async function handler(request, response) {
 
   try {
     const plan = await supabaseOne(
-      `megcredit_payment_plans?id=eq.${paymentPlanId}&client_account_id=eq.${active.account.id}&status=eq.awaiting_payment&select=id,billing_type,recurring_interval,currency`,
+      `megcredit_payment_plans?id=eq.${paymentPlanId}&client_account_id=eq.${active.account.id}&status=eq.awaiting_payment&select=id,billing_type,recurring_interval,currency,first_payment_cents`,
       { method: 'GET' },
     );
     if (!plan) return json(response, 404, { error: 'Este plan no está listo para pagarse.' });
@@ -66,6 +66,19 @@ export default async function handler(request, response) {
         ...(isRecurring ? { recurring: { interval: plan.recurring_interval } } : {}),
       },
     }));
+
+    // First payment (e.g. a financed plan's initial fee) bills once on the first invoice,
+    // alongside the recurring line items above — Stripe Checkout supports mixing the two in subscription mode.
+    if (isRecurring && Number.isInteger(plan.first_payment_cents) && plan.first_payment_cents > 0) {
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency: plan.currency,
+          unit_amount: plan.first_payment_cents,
+          product_data: { name: 'Primer pago' },
+        },
+      });
+    }
 
     const session = await createCheckoutSession({
       customerId,

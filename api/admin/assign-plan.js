@@ -31,6 +31,9 @@ export default async function handler(request, response) {
   const agreementTitle = clean(body.agreementTitle, 200) || 'Acuerdo de servicios';
   const agreementText = clean(body.agreementText, 20000);
   const services = Array.isArray(body.services) ? body.services.map(validService) : [];
+  const firstPaymentCentsRaw = body.firstPaymentCents;
+  const hasFirstPayment = firstPaymentCentsRaw !== undefined && firstPaymentCentsRaw !== null && firstPaymentCentsRaw !== '';
+  const firstPaymentCents = hasFirstPayment ? Number(firstPaymentCentsRaw) : null;
 
   if (!isUuid(clientId)) return json(response, 400, { error: 'Cliente inválido.' });
   if (!BILLING_TYPES.has(billingType)) return json(response, 400, { error: 'Tipo de facturación inválido.' });
@@ -41,6 +44,12 @@ export default async function handler(request, response) {
     return json(response, 400, { error: 'Revisa los servicios: cada uno necesita nombre y precio.' });
   }
   if (agreementText.length < 10) return json(response, 400, { error: 'El texto del contrato es demasiado corto.' });
+  if (hasFirstPayment && (!Number.isInteger(firstPaymentCents) || firstPaymentCents < 0)) {
+    return json(response, 400, { error: 'El primer pago no es válido.' });
+  }
+  if (billingType === 'one_time' && hasFirstPayment) {
+    return json(response, 400, { error: 'El primer pago solo aplica a planes recurrentes.' });
+  }
 
   try {
     const client = await supabaseOne(
@@ -57,6 +66,7 @@ export default async function handler(request, response) {
         created_by_staff_id: active.staff.id,
         billing_type: billingType,
         recurring_interval: billingType === 'recurring' ? recurringInterval : null,
+        first_payment_cents: billingType === 'recurring' ? firstPaymentCents : null,
         status: 'draft',
       }),
     });
