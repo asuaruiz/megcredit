@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
+import { LanguageProvider } from './contexts/LanguageContext.jsx';
 import Nav from './components/Nav.jsx';
 import Footer from './components/Footer.jsx';
 import Home from './pages/Home.jsx';
@@ -32,7 +33,7 @@ function ScrollToTop() {
   return null;
 }
 
-export default function App() {
+function AppContent() {
   const { pathname } = useLocation();
   const isPortal = pathname.startsWith('/portal');
   const isAdmin = pathname.startsWith('/admin');
@@ -101,5 +102,13 @@ export default function App() {
         <span>¿Necesitas ayuda?</span>
       </a>
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }

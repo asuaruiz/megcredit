@@ -1,19 +1,22 @@
 import { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext.jsx';
 import { Lockup } from './Logo.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
-
-const LINKS = [
-  { to: '/', label: 'Inicio', end: true },
-  { to: '/servicios', label: 'Servicios' },
-  { to: '/nosotros', label: 'Nosotros' },
-  { to: '/blog', label: 'Blog' },
-  { to: '/contacto', label: 'Contacto' },
-];
+import LanguageSelector from './LanguageSelector.jsx';
 
 export default function Nav() {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+
+  const LINKS = [
+    { to: '/', labelKey: 'nav.home', end: true },
+    { to: '/servicios', labelKey: 'nav.services' },
+    { to: '/nosotros', labelKey: 'nav.about' },
+    { to: '/blog', labelKey: 'nav.blog' },
+    { to: '/contacto', labelKey: 'nav.contact' },
+  ];
 
   return (
     <nav className="site-nav">
@@ -24,20 +27,21 @@ export default function Nav() {
       <div className="nav-links" role="navigation" aria-label="Principal">
         {LINKS.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.end} className="nav-link">
-            {l.label}
+            {t(l.labelKey)}
           </NavLink>
         ))}
       </div>
 
       <div className="nav-right">
+        <LanguageSelector />
         <ThemeToggle />
         <Link to="/contacto" className="btn btn-primary btn-nav">
-          Consulta gratuita
+          {t('nav.freeConsultation')}
         </Link>
         <button
           type="button"
           className="nav-burger"
-          aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
+          aria-label={open ? t('nav.closeMenu') : t('nav.openMenu')}
           aria-expanded={open}
           onClick={() => setOpen(!open)}
         >
@@ -60,11 +64,11 @@ export default function Nav() {
         <div className="nav-mobile">
           {LINKS.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.end} className="nav-link" onClick={close}>
-              {l.label}
+              {t(l.labelKey)}
             </NavLink>
           ))}
           <Link to="/contacto" className="btn btn-primary" onClick={close}>
-            Consulta gratuita
+            {t('nav.freeConsultation')}
           </Link>
         </div>
       )}
