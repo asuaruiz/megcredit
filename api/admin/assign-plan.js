@@ -1,5 +1,5 @@
 import { getActiveStaffSession } from '../_lib/admin.js';
-import { allowedOrigin, clean, isUuid, json, supabaseOne, supabaseRequest } from '../_lib/portal.js';
+import { agreementReadyEmailHtml, allowedOrigin, clean, isUuid, json, sendPortalEmail, supabaseOne, supabaseRequest } from '../_lib/portal.js';
 
 const BILLING_TYPES = new Set(['one_time', 'recurring']);
 const RECURRING_INTERVALS = new Set(['week', 'month', 'year']);
@@ -44,7 +44,7 @@ export default async function handler(request, response) {
 
   try {
     const client = await supabaseOne(
-      `megcredit_client_accounts?id=eq.${clientId}&status=eq.active&select=id`,
+      `megcredit_client_accounts?id=eq.${clientId}&status=eq.active&select=id,email,full_name`,
       { method: 'GET' },
     );
     if (!client) return json(response, 404, { error: 'Cliente no encontrado o inactivo.' });
@@ -89,6 +89,17 @@ export default async function handler(request, response) {
       }),
     });
     if (!agreementInsert.ok) throw new Error(`Supabase agreement insert failed: ${agreementInsert.status}`);
+
+    try {
+      const siteUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://www.megcredit.com';
+      await sendPortalEmail({
+        to: client.email,
+        subject: 'Tu contrato de servicios está listo para firmar',
+        html: agreementReadyEmailHtml({ fullName: client.full_name, loginUrl: `${siteUrl}/portal/dashboard` }),
+      });
+    } catch (emailError) {
+      console.error('Assign plan email failed', emailError instanceof Error ? emailError.message : 'unknown error');
+    }
 
     return json(response, 201, { ok: true, paymentPlanId: plan.id });
   } catch (error) {
