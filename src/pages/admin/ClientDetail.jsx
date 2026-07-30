@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
-import { assignPlan, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchStaffMe, staffLogout } from '../../lib/adminApi.js';
+import { assignPlan, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchStaffMe, reviewDocument, staffLogout } from '../../lib/adminApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 function CreditMonitoringSection({ clientId }) {
@@ -65,6 +65,8 @@ export default function AdminClientDetail() {
   const [agreementText, setAgreementText] = useState('');
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
+  const [reviewingId, setReviewingId] = useState(null);
+  const [reviewError, setReviewError] = useState('');
 
   const DOCUMENT_LABEL = {
     id_front: t('adminClientDetail.documentIdFront'),
@@ -151,6 +153,19 @@ export default function AdminClientDetail() {
     navigate('/admin/login', { replace: true });
   };
 
+  const handleReview = async (documentId, newStatus) => {
+    setReviewingId(documentId);
+    setReviewError('');
+    try {
+      await reviewDocument(documentId, newStatus);
+      await load();
+    } catch (reviewErr) {
+      setReviewError(reviewErr.message);
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
   if (loading || !detail) {
     return (
       <AdminLayout title={t('adminClientDetail.clientTitle')}>
@@ -168,14 +183,38 @@ export default function AdminClientDetail() {
         {detail.documents.length === 0 ? (
           <p className="portal-sub">{t('adminClientDetail.noDocuments')}</p>
         ) : (
-          <ul>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {detail.documents.map((doc) => (
-              <li key={doc.id} style={{ fontSize: 14, marginBottom: 4 }}>
-                {DOCUMENT_LABEL[doc.document_type] || doc.document_type} — {doc.status}
+              <li key={doc.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10, fontSize: 14, marginBottom: 8 }}>
+                <span>{DOCUMENT_LABEL[doc.document_type] || doc.document_type}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className={`status-badge ${doc.status}`}>{doc.status}</span>
+                  {doc.status !== 'approved' && (
+                    <button
+                      className="btn btn-outline"
+                      type="button"
+                      disabled={reviewingId === doc.id}
+                      onClick={() => handleReview(doc.id, 'approved')}
+                    >
+                      {t('adminClientDetail.approve')}
+                    </button>
+                  )}
+                  {doc.status !== 'rejected' && (
+                    <button
+                      className="btn btn-outline"
+                      type="button"
+                      disabled={reviewingId === doc.id}
+                      onClick={() => handleReview(doc.id, 'rejected')}
+                    >
+                      {t('adminClientDetail.reject')}
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
         )}
+        {reviewError && <p className="form-error" role="alert">{reviewError}</p>}
 
         <CreditMonitoringSection clientId={id} />
 

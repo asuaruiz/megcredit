@@ -46,3 +46,7 @@ export function fetchClientCreditMonitoring(id) {
 export function assignPlan(payload) {
   return request('/api/admin/assign-plan', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(payload) });
 }
+
+export function reviewDocument(documentId, status) {
+  return request('/api/admin/review-document', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ documentId, status }) });
+}

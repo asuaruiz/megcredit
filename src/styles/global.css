@@ -940,7 +940,18 @@ img, svg { max-width: 100%; }
 
 .checkbox-group { display: flex; flex-direction: column; gap: 10px; }
 .checkbox-item { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: var(--text-2); }
-.checkbox-item input[type='checkbox'] { width: 17px; height: 17px; flex-shrink: 0; accent-color: var(--check); cursor: pointer; }
+.checkbox-item input[type='checkbox'],
+.checkbox-item input[type='radio'] {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  accent-color: var(--check);
+  cursor: pointer;
+  appearance: auto;
+  border: none;
+  background: none;
+  padding: 0;
+}
 
 .submit-btn { width: 100%; margin-top: 10px; }
 
