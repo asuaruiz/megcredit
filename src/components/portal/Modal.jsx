@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 export default function Modal({ title, onClose, children }) {
+  const { t } = useLanguage();
   useEffect(() => {
     const onKey = (event) => {
       if (event.key === 'Escape') onClose();
@@ -21,7 +23,7 @@ export default function Modal({ title, onClose, children }) {
       <div style={{ background: 'var(--bg-card)', borderRadius: 12, padding: 28, maxWidth: 560, width: '100%', maxHeight: '85vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 style={{ fontSize: 18, margin: 0 }}>{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Cerrar" style={{ background: 'none', border: 'none', fontSize: 22, lineHeight: 1, cursor: 'pointer', color: 'var(--text-2)' }}>
+          <button type="button" onClick={onClose} aria-label={t('general.close')} style={{ background: 'none', border: 'none', fontSize: 22, lineHeight: 1, cursor: 'pointer', color: 'var(--text-2)' }}>
             ×
           </button>
         </div>

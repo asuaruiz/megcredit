@@ -2,6 +2,7 @@ import { encryptSecret } from '../_lib/crypto.js';
 import { allowedOrigin, clean, getActiveSession, json, supabaseRequest } from '../_lib/portal.js';
 
 const PROVIDERS = new Set(['identityiq', 'smartcredit', 'myscoreiq', 'other']);
+const PHONE_PATTERN = /^\+?[0-9](?:[0-9\s().-]{5,18})[0-9]$/;
 
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
@@ -22,7 +23,9 @@ export default async function handler(request, response) {
   const securityWord = typeof body.securityWord === 'string' ? body.securityWord : '';
 
   if (!PROVIDERS.has(provider)) return json(response, 400, { error: 'Selecciona un proveedor válido.' });
-  if (!username || !password) return json(response, 400, { error: 'Usuario y contraseña son obligatorios.' });
+  if (username.length < 3) return json(response, 400, { error: 'El usuario debe tener al menos 3 caracteres.' });
+  if (password.length < 4) return json(response, 400, { error: 'La contraseña debe tener al menos 4 caracteres.' });
+  if (phone && !PHONE_PATTERN.test(phone)) return json(response, 400, { error: 'El teléfono no tiene un formato válido.' });
 
   try {
     const payload = {

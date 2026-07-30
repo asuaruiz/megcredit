@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
 import { assignPlan, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchStaffMe, staffLogout } from '../../lib/adminApi.js';
-
-const PROVIDER_LABEL = { identityiq: 'IdentityIQ', smartcredit: 'SmartCredit', myscoreiq: 'MyScoreIQ', other: 'Otro' };
+import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 function CreditMonitoringSection({ clientId }) {
+  const { t } = useLanguage();
   const [state, setState] = useState('idle');
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
+
+  const PROVIDER_LABEL = { identityiq: 'IdentityIQ', smartcredit: 'SmartCredit', myscoreiq: 'MyScoreIQ', other: t('portalDashboard.providerOther') };
 
   const reveal = async () => {
     setState('loading');
@@ -25,48 +27,32 @@ function CreditMonitoringSection({ clientId }) {
 
   return (
     <>
-      <h2 style={{ fontSize: 16, marginTop: 24 }}>Credenciales de monitoreo de crédito</h2>
+      <h2 style={{ fontSize: 16, marginTop: 24 }}>{t('adminClientDetail.creditMonitoringTitle')}</h2>
       {state !== 'loaded' && (
         <button className="btn btn-outline" type="button" onClick={reveal} disabled={state === 'loading'}>
-          {state === 'loading' ? 'Cargando…' : 'Ver credenciales'}
+          {state === 'loading' ? t('adminClientDetail.loadingCredentials') : t('adminClientDetail.viewCredentials')}
         </button>
       )}
       {error && <p className="form-error" role="alert">{error}</p>}
       {state === 'loaded' && data && (
         <div className="doc-tile">
-          <p style={{ fontSize: 14 }}><strong>Proveedor:</strong> {PROVIDER_LABEL[data.provider] || data.provider}</p>
-          <p style={{ fontSize: 14 }}><strong>Usuario:</strong> {data.username}</p>
-          <p style={{ fontSize: 14 }}><strong>Contraseña:</strong> {data.password}</p>
-          {data.phone && <p style={{ fontSize: 14 }}><strong>Teléfono:</strong> {data.phone}</p>}
-          {data.securityWord && <p style={{ fontSize: 14 }}><strong>Palabra de seguridad:</strong> {data.securityWord}</p>}
+          <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.providerLabel')}:</strong> {PROVIDER_LABEL[data.provider] || data.provider}</p>
+          <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.usernameLabel')}:</strong> {data.username}</p>
+          <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.passwordLabel')}:</strong> {data.password}</p>
+          {data.phone && <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.phoneLabel')}:</strong> {data.phone}</p>}
+          {data.securityWord && <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.securityWordLabel')}:</strong> {data.securityWord}</p>}
         </div>
       )}
     </>
   );
 }
 
-const DOCUMENT_LABEL = {
-  id_front: 'Identificación',
-  id_back: 'Identificación (reverso)',
-  selfie_with_id: 'Selfie con identificación',
-  ssn_card: 'Tarjeta de Seguro Social',
-  proof_of_residency: 'Comprobante de domicilio',
-};
-
 function formatCents(cents) {
   return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 }
 
-function defaultAgreementText(services, billingType, recurringInterval) {
-  const total = services.reduce((sum, service) => sum + (Number(service.priceCents) || 0), 0);
-  const lines = services.map((service) => `- ${service.name || '(sin nombre)'}: ${formatCents(Number(service.priceCents) || 0)}`);
-  const billingLine = billingType === 'recurring'
-    ? `Este acuerdo se factura de forma recurrente (${recurringInterval || 'mensual'}) por un total de ${formatCents(total)} por período.`
-    : `Este acuerdo se factura como pago único por un total de ${formatCents(total)}.`;
-  return `MEG Credit se compromete a realizar los siguientes servicios para el cliente:\n\n${lines.join('\n')}\n\n${billingLine}\n\nAl firmar este acuerdo, el cliente autoriza a MEG Credit a proceder con los servicios descritos y acepta los términos de pago indicados.`;
-}
-
 export default function AdminClientDetail() {
+  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -75,10 +61,27 @@ export default function AdminClientDetail() {
   const [lineItems, setLineItems] = useState([]);
   const [billingType, setBillingType] = useState('one_time');
   const [recurringInterval, setRecurringInterval] = useState('month');
-  const [agreementTitle, setAgreementTitle] = useState('Acuerdo de servicios MEG Credit');
+  const [agreementTitle, setAgreementTitle] = useState(t('adminClientDetail.agreementTitleDefault'));
   const [agreementText, setAgreementText] = useState('');
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
+
+  const DOCUMENT_LABEL = {
+    id_front: t('adminClientDetail.documentIdFront'),
+    id_back: t('adminClientDetail.documentIdBack'),
+    selfie_with_id: t('adminClientDetail.documentSelfie'),
+    ssn_card: t('adminClientDetail.documentSsn'),
+    proof_of_residency: t('adminClientDetail.documentProof'),
+  };
+
+  const defaultAgreementText = (services, billing, interval) => {
+    const total = services.reduce((sum, service) => sum + (Number(service.priceCents) || 0), 0);
+    const lines = services.map((service) => `- ${service.name || t('adminClientDetail.unnamed')}: ${formatCents(Number(service.priceCents) || 0)}`);
+    const billingLine = billing === 'recurring'
+      ? t('adminClientDetail').agreementRecurringLine(interval || t('adminClientDetail.intervalMonthly'), formatCents(total))
+      : t('adminClientDetail').agreementOneTimeLine(formatCents(total));
+    return `${t('adminClientDetail.agreementIntro')}\n\n${lines.join('\n')}\n\n${billingLine}\n\n${t('adminClientDetail.agreementClosing')}`;
+  };
 
   const load = async () => {
     try {
@@ -150,8 +153,8 @@ export default function AdminClientDetail() {
 
   if (loading || !detail) {
     return (
-      <AdminLayout title="Cliente">
-        <div className="portal-card"><p className="portal-sub">Cargando…</p></div>
+      <AdminLayout title={t('adminClientDetail.clientTitle')}>
+        <div className="portal-card"><p className="portal-sub">{t('admin.loading')}</p></div>
       </AdminLayout>
     );
   }
@@ -159,11 +162,11 @@ export default function AdminClientDetail() {
   return (
     <AdminLayout title={detail.account.full_name} onLogout={handleLogout}>
       <div className="portal-card wide admin-section">
-        <p className="portal-sub">{detail.account.email} · Estado: {detail.account.status}</p>
+        <p className="portal-sub">{detail.account.email} · {t('adminClientDetail.statusLabel')}: {detail.account.status}</p>
 
-        <h2 style={{ fontSize: 16, marginTop: 24 }}>Documentos</h2>
+        <h2 style={{ fontSize: 16, marginTop: 24 }}>{t('adminClientDetail.documentsTitle')}</h2>
         {detail.documents.length === 0 ? (
-          <p className="portal-sub">Sin documentos subidos todavía.</p>
+          <p className="portal-sub">{t('adminClientDetail.noDocuments')}</p>
         ) : (
           <ul>
             {detail.documents.map((doc) => (
@@ -176,14 +179,14 @@ export default function AdminClientDetail() {
 
         <CreditMonitoringSection clientId={id} />
 
-        <h2 style={{ fontSize: 16, marginTop: 24 }}>Planes existentes</h2>
+        <h2 style={{ fontSize: 16, marginTop: 24 }}>{t('adminClientDetail.existingPlansTitle')}</h2>
         {detail.plans.length === 0 ? (
-          <p className="portal-sub">Todavía no se le ha armado un plan de servicios.</p>
+          <p className="portal-sub">{t('adminClientDetail.noPlans')}</p>
         ) : (
           detail.plans.map((plan) => (
             <div className="doc-tile" key={plan.id} style={{ marginBottom: 12 }}>
               <span className="status-badge pending">{plan.status}</span>
-              <p style={{ fontSize: 14 }}>{plan.billing_type === 'recurring' ? `Recurrente (${plan.recurring_interval})` : 'Pago único'} — Contrato: {plan.agreement?.status || 'sin contrato'}</p>
+              <p style={{ fontSize: 14 }}>{plan.billing_type === 'recurring' ? `${t('adminClientDetail.recurring')} (${plan.recurring_interval})` : t('adminClientDetail.oneTime')} — {t('adminClientDetail.contract')}: {plan.agreement?.status || t('adminClientDetail.noContract')}</p>
               <ul>
                 {plan.services.map((service) => (
                   <li key={service.id} style={{ fontSize: 13 }}>{service.name} — {formatCents(service.price_cents)}</li>
@@ -195,69 +198,69 @@ export default function AdminClientDetail() {
       </div>
 
       <div className="portal-card wide">
-        <h2>Armar plan de servicios</h2>
+        <h2>{t('adminClientDetail.buildPlanTitle')}</h2>
         <div className="form-group">
-          <label htmlFor="catalogSelect">Agregar desde catálogo</label>
+          <label htmlFor="catalogSelect">{t('adminClientDetail.addFromCatalog')}</label>
           <select id="catalogSelect" defaultValue="" onChange={(event) => { addCatalogItem(event.target.value); event.target.value = ''; }}>
-            <option value="" disabled>Selecciona un servicio</option>
+            <option value="" disabled>{t('adminClientDetail.selectService')}</option>
             {catalog.map((item) => (
               <option key={item.id} value={item.id}>{item.name} — {formatCents(item.default_price_cents)}</option>
             ))}
           </select>
         </div>
-        <button className="btn btn-outline" type="button" onClick={addCustomItem} style={{ marginBottom: 16 }}>+ Servicio personalizado</button>
+        <button className="btn btn-outline" type="button" onClick={addCustomItem} style={{ marginBottom: 16 }}>{t('adminClientDetail.customServiceButton')}</button>
 
         {lineItems.map((item, index) => (
           <div key={index} className="doc-tile" style={{ marginBottom: 12 }}>
             <div className="admin-form-row">
               <div className="form-group" style={{ flex: 2 }}>
-                <label>Nombre</label>
+                <label>{t('adminClientDetail.nameLabel2')}</label>
                 <input value={item.name} onChange={(event) => updateLineItem(index, { name: event.target.value })} required minLength="2" />
               </div>
               <div className="form-group" style={{ flex: 1 }}>
-                <label>Precio (USD)</label>
+                <label>{t('adminClientDetail.priceLabel')}</label>
                 <input type="number" min="0" step="0.01" value={item.priceCents / 100} onChange={(event) => updateLineItem(index, { priceCents: Math.round(Number(event.target.value) * 100) })} required />
               </div>
             </div>
             <div className="form-group">
-              <label>Descripción</label>
+              <label>{t('adminClientDetail.descriptionLabel')}</label>
               <textarea value={item.description} onChange={(event) => updateLineItem(index, { description: event.target.value })} maxLength="1000" />
             </div>
-            <button className="btn btn-outline" type="button" onClick={() => removeLineItem(index)}>Quitar</button>
+            <button className="btn btn-outline" type="button" onClick={() => removeLineItem(index)}>{t('adminClientDetail.removeButton')}</button>
           </div>
         ))}
 
         {lineItems.length > 0 && (
           <form onSubmit={submitPlan}>
             <div className="form-group">
-              <label className="group-label">Tipo de facturación</label>
-              <label className="checkbox-item"><input type="radio" name="billingType" checked={billingType === 'one_time'} onChange={() => setBillingType('one_time')} /> Pago único</label>
-              <label className="checkbox-item"><input type="radio" name="billingType" checked={billingType === 'recurring'} onChange={() => setBillingType('recurring')} /> Recurrente</label>
+              <label className="group-label">{t('adminClientDetail.billingTypeLabel')}</label>
+              <label className="checkbox-item"><input type="radio" name="billingType" checked={billingType === 'one_time'} onChange={() => setBillingType('one_time')} /> {t('adminClientDetail.billingOneTime')}</label>
+              <label className="checkbox-item"><input type="radio" name="billingType" checked={billingType === 'recurring'} onChange={() => setBillingType('recurring')} /> {t('adminClientDetail.billingRecurring')}</label>
             </div>
             {billingType === 'recurring' && (
               <div className="form-group">
-                <label htmlFor="interval">Intervalo</label>
+                <label htmlFor="interval">{t('adminClientDetail.intervalLabel')}</label>
                 <select id="interval" value={recurringInterval} onChange={(event) => setRecurringInterval(event.target.value)}>
-                  <option value="week">Semanal</option>
-                  <option value="month">Mensual</option>
-                  <option value="year">Anual</option>
+                  <option value="week">{t('adminClientDetail.intervalWeek')}</option>
+                  <option value="month">{t('adminClientDetail.intervalMonth')}</option>
+                  <option value="year">{t('adminClientDetail.intervalYear')}</option>
                 </select>
               </div>
             )}
             <div className="form-group">
-              <label htmlFor="agreementTitle">Título del contrato</label>
+              <label htmlFor="agreementTitle">{t('adminClientDetail.agreementTitleLabel')}</label>
               <input id="agreementTitle" value={agreementTitle} onChange={(event) => setAgreementTitle(event.target.value)} required minLength="2" />
             </div>
             <div className="form-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label htmlFor="agreementText">Texto del contrato</label>
-                <button className="btn btn-outline" type="button" onClick={generateAgreementText}>Generar sugerido</button>
+                <label htmlFor="agreementText">{t('adminClientDetail.agreementTextLabel')}</label>
+                <button className="btn btn-outline" type="button" onClick={generateAgreementText}>{t('adminClientDetail.generateSuggested')}</button>
               </div>
               <textarea id="agreementText" value={agreementText} onChange={(event) => setAgreementText(event.target.value)} required minLength="10" style={{ minHeight: 180 }} />
             </div>
             {error && <p className="form-error" role="alert">{error}</p>}
             <button className="btn btn-primary submit-btn" type="submit" disabled={status === 'sending'}>
-              {status === 'sending' ? 'Enviando…' : 'Enviar plan y contrato al cliente'}
+              {status === 'sending' ? t('adminClientDetail.sendingPlan') : t('adminClientDetail.submitPlan')}
             </button>
           </form>
         )}

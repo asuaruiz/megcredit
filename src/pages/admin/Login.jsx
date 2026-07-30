@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lockup } from '../../components/Logo.jsx';
 import { staffLogin } from '../../lib/adminApi.js';
+import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 export default function AdminLogin() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
@@ -29,20 +31,20 @@ export default function AdminLogin() {
       </header>
       <main className="portal-main">
         <div className="portal-card">
-          <h1>Panel de administrador</h1>
-          <p className="portal-sub">Acceso exclusivo para el equipo de MEG Credit.</p>
+          <h1>{t('adminLogin.title')}</h1>
+          <p className="portal-sub">{t('adminLogin.subtitle')}</p>
           <form onSubmit={submit}>
             <div className="form-group">
-              <label htmlFor="email">Correo electrónico</label>
+              <label htmlFor="email">{t('adminLogin.emailLabel')}</label>
               <input id="email" name="email" type="email" required maxLength="254" autoComplete="email" />
             </div>
             <div className="form-group">
-              <label htmlFor="password">Contraseña</label>
+              <label htmlFor="password">{t('adminLogin.passwordLabel')}</label>
               <input id="password" name="password" type="password" required autoComplete="current-password" />
             </div>
             {error && <p className="form-error" role="alert">{error}</p>}
             <button className="btn btn-primary submit-btn" type="submit" disabled={status === 'sending'} style={{ width: '100%' }}>
-              {status === 'sending' ? 'Ingresando…' : 'Iniciar sesión'}
+              {status === 'sending' ? t('adminLogin.sendingButton') : t('adminLogin.submitButton')}
             </button>
           </form>
         </div>

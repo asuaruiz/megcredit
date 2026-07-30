@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
 import { createCatalogItem, fetchCatalog, fetchStaffMe, staffLogout } from '../../lib/adminApi.js';
+import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 export default function AdminCatalog() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [catalog, setCatalog] = useState([]);
@@ -55,46 +57,46 @@ export default function AdminCatalog() {
 
   if (loading) {
     return (
-      <AdminLayout title="Catálogo">
-        <div className="portal-card"><p className="portal-sub">Cargando…</p></div>
+      <AdminLayout title={t('adminCatalog.catalogTitle')}>
+        <div className="portal-card"><p className="portal-sub">{t('admin.loading')}</p></div>
       </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout title="Catálogo" onLogout={handleLogout}>
+    <AdminLayout title={t('adminCatalog.catalogTitle')} onLogout={handleLogout}>
       <div className="portal-card wide admin-section">
-        <h2>Nuevo servicio</h2>
+        <h2>{t('adminCatalog.newServiceTitle')}</h2>
         <form onSubmit={submit}>
           <div className="form-group">
-            <label htmlFor="name">Nombre</label>
+            <label htmlFor="name">{t('adminCatalog.nameLabel')}</label>
             <input id="name" name="name" required minLength="2" maxLength="160" />
           </div>
           <div className="form-group">
-            <label htmlFor="description">Descripción</label>
+            <label htmlFor="description">{t('adminCatalog.descriptionLabel')}</label>
             <textarea id="description" name="description" maxLength="1000" />
           </div>
           <div className="form-group">
-            <label htmlFor="price">Precio por defecto (USD)</label>
+            <label htmlFor="price">{t('adminCatalog.priceLabel')}</label>
             <input id="price" name="price" type="number" min="0" step="0.01" required />
           </div>
           {error && <p className="form-error" role="alert">{error}</p>}
           <button className="btn btn-primary" type="submit" disabled={status === 'sending'}>
-            {status === 'sending' ? 'Guardando…' : 'Agregar al catálogo'}
+            {status === 'sending' ? t('adminCatalog.savingButton') : t('adminCatalog.addButton')}
           </button>
         </form>
       </div>
 
       <div className="portal-card wide">
-        <h2>Catálogo de servicios</h2>
+        <h2>{t('adminCatalog.catalogListTitle')}</h2>
         {catalog.length === 0 ? (
-          <p className="portal-sub">Todavía no hay servicios en el catálogo.</p>
+          <p className="portal-sub">{t('adminCatalog.noServices')}</p>
         ) : (
           <div className="doc-grid">
             {catalog.map((item) => (
               <div className="doc-tile" key={item.id}>
                 <h3>{item.name}</h3>
-                <p className="doc-hint">{item.description || 'Sin descripción.'}</p>
+                <p className="doc-hint">{item.description || t('adminCatalog.noDescription')}</p>
                 <p style={{ fontWeight: 600 }}>{(item.default_price_cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</p>
               </div>
             ))}
