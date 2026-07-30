@@ -150,16 +150,15 @@ export default function AdminClientDetail() {
 
   if (loading || !detail) {
     return (
-      <AdminLayout>
+      <AdminLayout title="Cliente">
         <div className="portal-card"><p className="portal-sub">Cargando…</p></div>
       </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout onLogout={handleLogout}>
-      <div className="portal-card wide">
-        <h1>{detail.account.full_name}</h1>
+    <AdminLayout title={detail.account.full_name} onLogout={handleLogout}>
+      <div className="portal-card wide admin-section">
         <p className="portal-sub">{detail.account.email} · Estado: {detail.account.status}</p>
 
         <h2 style={{ fontSize: 16, marginTop: 24 }}>Documentos</h2>
@@ -195,8 +194,8 @@ export default function AdminClientDetail() {
         )}
       </div>
 
-      <div className="portal-card wide" style={{ marginTop: 24 }}>
-        <h1>Armar plan de servicios</h1>
+      <div className="portal-card wide">
+        <h2>Armar plan de servicios</h2>
         <div className="form-group">
           <label htmlFor="catalogSelect">Agregar desde catálogo</label>
           <select id="catalogSelect" defaultValue="" onChange={(event) => { addCatalogItem(event.target.value); event.target.value = ''; }}>
@@ -210,7 +209,7 @@ export default function AdminClientDetail() {
 
         {lineItems.map((item, index) => (
           <div key={index} className="doc-tile" style={{ marginBottom: 12 }}>
-            <div className="form-row" style={{ display: 'flex', gap: 12 }}>
+            <div className="admin-form-row">
               <div className="form-group" style={{ flex: 2 }}>
                 <label>Nombre</label>
                 <input value={item.name} onChange={(event) => updateLineItem(index, { name: event.target.value })} required minLength="2" />

@@ -54,16 +54,16 @@ export default function AdminCatalog() {
 
   if (loading) {
     return (
-      <AdminLayout>
+      <AdminLayout title="Catálogo">
         <div className="portal-card"><p className="portal-sub">Cargando…</p></div>
       </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout onLogout={handleLogout}>
-      <div className="portal-card wide">
-        <h1>Nuevo servicio</h1>
+    <AdminLayout title="Catálogo" onLogout={handleLogout}>
+      <div className="portal-card wide admin-section">
+        <h2>Nuevo servicio</h2>
         <form onSubmit={submit}>
           <div className="form-group">
             <label htmlFor="name">Nombre</label>
@@ -84,8 +84,8 @@ export default function AdminCatalog() {
         </form>
       </div>
 
-      <div className="portal-card wide" style={{ marginTop: 24 }}>
-        <h1>Catálogo de servicios</h1>
+      <div className="portal-card wide">
+        <h2>Catálogo de servicios</h2>
         {catalog.length === 0 ? (
           <p className="portal-sub">Todavía no hay servicios en el catálogo.</p>
         ) : (

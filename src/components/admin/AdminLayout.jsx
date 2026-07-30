@@ -1,24 +1,76 @@
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { Lockup } from '../Logo.jsx';
+import '../../styles/admin.css';
 
-export default function AdminLayout({ children, onLogout }) {
+function IconUsers() {
   return (
-    <div className="portal-shell">
-      <header className="portal-header">
-        <Lockup onNavy markSize={34} />
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-          <Link to="/admin/clientes" style={{ color: '#fff', fontSize: 14 }}>Clientes</Link>
-          <Link to="/admin/catalogo" style={{ color: '#fff', fontSize: 14 }}>Catálogo</Link>
-          {onLogout && (
-            <button className="btn btn-outline btn-nav" type="button" onClick={onLogout} style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)' }}>
-              Cerrar sesión
-            </button>
-          )}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17 20a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4" />
+      <circle cx="10" cy="7" r="3.4" />
+      <path d="M16 4.2a3.4 3.4 0 0 1 0 6.4M20 20a3.6 3.6 0 0 0-3.2-3.9" />
+    </svg>
+  );
+}
+
+function IconCatalog() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="4" width="7" height="7" rx="1.2" />
+      <rect x="13" y="4" width="7" height="7" rx="1.2" />
+      <rect x="4" y="13" width="7" height="7" rx="1.2" />
+      <rect x="13" y="13" width="7" height="7" rx="1.2" />
+    </svg>
+  );
+}
+
+function IconLogout() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5M21 12H9" />
+    </svg>
+  );
+}
+
+const NAV_ITEMS = [
+  { to: '/admin/clientes', label: 'Clientes', Icon: IconUsers },
+  { to: '/admin/catalogo', label: 'Catálogo', Icon: IconCatalog },
+];
+
+export default function AdminLayout({ children, onLogout, title }) {
+  return (
+    <div className="admin-shell">
+      <aside className="admin-sidebar">
+        <div className="admin-sidebar-logo">
+          <Lockup vertical onNavy markSize={30} />
+        </div>
+        <nav className="admin-nav">
+          {NAV_ITEMS.map(({ to, label, Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => `admin-nav-link${isActive ? ' active' : ''}`}
+            >
+              <Icon />
+              {label}
+            </NavLink>
+          ))}
         </nav>
-      </header>
-      <main className="portal-main" style={{ alignItems: 'flex-start' }}>
-        {children}
-      </main>
+        {onLogout && (
+          <button className="admin-logout" type="button" onClick={onLogout}>
+            <IconLogout />
+            Cerrar sesión
+          </button>
+        )}
+      </aside>
+      <div className="admin-content">
+        {title && (
+          <header className="admin-topbar">
+            <h2>{title}</h2>
+          </header>
+        )}
+        <main className="admin-main">{children}</main>
+      </div>
     </div>
   );
 }
