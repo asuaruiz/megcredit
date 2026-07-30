@@ -296,6 +296,59 @@ img, svg { max-width: 100%; }
 }
 .theme-toggle:hover { border-color: var(--accent); color: var(--accent-strong); }
 
+.language-selector {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: none;
+  padding: 0;
+}
+
+.lang-btn {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lang-btn:hover {
+  background: var(--accent-soft);
+  color: var(--heading);
+}
+
+.lang-btn.active {
+  background: var(--accent);
+  color: var(--white);
+}
+
+@media (prefers-color-scheme: dark) {
+  .lang-btn.active {
+    background: var(--accent);
+    color: var(--navy-900);
+  }
+}
+
+:root[data-theme='dark'] .lang-btn.active {
+  background: var(--accent);
+  color: var(--navy-900);
+}
+
+.lang-separator {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  display: inline-block;
+}
+
 .nav-burger {
   display: none;
   width: 40px;

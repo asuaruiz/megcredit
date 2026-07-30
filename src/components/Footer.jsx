@@ -1,36 +1,38 @@
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext.jsx';
 import { Lockup } from './Logo.jsx';
 
 export default function Footer() {
+  const { t } = useLanguage();
+
   return (
     <footer className="site-footer">
       <div className="footer-lockup">
         <Lockup vertical onNavy markSize={64} />
       </div>
-      <p className="footer-tagline">“Credit is more than a three-digit number.”</p>
+      <p className="footer-tagline">&ldquo;Credit is more than a three-digit number.&rdquo;</p>
 
       <div className="footer-links">
-        <Link to="/servicios">Servicios</Link>
-        <Link to="/nosotros">Nosotros</Link>
-        <Link to="/blog">Blog</Link>
-        <Link to="/contacto">Contacto</Link>
-        <Link to="/terminos">Términos de servicio</Link>
-        <Link to="/privacidad">Política de privacidad</Link>
+        <Link to="/servicios">{t('footer.services')}</Link>
+        <Link to="/nosotros">{t('footer.about')}</Link>
+        <Link to="/blog">{t('footer.blog')}</Link>
+        <Link to="/contacto">{t('footer.contact')}</Link>
+        <Link to="/terminos">{t('footer.terms')}</Link>
+        <Link to="/privacidad">{t('footer.privacy')}</Link>
       </div>
 
       <p className="footer-legal">
-        © 2026 Magic Enterprise Group · Orlando, Florida ·{' '}
-        <a href="mailto:info@magicenterprisegroup.com">info@magicenterprisegroup.com</a>
-        {' · '}<a href="tel:+14077358696">+1 407-735-8696</a>
+        {t('footer.copyright')} ·{' '}
+        <a href="mailto:info@magicenterprisegroup.com">{t('footer.email')}</a>
+        {' · '}<a href="tel:+14077358696">{t('footer.phone')}</a>
         <br />
-        Operamos bajo la Fair Credit Reporting Act (FCRA) y la Credit Repair Organizations Act (CROA).
+        {t('footer.fcraDisclaimer')}
         <br />
-        Ninguna empresa puede garantizar legalmente la eliminación de información correcta y verificable de un reporte de crédito.
+        {t('footer.creditDisclaimer')}
       </p>
 
       <p className="footer-credit">
-        Made with <span className="footer-heart" aria-hidden="true">♥</span> by{' '}
-        <a href="https://andflow.cl">andflow.cl</a>
+        {t('footer.madeBy')}
       </p>
     </footer>
   );

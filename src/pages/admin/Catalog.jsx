@@ -28,7 +28,8 @@ export default function AdminCatalog() {
 
   const submit = async (event) => {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const data = new FormData(form);
     setStatus('sending');
     setError('');
     try {
@@ -38,7 +39,7 @@ export default function AdminCatalog() {
         description: data.get('description'),
         defaultPriceCents: Math.round(priceDollars * 100),
       });
-      event.currentTarget.reset();
+      form.reset();
       setStatus('idle');
       load();
     } catch (submissionError) {
