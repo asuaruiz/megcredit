@@ -11,6 +11,14 @@ import Contacto from './pages/Contacto.jsx';
 import Legal from './pages/Legal.jsx';
 import NotFound from './pages/NotFound.jsx';
 import SEO from './components/SEO.jsx';
+import PortalLogin from './pages/portal/Login.jsx';
+import PortalActivate from './pages/portal/Activate.jsx';
+import PortalDashboard from './pages/portal/Dashboard.jsx';
+import AdminLogin from './pages/admin/Login.jsx';
+import AdminDashboard from './pages/admin/Dashboard.jsx';
+import AdminClientDetail from './pages/admin/ClientDetail.jsx';
+import AdminCatalog from './pages/admin/Catalog.jsx';
+import './styles/portal.css';
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
@@ -25,6 +33,41 @@ function ScrollToTop() {
 }
 
 export default function App() {
+  const { pathname } = useLocation();
+  const isPortal = pathname.startsWith('/portal');
+  const isAdmin = pathname.startsWith('/admin');
+
+  if (isPortal) {
+    return (
+      <>
+        <ScrollToTop />
+        <SEO />
+        <Routes>
+          <Route path="/portal/login" element={<PortalLogin />} />
+          <Route path="/portal/activar" element={<PortalActivate />} />
+          <Route path="/portal/dashboard" element={<PortalDashboard />} />
+          <Route path="*" element={<PortalLogin />} />
+        </Routes>
+      </>
+    );
+  }
+
+  if (isAdmin) {
+    return (
+      <>
+        <ScrollToTop />
+        <SEO />
+        <Routes>
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/clientes" element={<AdminDashboard />} />
+          <Route path="/admin/clientes/:id" element={<AdminClientDetail />} />
+          <Route path="/admin/catalogo" element={<AdminCatalog />} />
+          <Route path="*" element={<AdminDashboard />} />
+        </Routes>
+      </>
+    );
+  }
+
   return (
     <>
       <ScrollToTop />

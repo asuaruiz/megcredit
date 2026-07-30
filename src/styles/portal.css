@@ -1,0 +1,95 @@
+.portal-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.portal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px;
+  background: var(--navy-700);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.portal-main {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 56px 20px;
+}
+
+.portal-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 12px;
+  padding: 36px;
+}
+
+.portal-card.wide {
+  max-width: 760px;
+}
+
+.portal-card h1 {
+  font-size: 26px;
+  margin: 0 0 8px;
+}
+
+.portal-card p.portal-sub {
+  color: var(--text-2);
+  margin: 0 0 28px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.doc-tile {
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 10px;
+  padding: 18px;
+  background: var(--bg-inset);
+}
+
+.doc-tile h3 {
+  font-size: 15px;
+  margin: 0 0 4px;
+}
+
+.doc-tile .doc-hint {
+  font-size: 12px;
+  color: var(--text-3);
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.doc-tile input[type='file'] {
+  font-size: 12px;
+  width: 100%;
+}
+
+.status-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+.status-badge.pending { background: rgba(166, 124, 27, 0.14); color: var(--accent-strong); }
+.status-badge.approved { background: rgba(46, 133, 85, 0.14); color: #2E8555; }
+.status-badge.rejected { background: rgba(161, 43, 43, 0.12); color: #A12B2B; }
+.status-badge.missing { background: rgba(124, 151, 179, 0.16); color: var(--text-2); }

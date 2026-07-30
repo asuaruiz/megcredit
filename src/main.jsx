@@ -14,5 +14,7 @@ const app = (
   </React.StrictMode>
 );
 
-if (root.hasChildNodes()) hydrateRoot(root, app);
+const isAppRoute = window.location.pathname.startsWith('/portal') || window.location.pathname.startsWith('/admin');
+
+if (root.hasChildNodes() && !isAppRoute) hydrateRoot(root, app);
 else createRoot(root).render(app);
