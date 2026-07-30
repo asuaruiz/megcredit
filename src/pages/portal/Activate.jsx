@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import PortalLayout from '../../components/portal/PortalLayout.jsx';
 import { activateAccount } from '../../lib/portalApi.js';
+import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 export default function PortalActivate() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
@@ -16,7 +18,7 @@ export default function PortalActivate() {
     const password = data.get('password');
     const confirm = data.get('confirm');
     if (password !== confirm) {
-      setError('Las contraseñas no coinciden.');
+      setError(t('portalActivate.passwordMismatch'));
       setStatus('error');
       return;
     }
@@ -35,9 +37,9 @@ export default function PortalActivate() {
     return (
       <PortalLayout>
         <div className="portal-card">
-          <h1>Enlace inválido</h1>
-          <p className="portal-sub">Este enlace de activación no es válido. Solicita uno nuevo a tu asesor.</p>
-          <Link className="btn btn-outline" to="/portal/login">Ir a iniciar sesión</Link>
+          <h1>{t('portalActivate.invalidTitle')}</h1>
+          <p className="portal-sub">{t('portalActivate.invalidText')}</p>
+          <Link className="btn btn-outline" to="/portal/login">{t('portalActivate.invalidButton')}</Link>
         </div>
       </PortalLayout>
     );
@@ -46,20 +48,20 @@ export default function PortalActivate() {
   return (
     <PortalLayout>
       <div className="portal-card">
-        <h1>Crea tu contraseña</h1>
-        <p className="portal-sub">Elige una contraseña segura de al menos 8 caracteres para tu cuenta del portal.</p>
+        <h1>{t('portalActivate.title')}</h1>
+        <p className="portal-sub">{t('portalActivate.subtitle')}</p>
         <form onSubmit={submit}>
           <div className="form-group">
-            <label htmlFor="password">Contraseña</label>
+            <label htmlFor="password">{t('portalActivate.passwordLabel')}</label>
             <input id="password" name="password" type="password" required minLength="8" autoComplete="new-password" />
           </div>
           <div className="form-group">
-            <label htmlFor="confirm">Confirma tu contraseña</label>
+            <label htmlFor="confirm">{t('portalActivate.confirmLabel')}</label>
             <input id="confirm" name="confirm" type="password" required minLength="8" autoComplete="new-password" />
           </div>
           {error && <p className="form-error" role="alert">{error}</p>}
           <button className="btn btn-primary submit-btn" type="submit" disabled={status === 'sending'} style={{ width: '100%' }}>
-            {status === 'sending' ? 'Creando cuenta…' : 'Crear mi cuenta'}
+            {status === 'sending' ? t('portalActivate.sendingButton') : t('portalActivate.submitButton')}
           </button>
         </form>
       </div>

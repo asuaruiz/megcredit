@@ -1,2 +1,7 @@
 import { Link } from 'react-router-dom';
-export default function NotFound() { return <section className="notfound"><span className="eyebrow">Error 404</span><h1>Esta página no existe</h1><p>La dirección puede haber cambiado o estar incompleta.</p><Link className="btn btn-primary" to="/">Volver al inicio</Link></section>; }
+import { useLanguage } from '../contexts/LanguageContext.jsx';
+
+export default function NotFound() {
+  const { t } = useLanguage();
+  return <section className="notfound"><span className="eyebrow">{t('notFound.eyebrow')}</span><h1>{t('notFound.title')}</h1><p>{t('notFound.text')}</p><Link className="btn btn-primary" to="/">{t('notFound.button')}</Link></section>;
+}

@@ -20,11 +20,11 @@ export default function Nav() {
 
   return (
     <nav className="site-nav">
-      <Link to="/" className="nav-logo" title="Magic Enterprise Group — inicio" onClick={close}>
+      <Link to="/" className="nav-logo" title={t('nav.logoTitle')} onClick={close}>
         <Lockup markSize={42} />
       </Link>
 
-      <div className="nav-links" role="navigation" aria-label="Principal">
+      <div className="nav-links" role="navigation" aria-label={t('nav.mainNav')}>
         {LINKS.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.end} className="nav-link">
             {t(l.labelKey)}

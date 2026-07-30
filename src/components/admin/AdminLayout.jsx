@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { Lockup } from '../Logo.jsx';
+import { useLanguage } from '../../contexts/LanguageContext.jsx';
 import '../../styles/admin.css';
 
 function IconUsers() {
@@ -32,12 +33,12 @@ function IconLogout() {
   );
 }
 
-const NAV_ITEMS = [
-  { to: '/admin/clientes', label: 'Clientes', Icon: IconUsers },
-  { to: '/admin/catalogo', label: 'Catálogo', Icon: IconCatalog },
-];
-
 export default function AdminLayout({ children, onLogout, title }) {
+  const { t } = useLanguage();
+  const NAV_ITEMS = [
+    { to: '/admin/clientes', label: t('adminLayout.navClients'), Icon: IconUsers },
+    { to: '/admin/catalogo', label: t('adminLayout.navCatalog'), Icon: IconCatalog },
+  ];
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
@@ -59,7 +60,7 @@ export default function AdminLayout({ children, onLogout, title }) {
         {onLogout && (
           <button className="admin-logout" type="button" onClick={onLogout}>
             <IconLogout />
-            Cerrar sesión
+            {t('adminLayout.logout')}
           </button>
         )}
       </aside>
