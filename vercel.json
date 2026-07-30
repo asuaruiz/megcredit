@@ -3,8 +3,10 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/portal/:path*", "destination": "/index.html" },
-    { "source": "/admin/:path*", "destination": "/index.html" }
+    { "source": "/portal", "destination": "/" },
+    { "source": "/portal/(.*)", "destination": "/" },
+    { "source": "/admin", "destination": "/" },
+    { "source": "/admin/(.*)", "destination": "/" }
   ],
   "headers": [
     {
