@@ -34,6 +34,7 @@ export default async function handler(request, response) {
   const firstPaymentCentsRaw = body.firstPaymentCents;
   const hasFirstPayment = firstPaymentCentsRaw !== undefined && firstPaymentCentsRaw !== null && firstPaymentCentsRaw !== '';
   const firstPaymentCents = hasFirstPayment ? Number(firstPaymentCentsRaw) : null;
+  const recurringAmountCents = billingType === 'recurring' ? Number(body.recurringAmountCents) : null;
 
   if (!isUuid(clientId)) return json(response, 400, { error: 'Cliente inválido.' });
   if (!BILLING_TYPES.has(billingType)) return json(response, 400, { error: 'Tipo de facturación inválido.' });
@@ -49,6 +50,9 @@ export default async function handler(request, response) {
   }
   if (billingType === 'one_time' && hasFirstPayment) {
     return json(response, 400, { error: 'El primer pago solo aplica a planes recurrentes.' });
+  }
+  if (billingType === 'recurring' && (!Number.isInteger(recurringAmountCents) || recurringAmountCents <= 0)) {
+    return json(response, 400, { error: 'Ingresa el monto del pago recurrente.' });
   }
 
   try {
@@ -67,6 +71,7 @@ export default async function handler(request, response) {
         billing_type: billingType,
         recurring_interval: billingType === 'recurring' ? recurringInterval : null,
         first_payment_cents: billingType === 'recurring' ? firstPaymentCents : null,
+        recurring_amount_cents: billingType === 'recurring' ? recurringAmountCents : null,
         status: 'draft',
       }),
     });
