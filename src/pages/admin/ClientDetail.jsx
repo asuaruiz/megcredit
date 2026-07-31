@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
 import Modal from '../../components/portal/Modal.jsx';
-import { assignPlan, fetchAgreementPdf, fetchAgreementSignature, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchDocumentFile, fetchStaffMe, resendPaymentLink, reviewDocument, staffLogout, uploadAgreementPdf } from '../../lib/adminApi.js';
+import { assignPlan, cancelPlan, fetchAgreementPdf, fetchAgreementSignature, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchDocumentFile, fetchPaymentHistory, fetchStaffMe, resendPaymentLink, reviewDocument, sendPaymentReminder, staffLogout, uploadAgreementPdf } from '../../lib/adminApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 function CreditMonitoringSection({ clientId }) {
@@ -81,6 +81,8 @@ export default function AdminClientDetail() {
   const [sendingPaymentId, setSendingPaymentId] = useState(null);
   const [paymentMessage, setPaymentMessage] = useState('');
   const [paymentError, setPaymentError] = useState('');
+  const [planActionId, setPlanActionId] = useState(null);
+  const [paymentHistory, setPaymentHistory] = useState(null);
 
   const DOCUMENT_LABEL = {
     id_front: t('adminClientDetail.documentIdFront'),
@@ -200,6 +202,7 @@ export default function AdminClientDetail() {
       const url = URL.createObjectURL(file);
       setDocumentPreview({
         url,
+        mimeType: file.type,
         title: DOCUMENT_LABEL[doc.document_type] || doc.original_filename || doc.document_type,
       });
     } catch (viewError) {
@@ -253,6 +256,49 @@ export default function AdminClientDetail() {
       setPaymentError(paymentErr.message);
     } finally {
       setSendingPaymentId(null);
+    }
+  };
+
+  const handleCancelPlan = async (plan) => {
+    if (!window.confirm(t('adminClientDetail.cancelPlanConfirm'))) return;
+    setPlanActionId(plan.id);
+    setPaymentError('');
+    setPaymentMessage('');
+    try {
+      await cancelPlan(plan.id);
+      setPaymentMessage(t('adminClientDetail.planCanceled'));
+      await load();
+    } catch (cancelError) {
+      setPaymentError(cancelError.message);
+    } finally {
+      setPlanActionId(null);
+    }
+  };
+
+  const handlePaymentHistory = async (plan) => {
+    setPlanActionId(plan.id);
+    setPaymentError('');
+    try {
+      const history = await fetchPaymentHistory(plan.id);
+      setPaymentHistory({ ...history, title: plan.services.map((service) => service.name).join(', ') || t('adminClientDetail.paymentHistory') });
+    } catch (historyError) {
+      setPaymentError(historyError.message);
+    } finally {
+      setPlanActionId(null);
+    }
+  };
+
+  const handlePaymentReminder = async (plan) => {
+    setPlanActionId(plan.id);
+    setPaymentError('');
+    setPaymentMessage('');
+    try {
+      await sendPaymentReminder(plan.id);
+      setPaymentMessage(t('adminClientDetail.reminderSent'));
+    } catch (reminderError) {
+      setPaymentError(reminderError.message);
+    } finally {
+      setPlanActionId(null);
     }
   };
 
@@ -376,6 +422,21 @@ export default function AdminClientDetail() {
                   {sendingPaymentId === plan.id ? t('adminClientDetail.sendingPaymentLink') : t('adminClientDetail.resendPaymentLink')}
                 </button>
               )}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => handlePaymentHistory(plan)}>
+                  {t('adminClientDetail.paymentHistory')}
+                </button>
+                {plan.billing_type === 'recurring' && ['active', 'past_due'].includes(plan.status) && (
+                  <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => handlePaymentReminder(plan)}>
+                    {t('adminClientDetail.sendReminder')}
+                  </button>
+                )}
+                {!['paid', 'canceled'].includes(plan.status) && (
+                  <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => handleCancelPlan(plan)} style={{ borderColor: '#b94a48', color: '#d97975' }}>
+                    {planActionId === plan.id ? t('adminClientDetail.cancelingPlan') : t('adminClientDetail.cancelPlan')}
+                  </button>
+                )}
+              </div>
             </div>
           ))
         )}
@@ -384,12 +445,20 @@ export default function AdminClientDetail() {
       </div>
 
       {documentPreview && (
-        <Modal title={documentPreview.title} onClose={closeDocumentPreview} maxWidth={1000}>
-          <iframe
-            src={documentPreview.url}
-            title={documentPreview.title}
-            style={{ display: 'block', width: '100%', height: '72vh', border: '1px solid var(--border)', borderRadius: 8, background: '#fff' }}
-          />
+        <Modal title={documentPreview.title} onClose={closeDocumentPreview} maxWidth={documentPreview.mimeType === 'application/pdf' ? 850 : 720}>
+          {documentPreview.mimeType?.startsWith('image/') ? (
+            <img
+              src={documentPreview.url}
+              alt={documentPreview.title}
+              style={{ display: 'block', width: '100%', height: 'auto', maxHeight: '65vh', objectFit: 'contain', borderRadius: 8, background: '#fff' }}
+            />
+          ) : (
+            <iframe
+              src={documentPreview.url}
+              title={documentPreview.title}
+              style={{ display: 'block', width: '100%', height: '68vh', border: '1px solid var(--border)', borderRadius: 8, background: '#fff' }}
+            />
+          )}
         </Modal>
       )}
 
@@ -406,6 +475,18 @@ export default function AdminClientDetail() {
               </div>
             )}
           </div>
+        </Modal>
+      )}
+
+      {paymentHistory && (
+        <Modal title={t('adminClientDetail.paymentHistory')} onClose={() => setPaymentHistory(null)} maxWidth={780}>
+          <p className="portal-sub">{paymentHistory.title}</p>
+          <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.totalPaid')}:</strong> {formatCents(paymentHistory.amountPaidCents || 0)} / {formatCents(paymentHistory.totalAmountCents || 0)}</p>
+          {paymentHistory.payments.length === 0 ? <p className="portal-sub">{t('adminClientDetail.noPayments')}</p> : (
+            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>{t('adminClientDetail.paymentDate')}</th><th>{t('adminClientDetail.paymentStatus')}</th><th>{t('adminClientDetail.paymentAmount')}</th><th>{t('adminClientDetail.receipt')}</th></tr></thead><tbody>
+              {paymentHistory.payments.map((payment) => <tr key={payment.id}><td>{new Date((payment.paidAt || payment.created) * 1000).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}</td><td><span className={`status-badge ${payment.status}`}>{payment.status}</span></td><td>{formatCents(payment.amountPaid || payment.amountDue || 0)}</td><td>{payment.hostedInvoiceUrl ? <a href={payment.hostedInvoiceUrl} target="_blank" rel="noopener noreferrer">{t('adminClientDetail.viewReceipt')}</a> : '—'}</td></tr>)}
+            </tbody></table></div>
+          )}
         </Modal>
       )}
 

@@ -77,6 +77,18 @@ export function resendPaymentLink(paymentPlanId) {
   return request('/api/admin/resend-payment-link', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ paymentPlanId }) });
 }
 
+export function cancelPlan(paymentPlanId) {
+  return request('/api/admin/cancel-plan', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ paymentPlanId }) });
+}
+
+export function fetchPaymentHistory(paymentPlanId) {
+  return request(`/api/admin/payment-history?id=${encodeURIComponent(paymentPlanId)}`);
+}
+
+export function sendPaymentReminder(paymentPlanId) {
+  return request('/api/admin/send-payment-reminder', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ paymentPlanId }) });
+}
+
 export function fetchContracts() {
   return request('/api/admin/contracts');
 }

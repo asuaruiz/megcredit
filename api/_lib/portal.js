@@ -233,6 +233,13 @@ export function paymentLinkEmailHtml({ fullName, paymentUrl }) {
   );
 }
 
+export function recurringPaymentReminderEmailHtml({ fullName, amount, interval, loginUrl }) {
+  return portalEmailLayout(
+    `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Recordatorio de pago</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hola, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">Te recordamos que tu plan tiene un pago recurrente de <strong>${escapeHtml(amount)}</strong> con frecuencia ${escapeHtml(interval)}. El cobro se procesa automáticamente con el método registrado.</p><p style="margin:0 0 26px"><a href="${escapeHtml(loginUrl)}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">Ver mi plan</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">Si tienes preguntas sobre este cobro, contacta a tu asesor de MEG Credit.</p>`,
+    'Recordatorio de tu pago recurrente',
+  );
+}
+
 export async function sendPortalEmail({ to, subject, html }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.CONTACT_FROM_EMAIL || 'MEG Credit <notificaciones@megcredit.com>';
