@@ -97,7 +97,7 @@ export default function PortalSidebarLayout({ children, onLogout, title }) {
   ];
 
   return (
-    <div className="admin-shell">
+    <div className="admin-shell portal-workspace">
       <aside className="admin-sidebar">
         <div className="admin-sidebar-logo">
           <Lockup vertical onNavy markSize={30} />
