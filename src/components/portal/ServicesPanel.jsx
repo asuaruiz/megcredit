@@ -36,24 +36,22 @@ function PlanCard({ plan }) {
   };
 
   return (
-    <div className="doc-tile" style={{ marginBottom: 20 }}>
+    <div className="doc-tile plan-card">
       <span className={`status-badge ${plan.status === 'paid' || plan.status === 'active' ? 'approved' : plan.status === 'past_due' ? 'rejected' : 'pending'}`}>
         {PLAN_STATUS_LABEL[plan.status] || plan.status}
       </span>
       <h3>{BILLING_LABEL[plan.billing_type]}{plan.recurring_interval ? ` · ${INTERVAL_LABEL[plan.recurring_interval]}` : ''}</h3>
-      <ul style={{ margin: '10px 0', paddingLeft: 18 }}>
+      <ul className="plan-service-list">
         {plan.services.map((service) => (
-          <li key={service.id} style={{ fontSize: 14, marginBottom: 4 }}>
-            {service.name} — {formatCents(service.price_cents)}
-          </li>
+          <li key={service.id}>{service.name} — {formatCents(service.price_cents)}</li>
         ))}
       </ul>
-      <p style={{ fontWeight: 600, marginBottom: 16 }}>{t('servicesPanel.total')}: {formatCents(total)}</p>
+      <p className="plan-total">{t('servicesPanel.total')}: {formatCents(total)}</p>
 
       {plan.agreement?.status === 'signed' && plan.status === 'awaiting_payment' && (
         <>
           {payError && <p className="form-error" role="alert">{payError}</p>}
-          <button className="btn btn-primary" type="button" onClick={handlePay} disabled={paying} style={{ width: '100%' }}>
+          <button className="btn btn-primary submit-btn" type="button" onClick={handlePay} disabled={paying}>
             {paying ? t('servicesPanel.redirecting') : t('servicesPanel.payWithStripe')}
           </button>
         </>
@@ -83,12 +81,14 @@ export default function ServicesPanel() {
   if (loading || plans.length === 0) return null;
 
   return (
-    <div style={{ marginTop: 36 }}>
-      <h2 style={{ fontSize: 20, marginBottom: 4 }}>{t('servicesPanel.sectionTitle')}</h2>
+    <div className="services-panel">
+      <h2 className="services-panel-title">{t('servicesPanel.sectionTitle')}</h2>
       <p className="portal-sub">{t('servicesPanel.sectionSubtitle')}</p>
-      {plans.map((plan) => (
-        <PlanCard key={plan.id} plan={plan} />
-      ))}
+      <div className="stack-3">
+        {plans.map((plan) => (
+          <PlanCard key={plan.id} plan={plan} />
+        ))}
+      </div>
     </div>
   );
 }

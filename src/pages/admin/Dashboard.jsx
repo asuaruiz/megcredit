@@ -86,7 +86,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="portal-card wide admin-section">
+      <div className="portal-card wide">
         <h2>{t('admin.inviteClient')}</h2>
         <form onSubmit={handleInvite}>
           <div className="admin-form-row">

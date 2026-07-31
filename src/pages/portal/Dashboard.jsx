@@ -95,15 +95,17 @@ function HomeTab({ account }) {
 
   return (
     <>
-      <div className="portal-card wide admin-section">
+      <div className="portal-card wide">
         <h2>{t('portalHome.clientCardTitle')}</h2>
-        <p className="portal-sub" style={{ marginBottom: 4 }}>{account.full_name}</p>
-        <p className="portal-sub" style={{ marginBottom: 4 }}>{account.email}</p>
-        {account.phone && <p className="portal-sub" style={{ marginBottom: 4 }}>{account.phone}</p>}
-        <p className="portal-sub" style={{ marginBottom: 0 }}>{t('portalHome.statusLabel')}: {account.status}</p>
+        <div className="field-list">
+          <p>{account.full_name}</p>
+          <p>{account.email}</p>
+          {account.phone && <p>{account.phone}</p>}
+          <p>{t('portalHome.statusLabel')}: {account.status}</p>
+        </div>
       </div>
 
-      <div className="portal-card wide admin-section">
+      <div className="portal-card wide">
         <h2>{t('portalHome.scoresTitle')}</h2>
         <div className="admin-stats">
           {BUREAUS.map(({ label, key }) => (
@@ -113,7 +115,7 @@ function HomeTab({ account }) {
             </div>
           ))}
         </div>
-        <p className="portal-sub" style={{ marginTop: 12, marginBottom: 0 }}>
+        <p className="portal-sub">
           {hasData ? `${t('portalHome.asOf')} ${bureauData.report.asOfDate}` : t('portalHome.scoresEmpty')}
         </p>
       </div>
@@ -121,7 +123,7 @@ function HomeTab({ account }) {
       <div className="portal-card wide">
         <h2>{t('portalHome.caseStatusTitle')}</h2>
         <CaseStatusTable bureauData={bureauData} />
-        {!hasData && <p className="portal-sub" style={{ marginTop: 12, marginBottom: 0 }}>{t('portalHome.caseStatusEmpty')}</p>}
+        {!hasData && <p className="portal-sub">{t('portalHome.caseStatusEmpty')}</p>}
       </div>
     </>
   );
@@ -136,7 +138,7 @@ function DisputesTab() {
     <div className="portal-card wide">
       <h2>{t('portalSidebar.disputes')}</h2>
       <CaseStatusTable bureauData={bureauData} />
-      {!hasData && <p className="portal-sub" style={{ marginTop: 12, marginBottom: 0 }}>{t('portalHome.caseStatusEmpty')}</p>}
+      {!hasData && <p className="portal-sub">{t('portalHome.caseStatusEmpty')}</p>}
     </div>
   );
 }
@@ -210,7 +212,7 @@ function AgreementModal({ agreement, onClose, onDone }) {
           <span>{t('portalDashboard.agreementConsent')}</span>
         </label>
         {error && <p className="form-error" role="alert">{error}</p>}
-        <button className="btn btn-primary submit-btn" type="submit" disabled={status === 'sending' || !agree} style={{ width: '100%', marginTop: 12 }}>
+        <button className="btn btn-primary submit-btn" type="submit" disabled={status === 'sending' || !agree}>
           {status === 'sending' ? t('portalDashboard.agreementSigning') : t('portalDashboard.agreementSubmit')}
         </button>
       </form>
@@ -307,7 +309,7 @@ function CreditMonitoringModal({ onClose, onDone }) {
           <input id="securityWord" name="securityWord" maxLength="120" autoComplete="off" />
         </div>
         {error && <p className="form-error" role="alert">{error}</p>}
-        <button className="btn btn-primary submit-btn" type="submit" disabled={status === 'sending'} style={{ width: '100%' }}>
+        <button className="btn btn-primary submit-btn" type="submit" disabled={status === 'sending'}>
           {status === 'sending' ? t('portalDashboard.savingCredentials') : t('portalDashboard.saveCredentials')}
         </button>
       </form>
@@ -462,33 +464,35 @@ export default function PortalDashboard() {
         <h1>{t('portalDashboard.greeting')}, {account.full_name.split(' ')[0]}</h1>
         <p className="portal-sub">{t('portalDashboard.subtitle')}</p>
 
-        <div style={{ background: 'var(--bg-inset)', borderRadius: 999, height: 10, overflow: 'hidden', marginBottom: 6 }}>
-          <div style={{ width: `${progress}%`, height: '100%', background: 'var(--accent)', transition: 'width 0.3s' }} />
+        <div className="progress-track">
+          <div className="progress-fill" style={{ width: `${progress}%` }} />
         </div>
-        <p className="doc-hint" style={{ marginBottom: 20 }}>{doneCount} {t('portalDashboard.progressText')} {items.length} {t('portalDashboard.completed')} ({progress}%)</p>
+        <p className="doc-hint progress-caption">{doneCount} {t('portalDashboard.progressText')} {items.length} {t('portalDashboard.completed')} ({progress}%)</p>
 
-        {items.map((item) => (
-          <div key={item.key} className="doc-tile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ color: item.done ? '#2E8555' : 'var(--text-3)', fontSize: 18 }}>{item.done ? '✓' : '○'}</span>
-              <span>{item.label}</span>
+        <div className="tile-list">
+          {items.map((item) => (
+            <div key={item.key} className="doc-tile tile-row">
+              <div className="tile-row-label">
+                <span className={`checklist-item-mark${item.done ? ' done' : ''}`}>{item.done ? '✓' : '○'}</span>
+                <span>{item.label}</span>
+              </div>
+              {item.key === 'agreement' && item.done ? (
+                <span className="status-badge approved">{t('portalDashboard.signed')}</span>
+              ) : (
+                <button className="btn btn-outline" type="button" onClick={() => setActiveModal(item.key)}>
+                  {item.done ? t('portalDashboard.update') : t('portalDashboard.completeNow')}
+                </button>
+              )}
             </div>
-            {item.key === 'agreement' && item.done ? (
-              <span className="status-badge approved">{t('portalDashboard.signed')}</span>
-            ) : (
-              <button className="btn btn-outline" type="button" onClick={() => setActiveModal(item.key)}>
-                {item.done ? t('portalDashboard.update') : t('portalDashboard.completeNow')}
-              </button>
-            )}
-          </div>
-        ))}
+          ))}
 
-        {checklistComplete && !status.agreement && (
-          <div className="doc-tile" style={{ marginBottom: 10 }}>
-            <h3 style={{ marginTop: 0 }}>{t('portalDashboard.agreementWaitingTitle')}</h3>
-            <p className="doc-hint" style={{ marginBottom: 0 }}>{t('portalDashboard.agreementWaitingText')}</p>
-          </div>
-        )}
+          {checklistComplete && !status.agreement && (
+            <div className="doc-tile">
+              <h3>{t('portalDashboard.agreementWaitingTitle')}</h3>
+              <p className="doc-hint">{t('portalDashboard.agreementWaitingText')}</p>
+            </div>
+          )}
+        </div>
 
         <ServicesPanel />
       </div>

@@ -226,30 +226,29 @@ function BureauReportsSection({ clientId, clientEmail }) {
     <section className="admin-block">
       <h2>{t('adminClientDetail.bureauReportsTitle')}</h2>
 
-      <div className="doc-tile" style={{ marginBottom: 16 }}>
-        <h3 style={{ fontSize: 14, marginBottom: 12 }}>{t('adminClientDetail.bureauLinkTitle')}</h3>
+      <div className="doc-tile">
+        <h3>{t('adminClientDetail.bureauLinkTitle')}</h3>
         {link ? (
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
-            <span className={`status-badge ${link.sync_status}`} style={{ marginBottom: 0 }}>{t(`adminClientDetail.bureauSyncStatus_${link.sync_status}`)}</span>
-            <span style={{ fontSize: 13 }}>
+          <div className="cluster-3">
+            <span className={`status-badge ${link.sync_status}`}>{t(`adminClientDetail.bureauSyncStatus_${link.sync_status}`)}</span>
+            <span className="text-xs">
               {t('adminClientDetail.bureauLastSynced')}: {link.last_synced_at || t('adminClientDetail.bureauNeverSynced')}
             </span>
             <button className="btn btn-outline" type="button" disabled={syncing} onClick={handleSync}>
               {syncing ? t('adminClientDetail.bureauSyncing') : t('adminClientDetail.bureauSyncButton')}
             </button>
             <button
-              className="btn btn-outline"
+              className="btn btn-outline danger"
               type="button"
               disabled={unlinking}
               onClick={handleUnlink}
-              style={{ borderColor: '#b94a48', color: '#d97975' }}
             >
               {unlinking ? t('adminClientDetail.bureauUnlinking') : t('adminClientDetail.bureauUnlinkButton')}
             </button>
           </div>
         ) : (
-          <form onSubmit={handleLink} className="admin-form-row" style={{ alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 0 }}>
-            <div className="form-group" style={{ marginBottom: 0, flex: 2 }}>
+          <form onSubmit={handleLink} className="admin-form-row" style={{ alignItems: 'flex-end' }}>
+            <div className="form-group" style={{ flex: 2 }}>
               <label htmlFor="bureauCustomerToken">{t('adminClientDetail.bureauCustomerTokenLabel')}</label>
               <input
                 id="bureauCustomerToken"
@@ -258,7 +257,7 @@ function BureauReportsSection({ clientId, clientEmail }) {
                 onChange={(event) => setCustomerTokenInput(event.target.value)}
               />
             </div>
-            <div className="form-group" style={{ marginBottom: 0, flex: '0 0 140px' }}>
+            <div className="form-group" style={{ flex: '0 0 140px' }}>
               <label htmlFor="bureauPid">{t('adminClientDetail.bureauPidLabel')}</label>
               <input id="bureauPid" type="text" value={pidInput} onChange={(event) => setPidInput(event.target.value)} />
             </div>
@@ -273,7 +272,7 @@ function BureauReportsSection({ clientId, clientEmail }) {
         {linkError && <p className="form-error" role="alert">{linkError}</p>}
       </div>
 
-      <form onSubmit={handleUpload} className="admin-form-row" style={{ alignItems: 'flex-end', flexWrap: 'wrap' }}>
+      <form onSubmit={handleUpload} className="admin-form-row" style={{ alignItems: 'flex-end' }}>
         <div className="form-group" style={{ flex: '0 0 170px' }}>
           <label htmlFor="bureauAsOfDate">{t('adminClientDetail.bureauAsOfDateLabel')}</label>
           <input id="bureauAsOfDate" type="date" value={asOfDate} onChange={(event) => setAsOfDate(event.target.value)} />
@@ -290,16 +289,16 @@ function BureauReportsSection({ clientId, clientEmail }) {
       {loadError && <p className="form-error" role="alert">{loadError}</p>}
 
       {reports.length === 0 ? (
-        <p className="portal-sub" style={{ marginTop: 16, marginBottom: 0 }}>{t('adminClientDetail.bureauNoReports')}</p>
+        <p className="portal-sub">{t('adminClientDetail.bureauNoReports')}</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0 0' }}>
+        <ul className="tile-list">
           {reports.map((report) => (
-            <li key={report.id} className="doc-tile admin-row-tile" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <span style={{ fontSize: 14 }}>
+            <li key={report.id} className="doc-tile admin-row-tile tile-row">
+              <span className="text-sm">
                 {report.source === 'api' ? t('adminClientDetail.bureauSourceApi') : t('adminClientDetail.bureauSourcePdf')} · {report.as_of_date}
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className={`status-badge ${report.parse_status}`} style={{ marginBottom: 0 }}>{report.parse_status}</span>
+              <div className="cluster-2">
+                <span className={`status-badge ${report.parse_status}`}>{report.parse_status}</span>
                 {report.parse_status === 'pending' && (
                   <button className="btn btn-outline" type="button" disabled={parsingId === report.id} onClick={() => handleParse(report.id)}>
                     {parsingId === report.id ? t('adminClientDetail.bureauParsing') : t('adminClientDetail.bureauParseButton')}
@@ -311,11 +310,10 @@ function BureauReportsSection({ clientId, clientEmail }) {
                   </button>
                 )}
                 <button
-                  className="btn btn-outline"
+                  className="btn btn-outline danger"
                   type="button"
                   disabled={deletingId === report.id}
                   onClick={() => setDeleteTarget(report)}
-                  style={{ borderColor: '#b94a48', color: '#d97975' }}
                 >
                   {deletingId === report.id ? t('adminClientDetail.bureauDeleting') : t('adminClientDetail.bureauDeleteButton')}
                 </button>
@@ -343,14 +341,14 @@ function BureauReportsSection({ clientId, clientEmail }) {
           <form onSubmit={submitConfirm}>
             <p className="portal-sub">{t('adminClientDetail.bureauReviewHint')}</p>
             {reviewingReport.source === 'api' && reviewingReport.raw_payload && (
-              <details style={{ marginBottom: 16 }}>
-                <summary style={{ cursor: 'pointer', fontSize: 13 }}>{t('adminClientDetail.bureauRawDataLabel')}</summary>
-                <pre style={{ fontSize: 11, maxHeight: 240, overflow: 'auto', padding: 10, background: 'var(--bg-inset)', borderRadius: 6 }}>
+              <details>
+                <summary className="text-xs" style={{ cursor: 'pointer' }}>{t('adminClientDetail.bureauRawDataLabel')}</summary>
+                <pre className="raw-payload">
                   {JSON.stringify(reviewingReport.raw_payload, null, 2)}
                 </pre>
               </details>
             )}
-            <div className="admin-form-row" style={{ flexWrap: 'wrap' }}>
+            <div className="admin-form-row">
               {BUREAUS_ADMIN.map(({ key, label }) => (
                 <div className="form-group" key={key}>
                   <label htmlFor={`score-${key}`}>{label} {t('adminClientDetail.bureauScoreLabel')}</label>
@@ -398,7 +396,7 @@ function BureauReportsSection({ clientId, clientEmail }) {
                 </tbody>
               </table>
             </div>
-            <button className="btn btn-primary submit-btn" type="submit" disabled={confirming} style={{ marginTop: 16 }}>
+            <button className="btn btn-primary submit-btn" type="submit" disabled={confirming}>
               {confirming ? t('adminClientDetail.bureauConfirming') : t('adminClientDetail.bureauConfirmButton')}
             </button>
           </form>
@@ -439,12 +437,12 @@ function CreditMonitoringSection({ clientId }) {
       )}
       {error && <p className="form-error" role="alert">{error}</p>}
       {state === 'loaded' && data && (
-        <div className="doc-tile" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '6px 24px' }}>
-          <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.providerLabel')}:</strong> {PROVIDER_LABEL[data.provider] || data.provider}</p>
-          <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.usernameLabel')}:</strong> {data.username}</p>
-          <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.passwordLabel')}:</strong> {data.password}</p>
-          {data.phone && <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.phoneLabel')}:</strong> {data.phone}</p>}
-          {data.securityWord && <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.securityWordLabel')}:</strong> {data.securityWord}</p>}
+        <div className="doc-tile field-grid">
+          <p className="text-sm"><strong>{t('adminClientDetail.providerLabel')}:</strong> {PROVIDER_LABEL[data.provider] || data.provider}</p>
+          <p className="text-sm"><strong>{t('adminClientDetail.usernameLabel')}:</strong> {data.username}</p>
+          <p className="text-sm"><strong>{t('adminClientDetail.passwordLabel')}:</strong> {data.password}</p>
+          {data.phone && <p className="text-sm"><strong>{t('adminClientDetail.phoneLabel')}:</strong> {data.phone}</p>}
+          {data.securityWord && <p className="text-sm"><strong>{t('adminClientDetail.securityWordLabel')}:</strong> {data.securityWord}</p>}
         </div>
       )}
     </section>
@@ -738,19 +736,19 @@ export default function AdminClientDetail() {
 
   return (
     <AdminLayout title={detail.account.full_name} onLogout={handleLogout}>
-      <div className="portal-card wide admin-section">
-        <p className="portal-sub" style={{ marginBottom: 0 }}>{detail.account.email} · {t('adminClientDetail.statusLabel')}: {detail.account.status}</p>
+      <div className="portal-card wide">
+        <p className="portal-sub">{detail.account.email} · {t('adminClientDetail.statusLabel')}: {detail.account.status}</p>
 
         <section className="admin-block">
           <h2>{t('adminClientDetail.documentsTitle')}</h2>
           {detail.documents.length === 0 ? (
             <p className="portal-sub">{t('adminClientDetail.noDocuments')}</p>
           ) : (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            <ul className="tile-list">
               {detail.documents.map((doc) => (
-                <li key={doc.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10, fontSize: 14, marginBottom: 8 }}>
+                <li key={doc.id} className="tile-row">
                   <span>{DOCUMENT_LABEL[doc.document_type] || doc.document_type}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div className="cluster-2">
                     <button
                       className="btn btn-outline"
                       type="button"
@@ -759,7 +757,7 @@ export default function AdminClientDetail() {
                     >
                       {viewingId === doc.id ? t('adminClientDetail.openingDocument') : t('adminClientDetail.viewDocument')}
                     </button>
-                    <span className={`status-badge ${doc.status}`} style={{ marginBottom: 0 }}>{doc.status}</span>
+                    <span className={`status-badge ${doc.status}`}>{doc.status}</span>
                     {doc.status !== 'approved' && (
                       <button
                         className="btn btn-outline"
@@ -797,16 +795,16 @@ export default function AdminClientDetail() {
           {(detail.signedAgreements || []).filter((agreement) => !agreement.archived).length === 0 ? (
             <p className="portal-sub">{t('adminClientDetail.noSignedContracts')}</p>
           ) : (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            <ul className="tile-list">
               {detail.signedAgreements.filter((agreement) => !agreement.archived).map((agreement) => (
-                <li key={agreement.id} className="doc-tile admin-row-tile" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <li key={agreement.id} className="doc-tile admin-row-tile tile-row">
                   <div>
-                    <strong style={{ fontSize: 14 }}>{agreement.title}</strong>
-                    <p className="doc-hint" style={{ margin: '4px 0 0' }}>
+                    <strong>{agreement.title}</strong>
+                    <p className="doc-hint">
                       {t('adminClientDetail.signedBy')} {agreement.signed_full_name} · {new Date(agreement.signed_at).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <div className="cluster-2">
                     <button
                       className="btn btn-outline"
                       type="button"
@@ -833,20 +831,20 @@ export default function AdminClientDetail() {
 
           {(detail.signedAgreements || []).some((agreement) => agreement.archived) && (
             <>
-              <button className="btn btn-outline" type="button" onClick={() => setShowArchived((prev) => !prev)} style={{ marginTop: 4 }}>
+              <button className="btn btn-outline list-toggle" type="button" onClick={() => setShowArchived((prev) => !prev)}>
                 {showArchived ? t('adminClientDetail.hideArchived') : t('adminClientDetail.showArchived')}
               </button>
               {showArchived && (
-                <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 0' }}>
+                <ul className="tile-list">
                   {detail.signedAgreements.filter((agreement) => agreement.archived).map((agreement) => (
-                    <li key={agreement.id} className="doc-tile admin-row-tile" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 8, opacity: 0.65 }}>
+                    <li key={agreement.id} className="doc-tile admin-row-tile tile-row archived">
                       <div>
-                        <strong style={{ fontSize: 14 }}>{agreement.title}</strong>
-                        <p className="doc-hint" style={{ margin: '4px 0 0' }}>
+                        <strong>{agreement.title}</strong>
+                        <p className="doc-hint">
                           {t('adminClientDetail.signedBy')} {agreement.signed_full_name} · {new Date(agreement.signed_at).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}
                         </p>
                       </div>
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <div className="cluster-2">
                         <button
                           className="btn btn-outline"
                           type="button"
@@ -878,51 +876,53 @@ export default function AdminClientDetail() {
           {detail.plans.length === 0 ? (
             <p className="portal-sub">{t('adminClientDetail.noPlans')}</p>
           ) : (
-            detail.plans.map((plan) => (
-              <div className="doc-tile" key={plan.id} style={{ marginBottom: 12 }}>
-                <span className="status-badge pending">{plan.status}</span>
-                <p style={{ fontSize: 14 }}>{plan.billing_type === 'recurring' ? `${t('adminClientDetail.recurring')} (${plan.recurring_interval})` : t('adminClientDetail.oneTime')} — {t('adminClientDetail.contract')}: {plan.agreement?.status || t('adminClientDetail.noContract')}</p>
-                {plan.billing_type === 'recurring' && plan.recurring_amount_cents > 0 && (
-                  <p style={{ fontSize: 13 }}>{t('adminClientDetail.recurringAmountLabel')}: {formatCents(plan.recurring_amount_cents)}</p>
-                )}
-                {plan.billing_type === 'recurring' && plan.first_payment_cents > 0 && (
-                  <p style={{ fontSize: 13 }}>{t('adminClientDetail.firstPaymentLabel')}: {formatCents(plan.first_payment_cents)}</p>
-                )}
-                <ul>
-                  {plan.services.map((service) => (
-                    <li key={service.id} style={{ fontSize: 13 }}>{service.name} — {formatCents(service.price_cents)}</li>
-                  ))}
-                </ul>
-                {plan.billing_type === 'recurring' && (
-                  <p className="doc-hint" style={{ marginTop: 4 }}>{t('adminClientDetail.serviceValueHint')}</p>
-                )}
-                {plan.status === 'awaiting_payment' && plan.agreement?.status === 'signed' && (
-                  <button
-                    className="btn btn-outline"
-                    type="button"
-                    disabled={sendingPaymentId === plan.id}
-                    onClick={() => handleResendPayment(plan.id)}
-                  >
-                    {sendingPaymentId === plan.id ? t('adminClientDetail.sendingPaymentLink') : t('adminClientDetail.resendPaymentLink')}
-                  </button>
-                )}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-                  <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => handlePaymentHistory(plan)}>
-                    {t('adminClientDetail.paymentHistory')}
-                  </button>
-                  {plan.billing_type === 'recurring' && ['active', 'past_due'].includes(plan.status) && (
-                    <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => handlePaymentReminder(plan)}>
-                      {t('adminClientDetail.sendReminder')}
+            <div className="tile-list">
+              {detail.plans.map((plan) => (
+                <div className="doc-tile plan-card" key={plan.id}>
+                  <span className="status-badge pending">{plan.status}</span>
+                  <p className="text-sm">{plan.billing_type === 'recurring' ? `${t('adminClientDetail.recurring')} (${plan.recurring_interval})` : t('adminClientDetail.oneTime')} — {t('adminClientDetail.contract')}: {plan.agreement?.status || t('adminClientDetail.noContract')}</p>
+                  {plan.billing_type === 'recurring' && plan.recurring_amount_cents > 0 && (
+                    <p className="text-xs">{t('adminClientDetail.recurringAmountLabel')}: {formatCents(plan.recurring_amount_cents)}</p>
+                  )}
+                  {plan.billing_type === 'recurring' && plan.first_payment_cents > 0 && (
+                    <p className="text-xs">{t('adminClientDetail.firstPaymentLabel')}: {formatCents(plan.first_payment_cents)}</p>
+                  )}
+                  <ul className="plan-service-list">
+                    {plan.services.map((service) => (
+                      <li key={service.id}>{service.name} — {formatCents(service.price_cents)}</li>
+                    ))}
+                  </ul>
+                  {plan.billing_type === 'recurring' && (
+                    <p className="doc-hint">{t('adminClientDetail.serviceValueHint')}</p>
+                  )}
+                  {plan.status === 'awaiting_payment' && plan.agreement?.status === 'signed' && (
+                    <button
+                      className="btn btn-outline"
+                      type="button"
+                      disabled={sendingPaymentId === plan.id}
+                      onClick={() => handleResendPayment(plan.id)}
+                    >
+                      {sendingPaymentId === plan.id ? t('adminClientDetail.sendingPaymentLink') : t('adminClientDetail.resendPaymentLink')}
                     </button>
                   )}
-                  {!['paid', 'canceled'].includes(plan.status) && (
-                    <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => setCancelPlanTarget(plan)} style={{ borderColor: '#b94a48', color: '#d97975' }}>
-                      {planActionId === plan.id ? t('adminClientDetail.cancelingPlan') : t('adminClientDetail.cancelPlan')}
+                  <div className="cluster-2">
+                    <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => handlePaymentHistory(plan)}>
+                      {t('adminClientDetail.paymentHistory')}
                     </button>
-                  )}
+                    {plan.billing_type === 'recurring' && ['active', 'past_due'].includes(plan.status) && (
+                      <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => handlePaymentReminder(plan)}>
+                        {t('adminClientDetail.sendReminder')}
+                      </button>
+                    )}
+                    {!['paid', 'canceled'].includes(plan.status) && (
+                      <button className="btn btn-outline danger" type="button" disabled={planActionId === plan.id} onClick={() => setCancelPlanTarget(plan)}>
+                        {planActionId === plan.id ? t('adminClientDetail.cancelingPlan') : t('adminClientDetail.cancelPlan')}
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
           {paymentMessage && <p className="form-success" role="status">{paymentMessage}</p>}
           {paymentError && <p className="form-error" role="alert">{paymentError}</p>}
@@ -950,12 +950,12 @@ export default function AdminClientDetail() {
       {agreementPreview && (
         <Modal title={agreementPreview.title} onClose={closeAgreementPreview} maxWidth={800}>
           {agreementPreview.pdfUrl ? <iframe src={agreementPreview.pdfUrl} title={agreementPreview.title} style={{ width: '100%', height: '55vh', border: '1px solid var(--border)', borderRadius: 8 }} /> : <div className="doc-tile" style={{ whiteSpace: 'pre-wrap', fontSize: 14, lineHeight: 1.7, maxHeight: '48vh', overflowY: 'auto' }}>{agreementPreview.body_text}</div>}
-          <div style={{ marginTop: 20 }}>
-            <p style={{ margin: '0 0 6px', fontSize: 14 }}><strong>{t('adminClientDetail.signedBy')}:</strong> {agreementPreview.signed_full_name}</p>
-            <p style={{ margin: '0 0 12px', fontSize: 14 }}><strong>{t('adminClientDetail.signedAt')}:</strong> {new Date(agreementPreview.signed_at).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}</p>
+          <div className="field-list">
+            <p><strong>{t('adminClientDetail.signedBy')}:</strong> {agreementPreview.signed_full_name}</p>
+            <p><strong>{t('adminClientDetail.signedAt')}:</strong> {new Date(agreementPreview.signed_at).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}</p>
             {agreementPreview.signatureUrl && (
               <div>
-                <strong style={{ fontSize: 14 }}>{t('adminClientDetail.signature')}</strong>
+                <strong className="text-sm">{t('adminClientDetail.signature')}</strong>
                 <img src={agreementPreview.signatureUrl} alt={t('adminClientDetail.signature')} style={{ display: 'block', maxWidth: 420, width: '100%', maxHeight: 160, objectFit: 'contain', objectPosition: 'left center', marginTop: 8, padding: 8, borderRadius: 8, background: '#fff', border: '1px solid var(--border)' }} />
               </div>
             )}
@@ -978,7 +978,7 @@ export default function AdminClientDetail() {
       {paymentHistory && (
         <Modal title={t('adminClientDetail.paymentHistory')} onClose={() => setPaymentHistory(null)} maxWidth={780}>
           <p className="portal-sub">{paymentHistory.title}</p>
-          <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.totalPaid')}:</strong> {formatCents(paymentHistory.amountPaidCents || 0)} / {formatCents(paymentHistory.totalAmountCents || 0)}</p>
+          <p className="text-sm"><strong>{t('adminClientDetail.totalPaid')}:</strong> {formatCents(paymentHistory.amountPaidCents || 0)} / {formatCents(paymentHistory.totalAmountCents || 0)}</p>
           {paymentHistory.payments.length === 0 ? <p className="portal-sub">{t('adminClientDetail.noPayments')}</p> : (
             <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>{t('adminClientDetail.paymentDate')}</th><th>{t('adminClientDetail.paymentStatus')}</th><th>{t('adminClientDetail.paymentAmount')}</th><th>{t('adminClientDetail.receipt')}</th></tr></thead><tbody>
               {paymentHistory.payments.map((payment) => <tr key={payment.id}><td>{new Date((payment.paidAt || payment.created) * 1000).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}</td><td><span className={`status-badge ${payment.status}`}>{payment.status}</span></td><td>{formatCents(payment.amountPaid || payment.amountDue || 0)}</td><td>{payment.hostedInvoiceUrl ? <a href={payment.hostedInvoiceUrl} target="_blank" rel="noopener noreferrer">{t('adminClientDetail.viewReceipt')}</a> : '—'}</td></tr>)}
@@ -989,40 +989,46 @@ export default function AdminClientDetail() {
 
       <div className="portal-card wide">
         <h2>{t('adminClientDetail.buildPlanTitle')}</h2>
-        <div className="form-group">
-          <label htmlFor="catalogSelect">{t('adminClientDetail.addFromCatalog')}</label>
-          <select id="catalogSelect" defaultValue="" onChange={(event) => { addCatalogItem(event.target.value); event.target.value = ''; }}>
-            <option value="" disabled>{t('adminClientDetail.selectService')}</option>
-            {catalog.map((item) => (
-              <option key={item.id} value={item.id}>{item.name} — {formatCents(item.default_price_cents)}</option>
-            ))}
-          </select>
-        </div>
-        <button className="btn btn-outline" type="button" onClick={addCustomItem} style={{ marginBottom: 16 }}>{t('adminClientDetail.customServiceButton')}</button>
-
-        {lineItems.map((item, index) => (
-          <div key={index} className="doc-tile" style={{ marginBottom: 12 }}>
-            <div className="admin-form-row">
-              <div className="form-group" style={{ flex: 2 }}>
-                <label>{t('adminClientDetail.nameLabel2')}</label>
-                <input value={item.name} onChange={(event) => updateLineItem(index, { name: event.target.value })} required minLength="2" />
-              </div>
-              <div className="form-group" style={{ flex: 1 }}>
-                <label>{t('adminClientDetail.priceLabel')}</label>
-                <input type="number" min="0" step="0.01" value={item.priceCents / 100} onChange={(event) => updateLineItem(index, { priceCents: Math.round(Number(event.target.value) * 100) })} required />
-                {billingType === 'recurring' && <p className="doc-hint" style={{ margin: '4px 0 0' }}>{t('adminClientDetail.serviceValueHint')}</p>}
-              </div>
-            </div>
-            <div className="form-group">
-              <label>{t('adminClientDetail.descriptionLabel')}</label>
-              <textarea value={item.description} onChange={(event) => updateLineItem(index, { description: event.target.value })} maxLength="1000" />
-            </div>
-            <button className="btn btn-outline" type="button" onClick={() => removeLineItem(index)}>{t('adminClientDetail.removeButton')}</button>
+        <div className="stack-5">
+          <div className="form-group">
+            <label htmlFor="catalogSelect">{t('adminClientDetail.addFromCatalog')}</label>
+            <select id="catalogSelect" defaultValue="" onChange={(event) => { addCatalogItem(event.target.value); event.target.value = ''; }}>
+              <option value="" disabled>{t('adminClientDetail.selectService')}</option>
+              {catalog.map((item) => (
+                <option key={item.id} value={item.id}>{item.name} — {formatCents(item.default_price_cents)}</option>
+              ))}
+            </select>
           </div>
-        ))}
+          <button className="btn btn-outline" type="button" onClick={addCustomItem}>{t('adminClientDetail.customServiceButton')}</button>
+
+          {lineItems.length > 0 && (
+            <div className="tile-list">
+              {lineItems.map((item, index) => (
+                <div key={index} className="doc-tile stack-4">
+                  <div className="admin-form-row">
+                    <div className="form-group" style={{ flex: 2 }}>
+                      <label>{t('adminClientDetail.nameLabel2')}</label>
+                      <input value={item.name} onChange={(event) => updateLineItem(index, { name: event.target.value })} required minLength="2" />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>{t('adminClientDetail.priceLabel')}</label>
+                      <input type="number" min="0" step="0.01" value={item.priceCents / 100} onChange={(event) => updateLineItem(index, { priceCents: Math.round(Number(event.target.value) * 100) })} required />
+                      {billingType === 'recurring' && <p className="doc-hint">{t('adminClientDetail.serviceValueHint')}</p>}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>{t('adminClientDetail.descriptionLabel')}</label>
+                    <textarea value={item.description} onChange={(event) => updateLineItem(index, { description: event.target.value })} maxLength="1000" />
+                  </div>
+                  <button className="btn btn-outline" type="button" onClick={() => removeLineItem(index)}>{t('adminClientDetail.removeButton')}</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {lineItems.length > 0 && (
-          <form onSubmit={submitPlan}>
+          <form onSubmit={submitPlan} className="stack-5 plan-builder-form">
             <div className="form-group">
               <label className="group-label">{t('adminClientDetail.billingTypeLabel')}</label>
               <label className="checkbox-item"><input type="radio" name="billingType" checked={billingType === 'one_time'} onChange={() => setBillingType('one_time')} /> {t('adminClientDetail.billingOneTime')}</label>
