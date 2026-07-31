@@ -366,7 +366,7 @@ export const translations = {
       plan: 'Plan',
     },
     adminContracts: {
-      title: 'Contracts', allContracts: 'All contracts', description: 'Review every client contract and upload or replace its private PDF.', empty: 'No contracts yet.', contract: 'Contract', client: 'Client', status: 'Status', actions: 'Actions', noPdf: 'No PDF', viewPdf: 'View PDF', uploadPdf: 'Upload PDF', replacePdf: 'Replace PDF', uploading: 'Uploading…',
+      title: 'Contracts', allContracts: 'All contracts', description: 'Review every client contract and upload or replace its private PDF.', empty: 'No contracts yet.', contract: 'Contract', client: 'Client', status: 'Status', actions: 'Actions', noPdf: 'No PDF', viewPdf: 'View PDF', uploadPdf: 'Upload PDF', replacePdf: 'Replace PDF', uploading: 'Uploading…', migrationRequired: 'The PDF database migration must be applied before files can be uploaded.',
     },
     adminCatalog: {
       catalogTitle: 'Catalog',
@@ -449,7 +449,7 @@ export const translations = {
       agreementIntro: 'MEG Credit agrees to provide the client with the following services:',
       agreementRecurringLine: (interval, total) => `This agreement is billed on a recurring basis (${interval}) for a total of ${total} per period.`,
       agreementOneTimeLine: (total) => `This agreement is billed as a one-time payment for a total of ${total}.`,
-      agreementFirstPaymentLine: (amount) => `A first payment of ${amount} is due upon signing, in addition to the recurring payments described above.`,
+      agreementFirstPaymentLine: (amount) => `An initial payment of ${amount} is due upon signing and counts toward the total plan value. Recurring installments continue according to the terms above.`,
       agreementClosing: 'By signing this agreement, the client authorizes MEG Credit to proceed with the described services and accepts the stated payment terms.',
       intervalMonthly: 'monthly',
     },
@@ -833,7 +833,7 @@ export const translations = {
       plan: 'Plan',
     },
     adminContracts: {
-      title: 'Contratos', allContracts: 'Todos los contratos', description: 'Revisa todos los contratos y sube o reemplaza su PDF privado.', empty: 'Todavía no hay contratos.', contract: 'Contrato', client: 'Cliente', status: 'Estado', actions: 'Acciones', noPdf: 'Sin PDF', viewPdf: 'Ver PDF', uploadPdf: 'Subir PDF', replacePdf: 'Reemplazar PDF', uploading: 'Subiendo…',
+      title: 'Contratos', allContracts: 'Todos los contratos', description: 'Revisa todos los contratos y sube o reemplaza su PDF privado.', empty: 'Todavía no hay contratos.', contract: 'Contrato', client: 'Cliente', status: 'Estado', actions: 'Acciones', noPdf: 'Sin PDF', viewPdf: 'Ver PDF', uploadPdf: 'Subir PDF', replacePdf: 'Reemplazar PDF', uploading: 'Subiendo…', migrationRequired: 'Debes aplicar la migración de contratos PDF antes de poder subir archivos.',
     },
     adminCatalog: {
       catalogTitle: 'Catálogo',
@@ -916,7 +916,7 @@ export const translations = {
       agreementIntro: 'MEG Credit se compromete a realizar los siguientes servicios para el cliente:',
       agreementRecurringLine: (interval, total) => `Este acuerdo se factura de forma recurrente (${interval}) por un total de ${total} por período.`,
       agreementOneTimeLine: (total) => `Este acuerdo se factura como pago único por un total de ${total}.`,
-      agreementFirstPaymentLine: (amount) => `Se realizará un primer pago de ${amount} al momento de la firma, adicional a los pagos recurrentes descritos arriba.`,
+      agreementFirstPaymentLine: (amount) => `Se realizará un pago inicial de ${amount} al momento de la firma, el cual se descuenta del valor total del plan. Las cuotas recurrentes continuarán según los términos indicados arriba.`,
       agreementClosing: 'Al firmar este acuerdo, el cliente autoriza a MEG Credit a proceder con los servicios descritos y acepta los términos de pago indicados.',
       intervalMonthly: 'mensual',
     },
