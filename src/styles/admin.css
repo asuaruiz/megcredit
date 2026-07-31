@@ -12,6 +12,22 @@
   --workspace-gutter: clamp(var(--space-5), 4vw, var(--space-8));
 }
 
+/* global.css pins --btn-bg to gold in dark mode for the marketing site's
+   single hero CTA; the dashboards run 8+ .btn-primary per screen, so gold
+   there would break the "accent, max ~10%" rule. Route dashboard buttons
+   back to navy in dark mode. */
+@media (prefers-color-scheme: dark) {
+  .admin-workspace, .portal-workspace {
+    --btn-bg: var(--navy-500);
+    --btn-text: var(--ivory);
+    --btn-hover: #37678F;
+  }
+}
+:root[data-theme='dark'] .admin-workspace,
+:root[data-theme='dark'] .portal-workspace {
+  --btn-bg: var(--navy-500); --btn-text: var(--ivory); --btn-hover: #37678F;
+}
+
 .admin-sidebar {
   width: 216px;
   flex-shrink: 0;
@@ -99,8 +115,9 @@
 
 .admin-topbar h2 {
   margin: 0;
-  font-size: clamp(24px, 2.4vw, 34px);
-  letter-spacing: -0.025em;
+  font-size: var(--ws-title);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .admin-main {
@@ -122,9 +139,15 @@
 }
 
 .portal-card h2 {
-  font-size: 21px;
+  font-size: var(--ws-section);
+  font-weight: 600;
   margin: 0 0 var(--space-5);
   letter-spacing: -0.018em;
+}
+
+.portal-card h1 {
+  font-size: var(--ws-title);
+  font-weight: 600;
 }
 
 /* Quiet, editorial section dividers for secondary info blocks (documents,
@@ -144,11 +167,11 @@
 
 .admin-block > h2 {
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: var(--ws-subhead);
   font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--text-3);
+  letter-spacing: -0.006em;
+  text-transform: none;
+  color: var(--heading);
   margin: 0 0 var(--space-4);
 }
 
@@ -167,6 +190,46 @@
 
 .admin-row-tile {
   padding: var(--space-3) var(--space-4);
+}
+
+/* Elevation is scarce by design — cap at one .surface-raised per screen so
+   it reads as "the important thing" instead of another box among boxes. */
+.surface-raised {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-6);
+  position: relative;
+  overflow: hidden;
+}
+.surface-raised::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 2px;
+  background: var(--navy-500);
+}
+.surface-raised.is-metric::before,
+.surface-raised.is-resolution::before { background: var(--gold-500); }
+:root[data-theme='dark'] .surface-raised::before { background: rgba(248,246,242,0.30); }
+:root[data-theme='dark'] .surface-raised.is-metric::before,
+:root[data-theme='dark'] .surface-raised.is-resolution::before { background: var(--gold-300); }
+@media (prefers-color-scheme: dark) {
+  .surface-raised::before { background: rgba(248,246,242,0.30); }
+  .surface-raised.is-metric::before,
+  .surface-raised.is-resolution::before { background: var(--gold-300); }
+}
+/* .admin-workspace/.portal-workspace .portal-card (below) flattens the
+   card look at equal specificity to plain .surface-raised, so the raised
+   treatment has to be re-asserted here with the workspace scoped in — this
+   is what keeps the metric card boxed while every other .portal-card in
+   the dashboard stays unboxed/editorial. */
+.admin-workspace .portal-card.surface-raised,
+.portal-workspace .portal-card.surface-raised {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-top: 0;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-6);
 }
 
 .admin-stats {
@@ -215,15 +278,15 @@
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: var(--ws-body);
 }
 
 .admin-table th {
   text-align: left;
   padding: var(--space-3) var(--space-2);
-  font-size: 11px;
+  font-size: var(--ws-overline);
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-3);
   border-bottom: 1px solid var(--border-color, var(--border));
@@ -272,11 +335,7 @@
   letter-spacing: 0.01em;
 }
 
-.admin-workspace .status-badge,
-.portal-workspace .status-badge {
-  border-radius: 2px;
-  padding: 3px 8px;
-}
+.admin-workspace .btn-outline:hover, .portal-workspace .btn-outline:hover { border-color: var(--navy-300); color: var(--heading); }
 
 .app-modal-backdrop {
   position: fixed;

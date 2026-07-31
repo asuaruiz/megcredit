@@ -233,14 +233,14 @@ function BureauReportsSection({ clientId, clientEmail }) {
         {link ? (
           <div className="cluster-3">
             <span className={`status-badge ${link.sync_status}`}>{t(`adminClientDetail.bureauSyncStatus_${link.sync_status}`)}</span>
-            <span className="text-xs">
+            <span className="ws-meta">
               {t('adminClientDetail.bureauLastSynced')}: {link.last_synced_at || t('adminClientDetail.bureauNeverSynced')}
             </span>
             <button className="btn btn-outline" type="button" disabled={syncing} onClick={handleSync}>
               {syncing ? t('adminClientDetail.bureauSyncing') : t('adminClientDetail.bureauSyncButton')}
             </button>
             <button
-              className="btn btn-outline danger"
+              className="btn-quiet danger"
               type="button"
               disabled={unlinking}
               onClick={handleUnlink}
@@ -263,7 +263,7 @@ function BureauReportsSection({ clientId, clientEmail }) {
               <label htmlFor="bureauPid">{t('adminClientDetail.bureauPidLabel')}</label>
               <input id="bureauPid" type="text" value={pidInput} onChange={(event) => setPidInput(event.target.value)} />
             </div>
-            <button className="btn btn-outline" type="button" disabled={!clientEmail || lookingUp} onClick={handleLookup}>
+            <button className="btn-quiet" type="button" disabled={!clientEmail || lookingUp} onClick={handleLookup}>
               {lookingUp ? t('adminClientDetail.bureauLookingUp') : t('adminClientDetail.bureauLookupButton')}
             </button>
             <button className="btn btn-primary" type="submit" disabled={!customerTokenInput.trim() || linking}>
@@ -296,7 +296,7 @@ function BureauReportsSection({ clientId, clientEmail }) {
         <ul className="tile-list">
           {reports.map((report) => (
             <li key={report.id} className="doc-tile admin-row-tile tile-row">
-              <span className="text-sm">
+              <span className="ws-body">
                 {report.source === 'api' ? t('adminClientDetail.bureauSourceApi') : t('adminClientDetail.bureauSourcePdf')} · {report.as_of_date}
               </span>
               <div className="cluster-2">
@@ -312,7 +312,7 @@ function BureauReportsSection({ clientId, clientEmail }) {
                   </button>
                 )}
                 <button
-                  className="btn btn-outline danger"
+                  className="btn-quiet danger"
                   type="button"
                   disabled={deletingId === report.id}
                   onClick={() => setDeleteTarget(report)}
@@ -344,7 +344,7 @@ function BureauReportsSection({ clientId, clientEmail }) {
             <p className="portal-sub">{t('adminClientDetail.bureauReviewHint')}</p>
             {reviewingReport.source === 'api' && reviewingReport.raw_payload && (
               <details>
-                <summary className="text-xs" style={{ cursor: 'pointer' }}>{t('adminClientDetail.bureauRawDataLabel')}</summary>
+                <summary className="ws-meta" style={{ cursor: 'pointer' }}>{t('adminClientDetail.bureauRawDataLabel')}</summary>
                 <pre className="raw-payload">
                   {JSON.stringify(reviewingReport.raw_payload, null, 2)}
                 </pre>
@@ -440,11 +440,11 @@ function CreditMonitoringSection({ clientId }) {
       {error && <p className="form-error" role="alert">{error}</p>}
       {state === 'loaded' && data && (
         <div className="doc-tile field-grid">
-          <p className="text-sm"><strong>{t('adminClientDetail.providerLabel')}:</strong> {PROVIDER_LABEL[data.provider] || data.provider}</p>
-          <p className="text-sm"><strong>{t('adminClientDetail.usernameLabel')}:</strong> {data.username}</p>
-          <p className="text-sm"><strong>{t('adminClientDetail.passwordLabel')}:</strong> {data.password}</p>
-          {data.phone && <p className="text-sm"><strong>{t('adminClientDetail.phoneLabel')}:</strong> {data.phone}</p>}
-          {data.securityWord && <p className="text-sm"><strong>{t('adminClientDetail.securityWordLabel')}:</strong> {data.securityWord}</p>}
+          <p className="ws-body"><strong>{t('adminClientDetail.providerLabel')}:</strong> {PROVIDER_LABEL[data.provider] || data.provider}</p>
+          <p className="ws-body"><strong>{t('adminClientDetail.usernameLabel')}:</strong> {data.username}</p>
+          <p className="ws-body"><strong>{t('adminClientDetail.passwordLabel')}:</strong> {data.password}</p>
+          {data.phone && <p className="ws-body"><strong>{t('adminClientDetail.phoneLabel')}:</strong> {data.phone}</p>}
+          {data.securityWord && <p className="ws-body"><strong>{t('adminClientDetail.securityWordLabel')}:</strong> {data.securityWord}</p>}
         </div>
       )}
     </section>
@@ -755,7 +755,7 @@ export default function AdminClientDetail() {
                   <span>{DOCUMENT_LABEL[doc.document_type] || doc.document_type}</span>
                   <div className="cluster-2">
                     <button
-                      className="btn btn-outline"
+                      className="btn-quiet"
                       type="button"
                       disabled={viewingId === doc.id}
                       onClick={() => handleViewDocument(doc)}
@@ -775,7 +775,7 @@ export default function AdminClientDetail() {
                     )}
                     {doc.status !== 'rejected' && (
                       <button
-                        className="btn btn-outline danger"
+                        className="btn-quiet danger"
                         type="button"
                         disabled={reviewingId === doc.id}
                         onClick={() => handleReview(doc.id, 'rejected')}
@@ -811,7 +811,7 @@ export default function AdminClientDetail() {
                   </div>
                   <div className="cluster-2">
                     <button
-                      className="btn btn-outline"
+                      className="btn-quiet"
                       type="button"
                       disabled={openingAgreementId === agreement.id}
                       onClick={() => handleViewAgreement(agreement)}
@@ -820,7 +820,7 @@ export default function AdminClientDetail() {
                     </button>
                     {agreement.plan_status === 'canceled' && (
                       <button
-                        className="btn btn-outline"
+                        className="btn-quiet"
                         type="button"
                         disabled={archivingId === agreement.id}
                         onClick={() => handleArchiveAgreement(agreement, true)}
@@ -851,7 +851,7 @@ export default function AdminClientDetail() {
                       </div>
                       <div className="cluster-2">
                         <button
-                          className="btn btn-outline"
+                          className="btn-quiet"
                           type="button"
                           disabled={openingAgreementId === agreement.id}
                           onClick={() => handleViewAgreement(agreement)}
@@ -859,7 +859,7 @@ export default function AdminClientDetail() {
                           {openingAgreementId === agreement.id ? t('adminClientDetail.openingDocument') : t('adminClientDetail.viewSignedContract')}
                         </button>
                         <button
-                          className="btn btn-outline"
+                          className="btn-quiet"
                           type="button"
                           disabled={archivingId === agreement.id}
                           onClick={() => handleArchiveAgreement(agreement, false)}
@@ -885,12 +885,12 @@ export default function AdminClientDetail() {
               {detail.plans.map((plan) => (
                 <div className="doc-tile plan-card" key={plan.id}>
                   <span className="status-badge pending">{plan.status}</span>
-                  <p className="text-sm">{plan.billing_type === 'recurring' ? `${t('adminClientDetail.recurring')} (${plan.recurring_interval})` : t('adminClientDetail.oneTime')} — {t('adminClientDetail.contract')}: {plan.agreement?.status || t('adminClientDetail.noContract')}</p>
+                  <p className="ws-body">{plan.billing_type === 'recurring' ? `${t('adminClientDetail.recurring')} (${plan.recurring_interval})` : t('adminClientDetail.oneTime')} — {t('adminClientDetail.contract')}: {plan.agreement?.status || t('adminClientDetail.noContract')}</p>
                   {plan.billing_type === 'recurring' && plan.recurring_amount_cents > 0 && (
-                    <p className="text-xs">{t('adminClientDetail.recurringAmountLabel')}: {formatCents(plan.recurring_amount_cents)}</p>
+                    <p className="ws-meta">{t('adminClientDetail.recurringAmountLabel')}: {formatCents(plan.recurring_amount_cents)}</p>
                   )}
                   {plan.billing_type === 'recurring' && plan.first_payment_cents > 0 && (
-                    <p className="text-xs">{t('adminClientDetail.firstPaymentLabel')}: {formatCents(plan.first_payment_cents)}</p>
+                    <p className="ws-meta">{t('adminClientDetail.firstPaymentLabel')}: {formatCents(plan.first_payment_cents)}</p>
                   )}
                   <ul className="plan-service-list">
                     {plan.services.map((service) => (
@@ -915,12 +915,12 @@ export default function AdminClientDetail() {
                       {t('adminClientDetail.paymentHistory')}
                     </button>
                     {plan.billing_type === 'recurring' && ['active', 'past_due'].includes(plan.status) && (
-                      <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => handlePaymentReminder(plan)}>
+                      <button className="btn-quiet" type="button" disabled={planActionId === plan.id} onClick={() => handlePaymentReminder(plan)}>
                         {t('adminClientDetail.sendReminder')}
                       </button>
                     )}
                     {!['paid', 'canceled'].includes(plan.status) && (
-                      <button className="btn btn-outline danger" type="button" disabled={planActionId === plan.id} onClick={() => setCancelPlanTarget(plan)}>
+                      <button className="btn-quiet danger" type="button" disabled={planActionId === plan.id} onClick={() => setCancelPlanTarget(plan)}>
                         {planActionId === plan.id ? t('adminClientDetail.cancelingPlan') : t('adminClientDetail.cancelPlan')}
                       </button>
                     )}
@@ -960,7 +960,7 @@ export default function AdminClientDetail() {
             <p><strong>{t('adminClientDetail.signedAt')}:</strong> {new Date(agreementPreview.signed_at).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}</p>
             {agreementPreview.signatureUrl && (
               <div>
-                <strong className="text-sm">{t('adminClientDetail.signature')}</strong>
+                <strong className="ws-body">{t('adminClientDetail.signature')}</strong>
                 <img src={agreementPreview.signatureUrl} alt={t('adminClientDetail.signature')} style={{ display: 'block', maxWidth: 420, width: '100%', maxHeight: 160, objectFit: 'contain', objectPosition: 'left center', marginTop: 8, padding: 8, borderRadius: 8, background: '#fff', border: '1px solid var(--border)' }} />
               </div>
             )}
@@ -983,7 +983,7 @@ export default function AdminClientDetail() {
       {paymentHistory && (
         <Modal title={t('adminClientDetail.paymentHistory')} onClose={() => setPaymentHistory(null)} maxWidth={780}>
           <p className="portal-sub">{paymentHistory.title}</p>
-          <p className="text-sm"><strong>{t('adminClientDetail.totalPaid')}:</strong> {formatCents(paymentHistory.amountPaidCents || 0)} / {formatCents(paymentHistory.totalAmountCents || 0)}</p>
+          <p className="ws-body"><strong>{t('adminClientDetail.totalPaid')}:</strong> {formatCents(paymentHistory.amountPaidCents || 0)} / {formatCents(paymentHistory.totalAmountCents || 0)}</p>
           {paymentHistory.payments.length === 0 ? <p className="portal-sub">{t('adminClientDetail.noPayments')}</p> : (
             <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>{t('adminClientDetail.paymentDate')}</th><th>{t('adminClientDetail.paymentStatus')}</th><th>{t('adminClientDetail.paymentAmount')}</th><th>{t('adminClientDetail.receipt')}</th></tr></thead><tbody>
               {paymentHistory.payments.map((payment) => <tr key={payment.id}><td>{new Date((payment.paidAt || payment.created) * 1000).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}</td><td><span className={`status-badge ${payment.status}`}>{payment.status}</span></td><td>{formatCents(payment.amountPaid || payment.amountDue || 0)}</td><td>{payment.hostedInvoiceUrl ? <a href={payment.hostedInvoiceUrl} target="_blank" rel="noopener noreferrer">{t('adminClientDetail.viewReceipt')}</a> : '—'}</td></tr>)}

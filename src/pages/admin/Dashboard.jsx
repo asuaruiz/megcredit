@@ -86,62 +86,68 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="portal-card wide">
-        <h2>{t('admin.inviteClient')}</h2>
-        <form onSubmit={handleInvite}>
-          <div className="admin-form-row">
-            <div className="form-group">
-              <label htmlFor="fullName">{t('admin.fullName')}</label>
-              <input id="fullName" name="fullName" required minLength="2" maxLength="160" />
-            </div>
-            <div className="form-group">
-              <label htmlFor="email">{t('admin.email')}</label>
-              <input id="email" name="email" type="email" required maxLength="254" />
-            </div>
+      <div className="workspace-split">
+        <div className="col-main">
+          <div className="portal-card wide">
+            <h2>{t('admin.allClients')}</h2>
+            {clients.length === 0 ? (
+              <p className="portal-sub">{t('admin.noClientsRegistered')}</p>
+            ) : (
+              <div className="admin-table-wrap">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>{t('admin.name')}</th>
+                      <th>{t('admin.email_header')}</th>
+                      <th>{t('admin.status')}</th>
+                      <th>{t('admin.documents')}</th>
+                      <th>{t('admin.plan')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clients.map((client) => (
+                      <tr key={client.id}>
+                        <td>
+                          <Link to={`/admin/clientes/${client.id}`}>{client.full_name}</Link>
+                        </td>
+                        <td>{client.email}</td>
+                        <td>
+                          <span className={`status-badge ${STATUS_BADGE[client.status] || 'missing'}`}>
+                            {STATUS_LABEL[client.status] || client.status}
+                          </span>
+                        </td>
+                        <td>{client.documentCount}</td>
+                        <td>{client.latestPlanStatus || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-          {inviteError && <p className="form-error" role="alert">{inviteError}</p>}
-          <button className="btn btn-primary" type="submit" disabled={inviteStatus === 'sending'}>
-            {inviteStatus === 'sending' ? t('admin.sending') : t('admin.sendInvitation')}
-          </button>
-        </form>
-      </div>
+        </div>
 
-      <div className="portal-card wide">
-        <h2>{t('admin.allClients')}</h2>
-        {clients.length === 0 ? (
-          <p className="portal-sub">{t('admin.noClientsRegistered')}</p>
-        ) : (
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>{t('admin.name')}</th>
-                  <th>{t('admin.email_header')}</th>
-                  <th>{t('admin.status')}</th>
-                  <th>{t('admin.documents')}</th>
-                  <th>{t('admin.plan')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clients.map((client) => (
-                  <tr key={client.id}>
-                    <td>
-                      <Link to={`/admin/clientes/${client.id}`}>{client.full_name}</Link>
-                    </td>
-                    <td>{client.email}</td>
-                    <td>
-                      <span className={`status-badge ${STATUS_BADGE[client.status] || 'missing'}`}>
-                        {STATUS_LABEL[client.status] || client.status}
-                      </span>
-                    </td>
-                    <td>{client.documentCount}</td>
-                    <td>{client.latestPlanStatus || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="col-aside">
+          <div className="portal-card wide">
+            <h2>{t('admin.inviteClient')}</h2>
+            <form onSubmit={handleInvite}>
+              <div className="stack-4">
+                <div className="form-group">
+                  <label htmlFor="fullName">{t('admin.fullName')}</label>
+                  <input id="fullName" name="fullName" required minLength="2" maxLength="160" />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="email">{t('admin.email')}</label>
+                  <input id="email" name="email" type="email" required maxLength="254" />
+                </div>
+              </div>
+              {inviteError && <p className="form-error" role="alert">{inviteError}</p>}
+              <button className="btn btn-primary" type="submit" disabled={inviteStatus === 'sending'}>
+                {inviteStatus === 'sending' ? t('admin.sending') : t('admin.sendInvitation')}
+              </button>
+            </form>
           </div>
-        )}
+        </div>
       </div>
     </AdminLayout>
   );

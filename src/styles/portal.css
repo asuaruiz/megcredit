@@ -44,7 +44,7 @@
    inside .portal-card, so it can't silently lose its styling. */
 .portal-sub {
   color: var(--text-2);
-  font-size: 14px;
+  font-size: var(--ws-body);
   line-height: 1.6;
 }
 
@@ -79,12 +79,13 @@
 }
 
 .doc-tile h3 {
-  font-size: 15px;
+  font-size: var(--ws-subhead);
+  font-weight: 600;
   margin: 0 0 var(--space-1);
 }
 
 .doc-hint {
-  font-size: 12px;
+  font-size: var(--ws-meta);
   color: var(--text-3);
   line-height: 1.5;
 }
@@ -100,7 +101,7 @@
 /* Tight stack of label/value lines (account summary, key details) — distinct
    from .portal-sub, which is intro copy and carries more vertical weight. */
 .field-list { display: flex; flex-direction: column; gap: var(--space-1); }
-.field-list p { margin: 0; color: var(--text-2); font-size: 14px; line-height: 1.6; }
+.field-list p { margin: 0; color: var(--text-2); font-size: var(--ws-body); line-height: 1.6; }
 
 /* A note trailing a data block (stat row or table) reads as a caption for
    that block, so it sits close beneath it rather than using the heading
@@ -112,22 +113,10 @@
 
 /* ---------- Onboarding progress + checklist ---------- */
 
-.progress-track {
-  background: var(--bg-inset);
-  border-radius: 999px;
-  height: 8px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--accent);
-  transition: width 0.3s ease;
-}
-
-.progress-caption {
-  margin: var(--space-2) 0 var(--space-5);
-}
+.progress-rule { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; height: 3px; }
+.progress-seg { background: var(--border); border-radius: 1px; }
+.progress-seg.is-done { background: var(--accent); }
+.progress-caption { margin: var(--space-3) 0 var(--space-5); font: 550 var(--ws-body)/1.5 var(--font-body); color: var(--text); }
 
 /* Generic "row of tiles" list — the onboarding checklist, the documents
    list, bureau reports, signed agreements... anywhere a set of doc-tile
@@ -140,7 +129,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-3);
-  font-size: 14px;
+  font-size: var(--ws-body);
 }
 
 .tile-row-label { display: flex; align-items: center; gap: var(--space-2); }
@@ -155,16 +144,16 @@
 .list-toggle + .tile-list { margin-top: var(--space-2); }
 
 .checklist-item-mark { font-size: 18px; color: var(--text-3); }
-.checklist-item-mark.done { color: #2E8555; }
+.checklist-item-mark.done { color: var(--accent-strong); }
 
 /* ---------- Services / plans panel ---------- */
 
 .tile-list + .services-panel { margin-top: var(--space-6); }
 
-.services-panel-title { font-size: 20px; margin-bottom: var(--space-1); }
+.services-panel-title { font-family: var(--font-body); font-size: var(--ws-subhead); font-weight: 600; margin-bottom: var(--space-1); }
 
 .plan-service-list { margin: var(--space-3) 0; padding-left: 18px; }
-.plan-service-list li { font-size: 14px; }
+.plan-service-list li { font-size: var(--ws-body); }
 .plan-service-list li + li { margin-top: var(--space-1); }
 
 .plan-total { font-weight: 600; margin-top: var(--space-2); }
@@ -176,20 +165,31 @@
 .plan-card > .status-badge:first-child { margin-bottom: 0; }
 
 .status-badge {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 999px;
+  display: inline-flex; align-items: center;
+  font-size: var(--ws-overline);
+  font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 8px; border-radius: var(--radius-sm);
+  line-height: 1.2; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Badge as the lead element of a tile (before a heading) wants trailing
    space; inline next to text or inside a table cell it should not. */
 .doc-tile > .status-badge:first-child { margin-bottom: var(--space-2); }
 
-.status-badge.pending { background: rgba(166, 124, 27, 0.14); color: var(--accent-strong); }
-.status-badge.approved { background: rgba(46, 133, 85, 0.14); color: #2E8555; }
-.status-badge.rejected { background: rgba(161, 43, 43, 0.12); color: #A12B2B; }
-.status-badge.missing { background: rgba(124, 151, 179, 0.16); color: var(--text-2); }
+.status-badge.pending  { background: rgba(44,85,128,0.12);  color: var(--navy-500); }
+.status-badge.approved { background: rgba(46,133,85,0.14);  color: #2E8555; }
+.status-badge.rejected { background: rgba(161,43,43,0.10);  color: #A12B2B; }
+.status-badge.missing  { background: transparent; color: var(--text-3); box-shadow: inset 0 0 0 1px var(--border); }
+.status-badge.achieved { background: var(--accent-soft); color: var(--accent-strong); }
+
+@media (prefers-color-scheme: dark) {
+  .status-badge.pending  { background: rgba(124,151,179,0.16); color: var(--navy-300); }
+  .status-badge.approved { background: rgba(88,179,137,0.16);  color: #58B389; }
+  .status-badge.rejected { background: rgba(224,138,133,0.14); color: #E08A85; }
+  .status-badge.missing  { color: var(--text-3); box-shadow: inset 0 0 0 1px var(--border); }
+}
+:root[data-theme='dark'] .status-badge.pending  { background: rgba(124,151,179,0.16); color: var(--navy-300); }
+:root[data-theme='dark'] .status-badge.approved { background: rgba(88,179,137,0.16);  color: #58B389; }
+:root[data-theme='dark'] .status-badge.rejected { background: rgba(224,138,133,0.14); color: #E08A85; }
+:root[data-theme='dark'] .status-badge.missing  { color: var(--text-3); box-shadow: inset 0 0 0 1px var(--border); }
