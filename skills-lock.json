@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "critique-visual-hierarchy": {
+      "source": "owl-listener/designer-skills",
+      "sourceType": "github",
+      "skillPath": "visual-critique/skills/critique-visual-hierarchy/SKILL.md",
+      "computedHash": "c49261e33c468bd140046dcaf53cb9b7c16360305de8f90a8a496503fc8fd8da"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",

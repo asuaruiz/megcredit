@@ -133,7 +133,10 @@
    comes from `.admin-main > * + *`; this only owns the divider + the gap
    between blocks nested one level in (e.g. inside a single card). */
 .admin-block + .admin-block,
-.portal-card > p + .admin-block {
+.portal-card > p + .admin-block,
+.portal-card > .cluster-1 + .admin-block,
+.portal-card > .cluster-2 + .admin-block,
+.portal-card > .cluster-3 + .admin-block {
   margin-top: var(--space-6);
   padding-top: var(--space-5);
   border-top: 1px solid var(--border-soft);

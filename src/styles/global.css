@@ -418,6 +418,7 @@ img, svg { max-width: 100%; }
 .cluster-1 { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-1); }
 .cluster-2 { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
 .cluster-3 { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
+.cluster-1 > p, .cluster-2 > p, .cluster-3 > p { margin: 0; }
 
 /* Two-step type scale for dashboard meta copy, replacing one-off
    `style={{ fontSize: N }}` values scattered per row/field. */
