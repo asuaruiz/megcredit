@@ -118,6 +118,36 @@
   letter-spacing: -0.018em;
 }
 
+/* Quiet, editorial section dividers for secondary info blocks (documents,
+   bureau reports, contracts...) so they read as reference material rather
+   than competing with the page's primary action. */
+.admin-block {
+  max-width: 720px;
+  margin-top: 36px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.admin-block:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.admin-block > h2 {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin: 0 0 18px;
+}
+
+.admin-row-tile {
+  padding: 13px 16px;
+}
+
 .admin-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
 import Modal from '../../components/portal/Modal.jsx';
 import ConfirmDialog from '../../components/ConfirmDialog.jsx';
-import { archiveAgreement, assignPlan, cancelPlan, confirmBureauReport, deleteBureauReport, fetchAgreementPdf, fetchAgreementSignature, fetchBureauReports, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchContractTemplates, fetchDocumentFile, fetchPaymentHistory, fetchStaffMe, parseBureauReport, resendPaymentLink, reviewDocument, sendPaymentReminder, staffLogout, uploadAgreementPdf, uploadBureauReportPdf } from '../../lib/adminApi.js';
+import { archiveAgreement, assignPlan, cancelPlan, confirmBureauReport, deleteBureauReport, fetchAgreementPdf, fetchAgreementSignature, fetchBureauLink, fetchBureauReports, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchContractTemplates, fetchDocumentFile, fetchPaymentHistory, fetchStaffMe, lookupBureauCustomer, parseBureauReport, resendPaymentLink, reviewDocument, saveBureauLink, sendPaymentReminder, staffLogout, syncBureauReport, unlinkBureauAccount, uploadAgreementPdf, uploadBureauReportPdf } from '../../lib/adminApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 const BUREAUS_ADMIN = [
@@ -40,7 +40,7 @@ function emptyReviewDraft(report) {
   return { scores, caseStatus };
 }
 
-function BureauReportsSection({ clientId }) {
+function BureauReportsSection({ clientId, clientEmail }) {
   const { t } = useLanguage();
   const [reports, setReports] = useState([]);
   const [loadError, setLoadError] = useState('');
@@ -56,6 +56,15 @@ function BureauReportsSection({ clientId }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
+  const [link, setLink] = useState(null);
+  const [linkError, setLinkError] = useState('');
+  const [customerTokenInput, setCustomerTokenInput] = useState('');
+  const [pidInput, setPidInput] = useState('');
+  const [linking, setLinking] = useState(false);
+  const [unlinking, setUnlinking] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [lookingUp, setLookingUp] = useState(false);
+
   const loadReports = async () => {
     try {
       const result = await fetchBureauReports(clientId);
@@ -65,10 +74,78 @@ function BureauReportsSection({ clientId }) {
     }
   };
 
+  const loadLink = async () => {
+    try {
+      const result = await fetchBureauLink(clientId);
+      setLink(result.link || null);
+    } catch (fetchError) {
+      setLinkError(fetchError.message);
+    }
+  };
+
   useEffect(() => {
     loadReports();
+    loadLink();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId]);
+
+  const handleLink = async (event) => {
+    event.preventDefault();
+    if (!customerTokenInput.trim()) return;
+    setLinking(true);
+    setLinkError('');
+    try {
+      await saveBureauLink(clientId, customerTokenInput.trim(), pidInput.trim());
+      setCustomerTokenInput('');
+      setPidInput('');
+      await loadLink();
+    } catch (submissionError) {
+      setLinkError(submissionError.message);
+    } finally {
+      setLinking(false);
+    }
+  };
+
+  const handleLookup = async () => {
+    if (!clientEmail) return;
+    setLookingUp(true);
+    setLinkError('');
+    try {
+      const result = await lookupBureauCustomer(clientEmail);
+      setCustomerTokenInput(result.customerToken || '');
+      setPidInput(result.pid || '');
+    } catch (lookupErr) {
+      setLinkError(lookupErr.message);
+    } finally {
+      setLookingUp(false);
+    }
+  };
+
+  const handleUnlink = async () => {
+    setUnlinking(true);
+    setLinkError('');
+    try {
+      await unlinkBureauAccount(clientId);
+      await loadLink();
+    } catch (unlinkErr) {
+      setLinkError(unlinkErr.message);
+    } finally {
+      setUnlinking(false);
+    }
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setLinkError('');
+    try {
+      await syncBureauReport(clientId);
+      await Promise.all([loadLink(), loadReports()]);
+    } catch (syncErr) {
+      setLinkError(syncErr.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleUpload = async (event) => {
     event.preventDefault();
@@ -146,10 +223,58 @@ function BureauReportsSection({ clientId }) {
   };
 
   return (
-    <>
-      <h2 style={{ fontSize: 16, marginTop: 24 }}>{t('adminClientDetail.bureauReportsTitle')}</h2>
+    <section className="admin-block">
+      <h2>{t('adminClientDetail.bureauReportsTitle')}</h2>
+
+      <div className="doc-tile" style={{ marginBottom: 16 }}>
+        <h3 style={{ fontSize: 14, marginBottom: 12 }}>{t('adminClientDetail.bureauLinkTitle')}</h3>
+        {link ? (
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
+            <span className={`status-badge ${link.sync_status}`} style={{ marginBottom: 0 }}>{t(`adminClientDetail.bureauSyncStatus_${link.sync_status}`)}</span>
+            <span style={{ fontSize: 13 }}>
+              {t('adminClientDetail.bureauLastSynced')}: {link.last_synced_at || t('adminClientDetail.bureauNeverSynced')}
+            </span>
+            <button className="btn btn-outline" type="button" disabled={syncing} onClick={handleSync}>
+              {syncing ? t('adminClientDetail.bureauSyncing') : t('adminClientDetail.bureauSyncButton')}
+            </button>
+            <button
+              className="btn btn-outline"
+              type="button"
+              disabled={unlinking}
+              onClick={handleUnlink}
+              style={{ borderColor: '#b94a48', color: '#d97975' }}
+            >
+              {unlinking ? t('adminClientDetail.bureauUnlinking') : t('adminClientDetail.bureauUnlinkButton')}
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleLink} className="admin-form-row" style={{ alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 0 }}>
+            <div className="form-group" style={{ marginBottom: 0, flex: 2 }}>
+              <label htmlFor="bureauCustomerToken">{t('adminClientDetail.bureauCustomerTokenLabel')}</label>
+              <input
+                id="bureauCustomerToken"
+                type="text"
+                value={customerTokenInput}
+                onChange={(event) => setCustomerTokenInput(event.target.value)}
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0, flex: '0 0 140px' }}>
+              <label htmlFor="bureauPid">{t('adminClientDetail.bureauPidLabel')}</label>
+              <input id="bureauPid" type="text" value={pidInput} onChange={(event) => setPidInput(event.target.value)} />
+            </div>
+            <button className="btn btn-outline" type="button" disabled={!clientEmail || lookingUp} onClick={handleLookup}>
+              {lookingUp ? t('adminClientDetail.bureauLookingUp') : t('adminClientDetail.bureauLookupButton')}
+            </button>
+            <button className="btn btn-primary" type="submit" disabled={!customerTokenInput.trim() || linking}>
+              {linking ? t('adminClientDetail.bureauLinking') : t('adminClientDetail.bureauLinkButton')}
+            </button>
+          </form>
+        )}
+        {linkError && <p className="form-error" role="alert">{linkError}</p>}
+      </div>
+
       <form onSubmit={handleUpload} className="admin-form-row" style={{ alignItems: 'flex-end', flexWrap: 'wrap' }}>
-        <div className="form-group">
+        <div className="form-group" style={{ flex: '0 0 170px' }}>
           <label htmlFor="bureauAsOfDate">{t('adminClientDetail.bureauAsOfDateLabel')}</label>
           <input id="bureauAsOfDate" type="date" value={asOfDate} onChange={(event) => setAsOfDate(event.target.value)} />
         </div>
@@ -157,7 +282,7 @@ function BureauReportsSection({ clientId }) {
           <label htmlFor="bureauPdf">{t('adminClientDetail.bureauUploadLabel')}</label>
           <input id="bureauPdf" type="file" accept="application/pdf" onChange={(event) => setFile(event.target.files?.[0] || null)} />
         </div>
-        <button className="btn btn-outline" type="submit" disabled={!file || uploading}>
+        <button className="btn btn-primary" type="submit" disabled={!file || uploading}>
           {uploading ? t('adminClientDetail.bureauUploading') : t('adminClientDetail.bureauUploadButton')}
         </button>
       </form>
@@ -165,16 +290,16 @@ function BureauReportsSection({ clientId }) {
       {loadError && <p className="form-error" role="alert">{loadError}</p>}
 
       {reports.length === 0 ? (
-        <p className="portal-sub">{t('adminClientDetail.bureauNoReports')}</p>
+        <p className="portal-sub" style={{ marginTop: 16, marginBottom: 0 }}>{t('adminClientDetail.bureauNoReports')}</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+        <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0 0' }}>
           {reports.map((report) => (
-            <li key={report.id} className="doc-tile" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <li key={report.id} className="doc-tile admin-row-tile" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <span style={{ fontSize: 14 }}>
                 {report.source === 'api' ? t('adminClientDetail.bureauSourceApi') : t('adminClientDetail.bureauSourcePdf')} · {report.as_of_date}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className={`status-badge ${report.parse_status}`}>{report.parse_status}</span>
+                <span className={`status-badge ${report.parse_status}`} style={{ marginBottom: 0 }}>{report.parse_status}</span>
                 {report.parse_status === 'pending' && (
                   <button className="btn btn-outline" type="button" disabled={parsingId === report.id} onClick={() => handleParse(report.id)}>
                     {parsingId === report.id ? t('adminClientDetail.bureauParsing') : t('adminClientDetail.bureauParseButton')}
@@ -217,6 +342,14 @@ function BureauReportsSection({ clientId }) {
         <Modal title={t('adminClientDetail.bureauReviewTitle')} onClose={() => setReviewingReport(null)} maxWidth={720}>
           <form onSubmit={submitConfirm}>
             <p className="portal-sub">{t('adminClientDetail.bureauReviewHint')}</p>
+            {reviewingReport.source === 'api' && reviewingReport.raw_payload && (
+              <details style={{ marginBottom: 16 }}>
+                <summary style={{ cursor: 'pointer', fontSize: 13 }}>{t('adminClientDetail.bureauRawDataLabel')}</summary>
+                <pre style={{ fontSize: 11, maxHeight: 240, overflow: 'auto', padding: 10, background: 'var(--bg-inset)', borderRadius: 6 }}>
+                  {JSON.stringify(reviewingReport.raw_payload, null, 2)}
+                </pre>
+              </details>
+            )}
             <div className="admin-form-row" style={{ flexWrap: 'wrap' }}>
               {BUREAUS_ADMIN.map(({ key, label }) => (
                 <div className="form-group" key={key}>
@@ -271,7 +404,7 @@ function BureauReportsSection({ clientId }) {
           </form>
         </Modal>
       )}
-    </>
+    </section>
   );
 }
 
@@ -297,8 +430,8 @@ function CreditMonitoringSection({ clientId }) {
   };
 
   return (
-    <>
-      <h2 style={{ fontSize: 16, marginTop: 24 }}>{t('adminClientDetail.creditMonitoringTitle')}</h2>
+    <section className="admin-block">
+      <h2>{t('adminClientDetail.creditMonitoringTitle')}</h2>
       {state !== 'loaded' && (
         <button className="btn btn-outline" type="button" onClick={reveal} disabled={state === 'loading'}>
           {state === 'loading' ? t('adminClientDetail.loadingCredentials') : t('adminClientDetail.viewCredentials')}
@@ -306,7 +439,7 @@ function CreditMonitoringSection({ clientId }) {
       )}
       {error && <p className="form-error" role="alert">{error}</p>}
       {state === 'loaded' && data && (
-        <div className="doc-tile">
+        <div className="doc-tile" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '6px 24px' }}>
           <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.providerLabel')}:</strong> {PROVIDER_LABEL[data.provider] || data.provider}</p>
           <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.usernameLabel')}:</strong> {data.username}</p>
           <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.passwordLabel')}:</strong> {data.password}</p>
@@ -314,7 +447,7 @@ function CreditMonitoringSection({ clientId }) {
           {data.securityWord && <p style={{ fontSize: 14 }}><strong>{t('adminClientDetail.securityWordLabel')}:</strong> {data.securityWord}</p>}
         </div>
       )}
-    </>
+    </section>
   );
 }
 
@@ -606,188 +739,194 @@ export default function AdminClientDetail() {
   return (
     <AdminLayout title={detail.account.full_name} onLogout={handleLogout}>
       <div className="portal-card wide admin-section">
-        <p className="portal-sub">{detail.account.email} · {t('adminClientDetail.statusLabel')}: {detail.account.status}</p>
+        <p className="portal-sub" style={{ marginBottom: 0 }}>{detail.account.email} · {t('adminClientDetail.statusLabel')}: {detail.account.status}</p>
 
-        <h2 style={{ fontSize: 16, marginTop: 24 }}>{t('adminClientDetail.documentsTitle')}</h2>
-        {detail.documents.length === 0 ? (
-          <p className="portal-sub">{t('adminClientDetail.noDocuments')}</p>
-        ) : (
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {detail.documents.map((doc) => (
-              <li key={doc.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10, fontSize: 14, marginBottom: 8 }}>
-                <span>{DOCUMENT_LABEL[doc.document_type] || doc.document_type}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <button
-                    className="btn btn-outline"
-                    type="button"
-                    disabled={viewingId === doc.id}
-                    onClick={() => handleViewDocument(doc)}
-                  >
-                    {viewingId === doc.id ? t('adminClientDetail.openingDocument') : t('adminClientDetail.viewDocument')}
-                  </button>
-                  <span className={`status-badge ${doc.status}`}>{doc.status}</span>
-                  {doc.status !== 'approved' && (
+        <section className="admin-block">
+          <h2>{t('adminClientDetail.documentsTitle')}</h2>
+          {detail.documents.length === 0 ? (
+            <p className="portal-sub">{t('adminClientDetail.noDocuments')}</p>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {detail.documents.map((doc) => (
+                <li key={doc.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10, fontSize: 14, marginBottom: 8 }}>
+                  <span>{DOCUMENT_LABEL[doc.document_type] || doc.document_type}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <button
                       className="btn btn-outline"
                       type="button"
-                      disabled={reviewingId === doc.id}
-                      onClick={() => handleReview(doc.id, 'approved')}
+                      disabled={viewingId === doc.id}
+                      onClick={() => handleViewDocument(doc)}
                     >
-                      {t('adminClientDetail.approve')}
+                      {viewingId === doc.id ? t('adminClientDetail.openingDocument') : t('adminClientDetail.viewDocument')}
                     </button>
-                  )}
-                  {doc.status !== 'rejected' && (
-                    <button
-                      className="btn btn-outline"
-                      type="button"
-                      disabled={reviewingId === doc.id}
-                      onClick={() => handleReview(doc.id, 'rejected')}
-                    >
-                      {t('adminClientDetail.reject')}
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-        {documentError && <p className="form-error" role="alert">{documentError}</p>}
-        {reviewError && <p className="form-error" role="alert">{reviewError}</p>}
-
-        <CreditMonitoringSection clientId={id} />
-        <BureauReportsSection clientId={id} />
-
-        <h2 style={{ fontSize: 16, marginTop: 24 }}>{t('adminClientDetail.signedContractsTitle')}</h2>
-        {(detail.signedAgreements || []).filter((agreement) => !agreement.archived).length === 0 ? (
-          <p className="portal-sub">{t('adminClientDetail.noSignedContracts')}</p>
-        ) : (
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {detail.signedAgreements.filter((agreement) => !agreement.archived).map((agreement) => (
-              <li key={agreement.id} className="doc-tile" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                <div>
-                  <strong style={{ fontSize: 14 }}>{agreement.title}</strong>
-                  <p className="doc-hint" style={{ margin: '4px 0 0' }}>
-                    {t('adminClientDetail.signedBy')} {agreement.signed_full_name} · {new Date(agreement.signed_at).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button
-                    className="btn btn-outline"
-                    type="button"
-                    disabled={openingAgreementId === agreement.id}
-                    onClick={() => handleViewAgreement(agreement)}
-                  >
-                    {openingAgreementId === agreement.id ? t('adminClientDetail.openingDocument') : t('adminClientDetail.viewSignedContract')}
-                  </button>
-                  {agreement.plan_status === 'canceled' && (
-                    <button
-                      className="btn btn-outline"
-                      type="button"
-                      disabled={archivingId === agreement.id}
-                      onClick={() => handleArchiveAgreement(agreement, true)}
-                    >
-                      {archivingId === agreement.id ? t('adminClientDetail.archiving') : t('adminClientDetail.archive')}
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {(detail.signedAgreements || []).some((agreement) => agreement.archived) && (
-          <>
-            <button className="btn btn-outline" type="button" onClick={() => setShowArchived((prev) => !prev)} style={{ marginTop: 4 }}>
-              {showArchived ? t('adminClientDetail.hideArchived') : t('adminClientDetail.showArchived')}
-            </button>
-            {showArchived && (
-              <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 0' }}>
-                {detail.signedAgreements.filter((agreement) => agreement.archived).map((agreement) => (
-                  <li key={agreement.id} className="doc-tile" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 8, opacity: 0.65 }}>
-                    <div>
-                      <strong style={{ fontSize: 14 }}>{agreement.title}</strong>
-                      <p className="doc-hint" style={{ margin: '4px 0 0' }}>
-                        {t('adminClientDetail.signedBy')} {agreement.signed_full_name} · {new Date(agreement.signed_at).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}
-                      </p>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <span className={`status-badge ${doc.status}`} style={{ marginBottom: 0 }}>{doc.status}</span>
+                    {doc.status !== 'approved' && (
                       <button
                         className="btn btn-outline"
                         type="button"
-                        disabled={openingAgreementId === agreement.id}
-                        onClick={() => handleViewAgreement(agreement)}
+                        disabled={reviewingId === doc.id}
+                        onClick={() => handleReview(doc.id, 'approved')}
                       >
-                        {openingAgreementId === agreement.id ? t('adminClientDetail.openingDocument') : t('adminClientDetail.viewSignedContract')}
+                        {t('adminClientDetail.approve')}
                       </button>
+                    )}
+                    {doc.status !== 'rejected' && (
+                      <button
+                        className="btn btn-outline"
+                        type="button"
+                        disabled={reviewingId === doc.id}
+                        onClick={() => handleReview(doc.id, 'rejected')}
+                      >
+                        {t('adminClientDetail.reject')}
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          {documentError && <p className="form-error" role="alert">{documentError}</p>}
+          {reviewError && <p className="form-error" role="alert">{reviewError}</p>}
+        </section>
+
+        <CreditMonitoringSection clientId={id} />
+        <BureauReportsSection clientId={id} clientEmail={detail.account.email} />
+
+        <section className="admin-block">
+          <h2>{t('adminClientDetail.signedContractsTitle')}</h2>
+          {(detail.signedAgreements || []).filter((agreement) => !agreement.archived).length === 0 ? (
+            <p className="portal-sub">{t('adminClientDetail.noSignedContracts')}</p>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {detail.signedAgreements.filter((agreement) => !agreement.archived).map((agreement) => (
+                <li key={agreement.id} className="doc-tile admin-row-tile" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                  <div>
+                    <strong style={{ fontSize: 14 }}>{agreement.title}</strong>
+                    <p className="doc-hint" style={{ margin: '4px 0 0' }}>
+                      {t('adminClientDetail.signedBy')} {agreement.signed_full_name} · {new Date(agreement.signed_at).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button
+                      className="btn btn-outline"
+                      type="button"
+                      disabled={openingAgreementId === agreement.id}
+                      onClick={() => handleViewAgreement(agreement)}
+                    >
+                      {openingAgreementId === agreement.id ? t('adminClientDetail.openingDocument') : t('adminClientDetail.viewSignedContract')}
+                    </button>
+                    {agreement.plan_status === 'canceled' && (
                       <button
                         className="btn btn-outline"
                         type="button"
                         disabled={archivingId === agreement.id}
-                        onClick={() => handleArchiveAgreement(agreement, false)}
+                        onClick={() => handleArchiveAgreement(agreement, true)}
                       >
-                        {archivingId === agreement.id ? t('adminClientDetail.archiving') : t('adminClientDetail.unarchive')}
+                        {archivingId === agreement.id ? t('adminClientDetail.archiving') : t('adminClientDetail.archive')}
                       </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        )}
-        {agreementError && <p className="form-error" role="alert">{agreementError}</p>}
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
 
-        <h2 style={{ fontSize: 16, marginTop: 24 }}>{t('adminClientDetail.existingPlansTitle')}</h2>
-        {detail.plans.length === 0 ? (
-          <p className="portal-sub">{t('adminClientDetail.noPlans')}</p>
-        ) : (
-          detail.plans.map((plan) => (
-            <div className="doc-tile" key={plan.id} style={{ marginBottom: 12 }}>
-              <span className="status-badge pending">{plan.status}</span>
-              <p style={{ fontSize: 14 }}>{plan.billing_type === 'recurring' ? `${t('adminClientDetail.recurring')} (${plan.recurring_interval})` : t('adminClientDetail.oneTime')} — {t('adminClientDetail.contract')}: {plan.agreement?.status || t('adminClientDetail.noContract')}</p>
-              {plan.billing_type === 'recurring' && plan.recurring_amount_cents > 0 && (
-                <p style={{ fontSize: 13 }}>{t('adminClientDetail.recurringAmountLabel')}: {formatCents(plan.recurring_amount_cents)}</p>
+          {(detail.signedAgreements || []).some((agreement) => agreement.archived) && (
+            <>
+              <button className="btn btn-outline" type="button" onClick={() => setShowArchived((prev) => !prev)} style={{ marginTop: 4 }}>
+                {showArchived ? t('adminClientDetail.hideArchived') : t('adminClientDetail.showArchived')}
+              </button>
+              {showArchived && (
+                <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 0' }}>
+                  {detail.signedAgreements.filter((agreement) => agreement.archived).map((agreement) => (
+                    <li key={agreement.id} className="doc-tile admin-row-tile" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 8, opacity: 0.65 }}>
+                      <div>
+                        <strong style={{ fontSize: 14 }}>{agreement.title}</strong>
+                        <p className="doc-hint" style={{ margin: '4px 0 0' }}>
+                          {t('adminClientDetail.signedBy')} {agreement.signed_full_name} · {new Date(agreement.signed_at).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <button
+                          className="btn btn-outline"
+                          type="button"
+                          disabled={openingAgreementId === agreement.id}
+                          onClick={() => handleViewAgreement(agreement)}
+                        >
+                          {openingAgreementId === agreement.id ? t('adminClientDetail.openingDocument') : t('adminClientDetail.viewSignedContract')}
+                        </button>
+                        <button
+                          className="btn btn-outline"
+                          type="button"
+                          disabled={archivingId === agreement.id}
+                          onClick={() => handleArchiveAgreement(agreement, false)}
+                        >
+                          {archivingId === agreement.id ? t('adminClientDetail.archiving') : t('adminClientDetail.unarchive')}
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               )}
-              {plan.billing_type === 'recurring' && plan.first_payment_cents > 0 && (
-                <p style={{ fontSize: 13 }}>{t('adminClientDetail.firstPaymentLabel')}: {formatCents(plan.first_payment_cents)}</p>
-              )}
-              <ul>
-                {plan.services.map((service) => (
-                  <li key={service.id} style={{ fontSize: 13 }}>{service.name} — {formatCents(service.price_cents)}</li>
-                ))}
-              </ul>
-              {plan.billing_type === 'recurring' && (
-                <p className="doc-hint" style={{ marginTop: 4 }}>{t('adminClientDetail.serviceValueHint')}</p>
-              )}
-              {plan.status === 'awaiting_payment' && plan.agreement?.status === 'signed' && (
-                <button
-                  className="btn btn-outline"
-                  type="button"
-                  disabled={sendingPaymentId === plan.id}
-                  onClick={() => handleResendPayment(plan.id)}
-                >
-                  {sendingPaymentId === plan.id ? t('adminClientDetail.sendingPaymentLink') : t('adminClientDetail.resendPaymentLink')}
-                </button>
-              )}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-                <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => handlePaymentHistory(plan)}>
-                  {t('adminClientDetail.paymentHistory')}
-                </button>
-                {plan.billing_type === 'recurring' && ['active', 'past_due'].includes(plan.status) && (
-                  <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => handlePaymentReminder(plan)}>
-                    {t('adminClientDetail.sendReminder')}
+            </>
+          )}
+          {agreementError && <p className="form-error" role="alert">{agreementError}</p>}
+        </section>
+
+        <section className="admin-block">
+          <h2>{t('adminClientDetail.existingPlansTitle')}</h2>
+          {detail.plans.length === 0 ? (
+            <p className="portal-sub">{t('adminClientDetail.noPlans')}</p>
+          ) : (
+            detail.plans.map((plan) => (
+              <div className="doc-tile" key={plan.id} style={{ marginBottom: 12 }}>
+                <span className="status-badge pending">{plan.status}</span>
+                <p style={{ fontSize: 14 }}>{plan.billing_type === 'recurring' ? `${t('adminClientDetail.recurring')} (${plan.recurring_interval})` : t('adminClientDetail.oneTime')} — {t('adminClientDetail.contract')}: {plan.agreement?.status || t('adminClientDetail.noContract')}</p>
+                {plan.billing_type === 'recurring' && plan.recurring_amount_cents > 0 && (
+                  <p style={{ fontSize: 13 }}>{t('adminClientDetail.recurringAmountLabel')}: {formatCents(plan.recurring_amount_cents)}</p>
+                )}
+                {plan.billing_type === 'recurring' && plan.first_payment_cents > 0 && (
+                  <p style={{ fontSize: 13 }}>{t('adminClientDetail.firstPaymentLabel')}: {formatCents(plan.first_payment_cents)}</p>
+                )}
+                <ul>
+                  {plan.services.map((service) => (
+                    <li key={service.id} style={{ fontSize: 13 }}>{service.name} — {formatCents(service.price_cents)}</li>
+                  ))}
+                </ul>
+                {plan.billing_type === 'recurring' && (
+                  <p className="doc-hint" style={{ marginTop: 4 }}>{t('adminClientDetail.serviceValueHint')}</p>
+                )}
+                {plan.status === 'awaiting_payment' && plan.agreement?.status === 'signed' && (
+                  <button
+                    className="btn btn-outline"
+                    type="button"
+                    disabled={sendingPaymentId === plan.id}
+                    onClick={() => handleResendPayment(plan.id)}
+                  >
+                    {sendingPaymentId === plan.id ? t('adminClientDetail.sendingPaymentLink') : t('adminClientDetail.resendPaymentLink')}
                   </button>
                 )}
-                {!['paid', 'canceled'].includes(plan.status) && (
-                  <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => setCancelPlanTarget(plan)} style={{ borderColor: '#b94a48', color: '#d97975' }}>
-                    {planActionId === plan.id ? t('adminClientDetail.cancelingPlan') : t('adminClientDetail.cancelPlan')}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                  <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => handlePaymentHistory(plan)}>
+                    {t('adminClientDetail.paymentHistory')}
                   </button>
-                )}
+                  {plan.billing_type === 'recurring' && ['active', 'past_due'].includes(plan.status) && (
+                    <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => handlePaymentReminder(plan)}>
+                      {t('adminClientDetail.sendReminder')}
+                    </button>
+                  )}
+                  {!['paid', 'canceled'].includes(plan.status) && (
+                    <button className="btn btn-outline" type="button" disabled={planActionId === plan.id} onClick={() => setCancelPlanTarget(plan)} style={{ borderColor: '#b94a48', color: '#d97975' }}>
+                      {planActionId === plan.id ? t('adminClientDetail.cancelingPlan') : t('adminClientDetail.cancelPlan')}
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))
-        )}
-        {paymentMessage && <p className="form-success" role="status">{paymentMessage}</p>}
-        {paymentError && <p className="form-error" role="alert">{paymentError}</p>}
+            ))
+          )}
+          {paymentMessage && <p className="form-success" role="status">{paymentMessage}</p>}
+          {paymentError && <p className="form-error" role="alert">{paymentError}</p>}
+        </section>
       </div>
 
       {documentPreview && (

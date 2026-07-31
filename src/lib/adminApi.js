@@ -155,6 +155,30 @@ export function confirmBureauReport(reportId, scores, caseStatus) {
   });
 }
 
+export function fetchBureauLink(clientAccountId) {
+  return request(`/api/admin/bureau-link?clientAccountId=${encodeURIComponent(clientAccountId)}`);
+}
+
+export function saveBureauLink(clientAccountId, customerToken, pid) {
+  return request('/api/admin/bureau-link', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ clientAccountId, customerToken, pid }),
+  });
+}
+
+export function unlinkBureauAccount(clientAccountId) {
+  return request(`/api/admin/bureau-link?clientAccountId=${encodeURIComponent(clientAccountId)}`, { method: 'DELETE' });
+}
+
+export function syncBureauReport(clientAccountId) {
+  return request('/api/admin/bureau-sync', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ clientAccountId }) });
+}
+
+export function lookupBureauCustomer(email) {
+  return request('/api/admin/bureau-lookup', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ email }) });
+}
+
 export function fetchContractTemplates() {
   return request('/api/admin/contract-templates');
 }
