@@ -94,38 +94,42 @@ function HomeTab({ account }) {
   const scoreFor = (bureauKey) => bureauData?.scores.find((row) => row.bureau === bureauKey)?.score;
 
   return (
-    <>
-      <div className="portal-card wide">
-        <h2>{t('portalHome.clientCardTitle')}</h2>
-        <div className="field-list">
-          <p>{account.full_name}</p>
-          <p>{account.email}</p>
-          {account.phone && <p>{account.phone}</p>}
-          <p>{t('portalHome.statusLabel')}: {account.status}</p>
+    <div className="workspace-split">
+      <div className="col-main">
+        <div className="portal-card wide surface-raised is-metric">
+          <h2>{t('portalHome.scoresTitle')}</h2>
+          <div className="admin-stats">
+            {BUREAUS.map(({ label, key }) => (
+              <div className="admin-stat-tile" key={key}>
+                <div className="stat-value">{scoreFor(key) ?? '—'}</div>
+                <div className="stat-label">{label}</div>
+              </div>
+            ))}
+          </div>
+          <p className="portal-sub">
+            {hasData ? `${t('portalHome.asOf')} ${bureauData.report.asOfDate}` : t('portalHome.scoresEmpty')}
+          </p>
+        </div>
+
+        <div className="portal-card wide">
+          <h2>{t('portalHome.caseStatusTitle')}</h2>
+          <CaseStatusTable bureauData={bureauData} />
+          {!hasData && <p className="portal-sub">{t('portalHome.caseStatusEmpty')}</p>}
         </div>
       </div>
 
-      <div className="portal-card wide">
-        <h2>{t('portalHome.scoresTitle')}</h2>
-        <div className="admin-stats">
-          {BUREAUS.map(({ label, key }) => (
-            <div className="admin-stat-tile" key={key}>
-              <div className="stat-value">{scoreFor(key) ?? '—'}</div>
-              <div className="stat-label">{label}</div>
-            </div>
-          ))}
+      <div className="col-aside">
+        <div className="portal-card wide">
+          <h2>{t('portalHome.clientCardTitle')}</h2>
+          <div className="field-list">
+            <p>{account.full_name}</p>
+            <p>{account.email}</p>
+            {account.phone && <p>{account.phone}</p>}
+            <p>{t('portalHome.statusLabel')}: {account.status}</p>
+          </div>
         </div>
-        <p className="portal-sub">
-          {hasData ? `${t('portalHome.asOf')} ${bureauData.report.asOfDate}` : t('portalHome.scoresEmpty')}
-        </p>
       </div>
-
-      <div className="portal-card wide">
-        <h2>{t('portalHome.caseStatusTitle')}</h2>
-        <CaseStatusTable bureauData={bureauData} />
-        {!hasData && <p className="portal-sub">{t('portalHome.caseStatusEmpty')}</p>}
-      </div>
-    </>
+    </div>
   );
 }
 
@@ -409,7 +413,7 @@ export default function PortalDashboard() {
   DOCUMENT_TILES.forEach((tile) => items.push({ key: tile.type, label: tile.title, done: status.documentsStatus[tile.type] }));
 
   const doneCount = items.filter((item) => item.done).length;
-  const progress = items.length ? Math.round((doneCount / items.length) * 100) : 0;
+  const nextIncompleteKey = items.find((item) => !item.done)?.key;
   const activeDocumentTile = DOCUMENT_TILES.find((tile) => tile.type === activeModal);
 
   const documentsComplete = DOCUMENT_TILES.every((tile) => status.documentsStatus[tile.type]);
@@ -464,10 +468,12 @@ export default function PortalDashboard() {
         <h1>{t('portalDashboard.greeting')}, {account.full_name.split(' ')[0]}</h1>
         <p className="portal-sub">{t('portalDashboard.subtitle')}</p>
 
-        <div className="progress-track">
-          <div className="progress-fill" style={{ width: `${progress}%` }} />
+        <div className="progress-rule">
+          {items.map((item) => (
+            <div key={item.key} className={`progress-seg${item.done ? ' is-done' : ''}`} />
+          ))}
         </div>
-        <p className="doc-hint progress-caption">{doneCount} {t('portalDashboard.progressText')} {items.length} {t('portalDashboard.completed')} ({progress}%)</p>
+        <p className="doc-hint progress-caption">{doneCount} {t('portalDashboard.progressText')} {items.length} {t('portalDashboard.completed')}</p>
 
         <div className="tile-list">
           {items.map((item) => (
@@ -478,9 +484,17 @@ export default function PortalDashboard() {
               </div>
               {item.key === 'agreement' && item.done ? (
                 <span className="status-badge approved">{t('portalDashboard.signed')}</span>
+              ) : item.done ? (
+                <button className="btn-quiet" type="button" onClick={() => setActiveModal(item.key)}>
+                  {t('portalDashboard.update')}
+                </button>
               ) : (
-                <button className="btn btn-outline" type="button" onClick={() => setActiveModal(item.key)}>
-                  {item.done ? t('portalDashboard.update') : t('portalDashboard.completeNow')}
+                <button
+                  className={`btn ${item.key === nextIncompleteKey ? 'btn-primary' : 'btn-outline'}`}
+                  type="button"
+                  onClick={() => setActiveModal(item.key)}
+                >
+                  {t('portalDashboard.completeNow')}
                 </button>
               )}
             </div>

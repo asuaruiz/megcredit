@@ -70,6 +70,19 @@
   --space-6: 32px;
   --space-7: 48px;
   --space-8: 64px;
+
+  /* Type scale — role-based sizes for dashboard hierarchy. Prefer these
+     over one-off font-size values in admin.css/portal.css. */
+  --ws-display:  clamp(40px, 4.4vw, 56px);
+  --ws-title:    clamp(26px, 2.2vw, 32px);
+  --ws-section:  21px;
+  --ws-subhead:  16px;
+  --ws-body:     15px;
+  --ws-meta:     12.5px;
+  --ws-overline: 11px;
+  --radius-sm: 3px;
+  --radius: 6px;
+  --radius-lg: 10px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -251,6 +264,22 @@ img, svg { max-width: 100%; }
 .btn-outline.danger { border-color: #b94a48; color: #d97975; }
 .btn-outline.danger:hover { border-color: #d97975; color: #d97975; }
 
+/* Quiet, text-style action for list rows with 2-3 buttons: at most one
+   button per row should look like a commitment (primary or outline); the
+   rest read as low-emphasis text actions. */
+.btn-quiet {
+  background: transparent; border: 0;
+  min-height: 32px; padding: 0 8px;
+  color: var(--text-2);
+  font: 600 13px/1 var(--font-body);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.btn-quiet:hover { color: var(--heading); text-decoration: underline; text-underline-offset: 3px; }
+.btn-quiet.danger { color: var(--text-3); }
+.btn-quiet.danger:hover { color: #A12B2B; }
+@media (prefers-color-scheme: dark) { .btn-quiet.danger:hover { color: #E08A85; } }
+
 /* Sobre fondo navy (hero, banners) */
 .on-navy .btn-primary { background: var(--gold-500); color: var(--navy-900); }
 .on-navy .btn-primary:hover { background: var(--gold-300); }
@@ -420,10 +449,39 @@ img, svg { max-width: 100%; }
 .cluster-3 { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
 .cluster-1 > p, .cluster-2 > p, .cluster-3 > p { margin: 0; }
 
-/* Two-step type scale for dashboard meta copy, replacing one-off
+/* Role-based type scale for dashboard copy, replacing one-off
    `style={{ fontSize: N }}` values scattered per row/field. */
-.text-sm { font-size: 14px; }
-.text-xs { font-size: 13px; }
+.ws-subhead { font: 600 var(--ws-subhead)/1.4 var(--font-body); letter-spacing: -0.006em; color: var(--heading); }
+.ws-body    { font: 400 var(--ws-body)/1.6 var(--font-body); color: var(--text-2); }
+.ws-value   { font: 550 var(--ws-body)/1.6 var(--font-body); color: var(--text); font-variant-numeric: tabular-nums; }
+.ws-meta    { font: 400 var(--ws-meta)/1.5 var(--font-body); color: var(--text-3); }
+.ws-overline{ font: 600 var(--ws-overline)/1.2 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+
+/* ---------- Split layout (dashboards) ----------
+   Generic two-column split: primary work column + a narrower reference/
+   secondary column. Used by both the admin client list and the portal
+   Home tab so daily-use content leads and supporting info sits beside it
+   instead of stacked below the fold. */
+.workspace-split {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  column-gap: var(--space-7);
+  row-gap: var(--space-7);
+  align-items: start;
+}
+.workspace-split > .col-main  { min-width: 0; display: flex; flex-direction: column; gap: var(--space-7); }
+.workspace-split > .col-aside { min-width: 0; display: flex; flex-direction: column; gap: var(--space-6); }
+.workspace-full { grid-column: 1 / -1; }
+@media (max-width: 1180px) {
+  .workspace-split { grid-template-columns: 1fr; }
+}
+.col-aside .admin-block > h2,
+.col-aside .portal-card h2 { font: 600 var(--ws-overline)/1.2 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+
+/* Each split column starts its own visual group — the lead card in either
+   column shouldn't carry a stray divider line with nothing above it. */
+.workspace-split > .col-main > .portal-card:first-child,
+.workspace-split > .col-aside > .portal-card:first-child { border-top: 0; }
 
 /* ---------- Utilidades de sección ---------- */
 
