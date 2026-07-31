@@ -13,12 +13,25 @@ export default function AdminContracts() {
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(null);
+  const [pdfColumnsAvailable, setPdfColumnsAvailable] = useState(true);
   const load = async () => {
+    setError('');
     try {
       await fetchStaffMe();
+    } catch (sessionError) {
+      if (sessionError.status === 401) navigate('/admin/login', { replace: true });
+      else setError(sessionError.message);
+      setLoading(false);
+      return;
+    }
+    try {
       const result = await fetchContracts();
       setContracts(result.contracts || []);
-    } catch { navigate('/admin/login', { replace: true }); }
+      setPdfColumnsAvailable(result.pdfColumnsAvailable !== false);
+    } catch (contractsError) {
+      if (contractsError.status === 401) navigate('/admin/login', { replace: true });
+      else setError(contractsError.message);
+    }
     finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -47,11 +60,12 @@ export default function AdminContracts() {
       <div className="portal-card wide">
         <h2>{t('adminContracts.allContracts')}</h2>
         <p className="portal-sub">{t('adminContracts.description')}</p>
+        {!pdfColumnsAvailable && <p className="form-error" role="alert">{t('adminContracts.migrationRequired')}</p>}
         {loading ? <p>{t('admin.loading')}</p> : contracts.length === 0 ? <p className="portal-sub">{t('adminContracts.empty')}</p> : (
           <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>{t('adminContracts.contract')}</th><th>{t('adminContracts.client')}</th><th>{t('adminContracts.status')}</th><th>PDF</th><th>{t('adminContracts.actions')}</th></tr></thead><tbody>
             {contracts.map((contract) => <tr key={contract.id}><td>{contract.title}</td><td>{contract.client?.full_name || contract.client?.email || '—'}</td><td><span className={`status-badge ${contract.status}`}>{contract.status}</span></td><td>{contract.pdf_original_filename || t('adminContracts.noPdf')}</td><td style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {contract.has_pdf && <button className="btn btn-outline" type="button" disabled={busyId === contract.id} onClick={() => open(contract)}>{t('adminContracts.viewPdf')}</button>}
-              <label className="btn btn-outline" style={{ cursor: busyId === contract.id ? 'wait' : 'pointer' }}>{busyId === contract.id ? t('adminContracts.uploading') : contract.has_pdf ? t('adminContracts.replacePdf') : t('adminContracts.uploadPdf')}<input type="file" accept="application/pdf" hidden disabled={busyId === contract.id} onChange={(event) => upload(contract, event.target.files?.[0])} /></label>
+              {pdfColumnsAvailable && <label className="btn btn-outline" style={{ cursor: busyId === contract.id ? 'wait' : 'pointer' }}>{busyId === contract.id ? t('adminContracts.uploading') : contract.has_pdf ? t('adminContracts.replacePdf') : t('adminContracts.uploadPdf')}<input type="file" accept="application/pdf" hidden disabled={busyId === contract.id} onChange={(event) => upload(contract, event.target.files?.[0])} /></label>}
             </td></tr>)}
           </tbody></table></div>
         )}

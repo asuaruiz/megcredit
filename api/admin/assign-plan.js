@@ -38,6 +38,7 @@ export default async function handler(request, response) {
   const hasFirstPayment = firstPaymentCentsRaw !== undefined && firstPaymentCentsRaw !== null && firstPaymentCentsRaw !== '';
   const firstPaymentCents = hasFirstPayment ? Number(firstPaymentCentsRaw) : null;
   const recurringAmountCents = billingType === 'recurring' ? Number(body.recurringAmountCents) : null;
+  const totalAmountCents = services.reduce((sum, service) => sum + (service?.priceCents || 0), 0);
 
   if (!isUuid(clientId)) return json(response, 400, { error: 'Cliente inválido.' });
   if (!BILLING_TYPES.has(billingType)) return json(response, 400, { error: 'Tipo de facturación inválido.' });
@@ -61,6 +62,12 @@ export default async function handler(request, response) {
   if (billingType === 'recurring' && (!Number.isInteger(recurringAmountCents) || recurringAmountCents <= 0)) {
     return json(response, 400, { error: 'Ingresa el monto del pago recurrente.' });
   }
+  if (billingType === 'recurring') {
+    const initialAmount = hasFirstPayment && firstPaymentCents > 0 ? firstPaymentCents : recurringAmountCents;
+    if (initialAmount > totalAmountCents || (totalAmountCents - initialAmount) % recurringAmountCents !== 0) {
+      return json(response, 400, { error: 'El primer pago y las cuotas deben completar exactamente el valor total del plan.' });
+    }
+  }
 
   try {
     const client = await supabaseOne(
@@ -79,6 +86,7 @@ export default async function handler(request, response) {
         recurring_interval: billingType === 'recurring' ? recurringInterval : null,
         first_payment_cents: billingType === 'recurring' ? firstPaymentCents : null,
         recurring_amount_cents: billingType === 'recurring' ? recurringAmountCents : null,
+        total_amount_cents: totalAmountCents,
         status: 'draft',
       }),
     });

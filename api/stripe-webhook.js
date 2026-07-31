@@ -1,5 +1,5 @@
-import { readRawBody, verifyStripeSignature } from './_lib/stripe.js';
-import { json, supabaseRequest } from './_lib/portal.js';
+import { cancelStripeSubscription, readRawBody, verifyStripeSignature } from './_lib/stripe.js';
+import { json, supabaseOne, supabaseRequest } from './_lib/portal.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -55,16 +55,34 @@ export default async function handler(request, response) {
       const paymentPlanId = object.metadata?.payment_plan_id || object.client_reference_id;
       if (paymentPlanId) {
         const isSubscription = object.mode === 'subscription';
-        await markPlan(`id=eq.${paymentPlanId}`, {
+        await markPlan(`id=eq.${paymentPlanId}&status=eq.awaiting_payment`, {
           status: isSubscription ? 'active' : 'paid',
           stripe_subscription_id: isSubscription ? object.subscription : null,
         });
       }
     } else if (event.type === 'customer.subscription.deleted') {
-      await markPlan(`stripe_subscription_id=eq.${object.id}`, { status: 'canceled' });
+      await markPlan(`stripe_subscription_id=eq.${object.id}&status=in.(active,past_due)`, { status: 'canceled' });
     } else if (event.type === 'invoice.payment_failed') {
       if (object.subscription) {
         await markPlan(`stripe_subscription_id=eq.${object.subscription}`, { status: 'past_due' });
+      }
+    } else if (event.type === 'invoice.paid') {
+      const subscriptionId = typeof object.subscription === 'string'
+        ? object.subscription
+        : object.parent?.subscription_details?.subscription;
+      const metadataPlanId = object.parent?.subscription_details?.metadata?.payment_plan_id
+        || object.subscription_details?.metadata?.payment_plan_id;
+      const plan = metadataPlanId
+        ? await supabaseOne(`megcredit_payment_plans?id=eq.${metadataPlanId}&select=id,status,stripe_subscription_id,total_amount_cents,amount_paid_cents`, { method: 'GET' })
+        : subscriptionId
+          ? await supabaseOne(`megcredit_payment_plans?stripe_subscription_id=eq.${subscriptionId}&select=id,status,stripe_subscription_id,total_amount_cents,amount_paid_cents`, { method: 'GET' })
+          : null;
+      if (plan && Number.isInteger(object.amount_paid) && object.amount_paid > 0) {
+        const amountPaid = (plan.amount_paid_cents || 0) + object.amount_paid;
+        const completed = plan.total_amount_cents > 0 && amountPaid >= plan.total_amount_cents;
+        await markPlan(`id=eq.${plan.id}`, { amount_paid_cents: amountPaid, ...(completed ? { status: 'paid' } : {}) });
+        const stripeSubscriptionId = subscriptionId || plan.stripe_subscription_id;
+        if (completed && stripeSubscriptionId) await cancelStripeSubscription(stripeSubscriptionId);
       }
     }
 

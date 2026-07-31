@@ -3,7 +3,11 @@ const JSON_HEADERS = { 'Content-Type': 'application/json' };
 async function request(path, options = {}) {
   const response = await fetch(path, { credentials: 'include', ...options });
   const result = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(result.error || 'Ocurrió un error inesperado.');
+  if (!response.ok) {
+    const error = new Error(result.error || 'Ocurrió un error inesperado.');
+    error.status = response.status;
+    throw error;
+  }
   return result;
 }
 

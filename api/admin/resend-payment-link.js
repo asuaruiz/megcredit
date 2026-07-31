@@ -6,6 +6,14 @@ function siteUrl() {
   return process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://www.megcredit.com';
 }
 
+function nextBillingTimestamp(interval) {
+  const date = new Date();
+  if (interval === 'week') date.setUTCDate(date.getUTCDate() + 7);
+  else if (interval === 'month') date.setUTCMonth(date.getUTCMonth() + 1);
+  else date.setUTCFullYear(date.getUTCFullYear() + 1);
+  return Math.floor(date.getTime() / 1000);
+}
+
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST');
@@ -20,7 +28,7 @@ export default async function handler(request, response) {
 
   try {
     const plan = await supabaseOne(
-      `megcredit_payment_plans?id=eq.${paymentPlanId}&status=eq.awaiting_payment&select=id,client_account_id,billing_type,recurring_interval,currency,first_payment_cents,recurring_amount_cents`,
+      `megcredit_payment_plans?id=eq.${paymentPlanId}&status=eq.awaiting_payment&select=id,client_account_id,billing_type,recurring_interval,currency,first_payment_cents,recurring_amount_cents,total_amount_cents`,
       { method: 'GET' },
     );
     if (!plan) return json(response, 404, { error: 'Este plan no está pendiente de pago.' });
@@ -72,7 +80,7 @@ export default async function handler(request, response) {
           product_data: { name: 'Pago recurrente', description: services.map((service) => service.name).join(', ') },
         },
       }];
-      if (Number.isInteger(plan.first_payment_cents) && plan.first_payment_cents > 0) {
+      if (Number.isInteger(plan.first_payment_cents) && plan.first_payment_cents > 0 && plan.first_payment_cents !== plan.recurring_amount_cents) {
         lineItems.push({ quantity: 1, price_data: { currency: plan.currency, unit_amount: plan.first_payment_cents, product_data: { name: 'Primer pago' } } });
       }
     } else {
@@ -91,6 +99,12 @@ export default async function handler(request, response) {
       mode: isRecurring ? 'subscription' : 'payment',
       lineItems,
       metadata: { payment_plan_id: plan.id },
+      subscriptionData: isRecurring ? {
+        metadata: { payment_plan_id: plan.id, total_amount_cents: plan.total_amount_cents },
+        ...(plan.first_payment_cents > 0 && plan.first_payment_cents !== plan.recurring_amount_cents
+          ? { trial_end: nextBillingTimestamp(plan.recurring_interval) }
+          : {}),
+      } : undefined,
       clientReferenceId: plan.id,
       successUrl: `${siteUrl()}/portal/dashboard?payment=success`,
       cancelUrl: `${siteUrl()}/portal/dashboard?payment=cancelled`,

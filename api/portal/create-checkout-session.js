@@ -5,6 +5,14 @@ function siteUrl() {
   return process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://www.megcredit.com';
 }
 
+function nextBillingTimestamp(interval) {
+  const date = new Date();
+  if (interval === 'week') date.setUTCDate(date.getUTCDate() + 7);
+  else if (interval === 'month') date.setUTCMonth(date.getUTCMonth() + 1);
+  else date.setUTCFullYear(date.getUTCFullYear() + 1);
+  return Math.floor(date.getTime() / 1000);
+}
+
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST');
@@ -21,7 +29,7 @@ export default async function handler(request, response) {
 
   try {
     const plan = await supabaseOne(
-      `megcredit_payment_plans?id=eq.${paymentPlanId}&client_account_id=eq.${active.account.id}&status=eq.awaiting_payment&select=id,billing_type,recurring_interval,currency,first_payment_cents,recurring_amount_cents`,
+      `megcredit_payment_plans?id=eq.${paymentPlanId}&client_account_id=eq.${active.account.id}&status=eq.awaiting_payment&select=id,billing_type,recurring_interval,currency,first_payment_cents,recurring_amount_cents,total_amount_cents`,
       { method: 'GET' },
     );
     if (!plan) return json(response, 404, { error: 'Este plan no está listo para pagarse.' });
@@ -63,10 +71,6 @@ export default async function handler(request, response) {
       if (!Number.isInteger(plan.recurring_amount_cents) || plan.recurring_amount_cents <= 0) {
         throw new Error(`Recurring plan ${plan.id} is missing a valid recurring_amount_cents`);
       }
-      // The recurring charge is the plan's own recurring_amount_cents, set by staff -- independent
-      // of each service's price_cents (those are reference/total value shown in the contract, not
-      // per-period charges). First payment (if any) bills once on the first invoice alongside it --
-      // Stripe Checkout supports mixing one-time and recurring line items in subscription mode.
       lineItems = [{
         quantity: 1,
         price_data: {
@@ -76,7 +80,7 @@ export default async function handler(request, response) {
           product_data: { name: 'Pago recurrente', description: services.map((service) => service.name).join(', ') },
         },
       }];
-      if (Number.isInteger(plan.first_payment_cents) && plan.first_payment_cents > 0) {
+      if (Number.isInteger(plan.first_payment_cents) && plan.first_payment_cents > 0 && plan.first_payment_cents !== plan.recurring_amount_cents) {
         lineItems.push({
           quantity: 1,
           price_data: {
@@ -102,6 +106,12 @@ export default async function handler(request, response) {
       mode: isRecurring ? 'subscription' : 'payment',
       lineItems,
       metadata: { payment_plan_id: plan.id },
+      subscriptionData: isRecurring ? {
+        metadata: { payment_plan_id: plan.id, total_amount_cents: plan.total_amount_cents },
+        ...(plan.first_payment_cents > 0 && plan.first_payment_cents !== plan.recurring_amount_cents
+          ? { trial_end: nextBillingTimestamp(plan.recurring_interval) }
+          : {}),
+      } : undefined,
       clientReferenceId: plan.id,
       successUrl: `${siteUrl()}/portal/dashboard?payment=success`,
       cancelUrl: `${siteUrl()}/portal/dashboard?payment=cancelled`,
