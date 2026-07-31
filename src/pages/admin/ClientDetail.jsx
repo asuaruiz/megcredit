@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
 import Modal from '../../components/portal/Modal.jsx';
-import { assignPlan, fetchAgreementSignature, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchDocumentFile, fetchStaffMe, resendPaymentLink, reviewDocument, staffLogout } from '../../lib/adminApi.js';
+import { assignPlan, fetchAgreementPdf, fetchAgreementSignature, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchDocumentFile, fetchStaffMe, resendPaymentLink, reviewDocument, staffLogout, uploadAgreementPdf } from '../../lib/adminApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 function CreditMonitoringSection({ clientId }) {
@@ -66,6 +66,8 @@ export default function AdminClientDetail() {
   const [firstPaymentCents, setFirstPaymentCents] = useState(0);
   const [agreementTitle, setAgreementTitle] = useState(t('adminClientDetail.agreementTitleDefault'));
   const [agreementText, setAgreementText] = useState('');
+  const [agreementSource, setAgreementSource] = useState('text');
+  const [agreementPdf, setAgreementPdf] = useState(null);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const [reviewingId, setReviewingId] = useState(null);
@@ -145,6 +147,7 @@ export default function AdminClientDetail() {
     setStatus('sending');
     setError('');
     try {
+      const uploadedPdf = agreementSource === 'pdf' ? await uploadAgreementPdf(id, agreementPdf) : null;
       await assignPlan({
         clientId: id,
         services: lineItems.map((item) => ({ catalogId: item.catalogId, name: item.name, description: item.description, priceCents: Number(item.priceCents) })),
@@ -153,10 +156,14 @@ export default function AdminClientDetail() {
         recurringAmountCents: billingType === 'recurring' ? recurringAmountCents : undefined,
         firstPaymentCents: billingType === 'recurring' && firstPaymentCents > 0 ? firstPaymentCents : undefined,
         agreementTitle,
-        agreementText,
+        agreementText: agreementSource === 'text' ? agreementText : '',
+        agreementPdfPath: uploadedPdf?.path,
+        agreementPdfFilename: uploadedPdf?.filename,
+        agreementPdfSizeBytes: uploadedPdf?.sizeBytes,
       });
       setLineItems([]);
       setAgreementText('');
+      setAgreementPdf(null);
       setFirstPaymentCents(0);
       setRecurringAmountCents(0);
       setStatus('idle');
@@ -212,11 +219,16 @@ export default function AdminClientDetail() {
     setAgreementError('');
     try {
       let signatureUrl = null;
+      let pdfUrl = null;
       if (agreement.has_signature) {
         const signature = await fetchAgreementSignature(agreement.id);
         signatureUrl = URL.createObjectURL(signature);
       }
-      setAgreementPreview({ ...agreement, signatureUrl });
+      if (agreement.has_pdf) {
+        const pdf = await fetchAgreementPdf(agreement.id);
+        pdfUrl = URL.createObjectURL(pdf);
+      }
+      setAgreementPreview({ ...agreement, signatureUrl, pdfUrl });
     } catch (agreementFetchError) {
       setAgreementError(agreementFetchError.message);
     } finally {
@@ -226,6 +238,7 @@ export default function AdminClientDetail() {
 
   const closeAgreementPreview = () => {
     if (agreementPreview?.signatureUrl) URL.revokeObjectURL(agreementPreview.signatureUrl);
+    if (agreementPreview?.pdfUrl) URL.revokeObjectURL(agreementPreview.pdfUrl);
     setAgreementPreview(null);
   };
 
@@ -382,9 +395,7 @@ export default function AdminClientDetail() {
 
       {agreementPreview && (
         <Modal title={agreementPreview.title} onClose={closeAgreementPreview} maxWidth={800}>
-          <div className="doc-tile" style={{ whiteSpace: 'pre-wrap', fontSize: 14, lineHeight: 1.7, maxHeight: '48vh', overflowY: 'auto' }}>
-            {agreementPreview.body_text}
-          </div>
+          {agreementPreview.pdfUrl ? <iframe src={agreementPreview.pdfUrl} title={agreementPreview.title} style={{ width: '100%', height: '55vh', border: '1px solid var(--border)', borderRadius: 8 }} /> : <div className="doc-tile" style={{ whiteSpace: 'pre-wrap', fontSize: 14, lineHeight: 1.7, maxHeight: '48vh', overflowY: 'auto' }}>{agreementPreview.body_text}</div>}
           <div style={{ marginTop: 20 }}>
             <p style={{ margin: '0 0 6px', fontSize: 14 }}><strong>{t('adminClientDetail.signedBy')}:</strong> {agreementPreview.signed_full_name}</p>
             <p style={{ margin: '0 0 12px', fontSize: 14 }}><strong>{t('adminClientDetail.signedAt')}:</strong> {new Date(agreementPreview.signed_at).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}</p>
@@ -481,12 +492,17 @@ export default function AdminClientDetail() {
               <input id="agreementTitle" value={agreementTitle} onChange={(event) => setAgreementTitle(event.target.value)} required minLength="2" />
             </div>
             <div className="form-group">
+              <label className="group-label">{t('adminClientDetail.agreementSourceLabel')}</label>
+              <label className="checkbox-item"><input type="radio" name="agreementSource" checked={agreementSource === 'text'} onChange={() => setAgreementSource('text')} /> {t('adminClientDetail.agreementSourceText')}</label>
+              <label className="checkbox-item"><input type="radio" name="agreementSource" checked={agreementSource === 'pdf'} onChange={() => setAgreementSource('pdf')} /> {t('adminClientDetail.agreementSourcePdf')}</label>
+            </div>
+            {agreementSource === 'text' ? <div className="form-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label htmlFor="agreementText">{t('adminClientDetail.agreementTextLabel')}</label>
                 <button className="btn btn-outline" type="button" onClick={generateAgreementText}>{t('adminClientDetail.generateSuggested')}</button>
               </div>
               <textarea id="agreementText" value={agreementText} onChange={(event) => setAgreementText(event.target.value)} required minLength="10" style={{ minHeight: 180 }} />
-            </div>
+            </div> : <div className="form-group"><label htmlFor="agreementPdf">{t('adminClientDetail.agreementPdfLabel')}</label><input id="agreementPdf" type="file" accept="application/pdf" required onChange={(event) => setAgreementPdf(event.target.files?.[0] || null)} /></div>}
             {error && <p className="form-error" role="alert">{error}</p>}
             <button className="btn btn-primary submit-btn" type="submit" disabled={status === 'sending'}>
               {status === 'sending' ? t('adminClientDetail.sendingPlan') : t('adminClientDetail.submitPlan')}

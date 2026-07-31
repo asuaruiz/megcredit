@@ -5,7 +5,7 @@ import PortalSidebarLayout from '../../components/portal/PortalSidebarLayout.jsx
 import Modal from '../../components/portal/Modal.jsx';
 import SignaturePad from '../../components/portal/SignaturePad.jsx';
 import ServicesPanel from '../../components/portal/ServicesPanel.jsx';
-import { fetchMe, fetchOnboardingStatus, logout, saveCreditMonitoring, signAgreement, uploadDocument } from '../../lib/portalApi.js';
+import { fetchAgreementPdf, fetchMe, fetchOnboardingStatus, logout, saveCreditMonitoring, signAgreement, uploadDocument } from '../../lib/portalApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 const BUREAUS = ['Equifax', 'Experian', 'TransUnion'];
@@ -105,6 +105,18 @@ function AgreementModal({ agreement, onClose, onDone }) {
   const [agree, setAgree] = useState(false);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
+  const [pdfUrl, setPdfUrl] = useState(null);
+
+  useEffect(() => {
+    if (!agreement.has_pdf) return undefined;
+    let active = true;
+    let objectUrl;
+    fetchAgreementPdf(agreement.id).then((blob) => {
+      objectUrl = URL.createObjectURL(blob);
+      if (active) setPdfUrl(objectUrl);
+    }).catch((pdfError) => { if (active) setError(pdfError.message); });
+    return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [agreement.has_pdf, agreement.id]);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -126,9 +138,7 @@ function AgreementModal({ agreement, onClose, onDone }) {
   return (
     <Modal title={agreement.title} onClose={onClose}>
       <form onSubmit={submit}>
-        <div className="doc-tile" style={{ maxHeight: 220, overflowY: 'auto', whiteSpace: 'pre-wrap', fontSize: 13, marginBottom: 16 }}>
-          {agreement.body_text}
-        </div>
+        {agreement.has_pdf ? (pdfUrl ? <iframe src={pdfUrl} title={agreement.title} style={{ width: '100%', height: 360, border: '1px solid var(--border)', borderRadius: 8, marginBottom: 16 }} /> : <p className="portal-sub">{t('general.loading')}</p>) : <div className="doc-tile" style={{ maxHeight: 220, overflowY: 'auto', whiteSpace: 'pre-wrap', fontSize: 13, marginBottom: 16 }}>{agreement.body_text}</div>}
         <div className="form-group">
           <label htmlFor="agreementFullName">{t('portalDashboard.agreementNameLabel')}</label>
           <input id="agreementFullName" value={fullName} onChange={(event) => setFullName(event.target.value)} required minLength="2" />

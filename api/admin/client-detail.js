@@ -26,7 +26,7 @@ export default async function handler(request, response) {
       supabaseRequest(`megcredit_client_documents?client_account_id=eq.${clientId}&select=id,document_type,status,original_filename,created_at&order=created_at.desc`, { method: 'GET' }),
       supabaseRequest(`megcredit_payment_plans?client_account_id=eq.${clientId}&select=*&order=created_at.desc`, { method: 'GET' }),
       supabaseRequest(`megcredit_client_services?client_account_id=eq.${clientId}&select=*`, { method: 'GET' }),
-      supabaseRequest(`megcredit_service_agreements?client_account_id=eq.${clientId}&select=id,payment_plan_id,title,body_text,status,signed_full_name,signed_at,signature_image_path,created_at`, { method: 'GET' }),
+      supabaseRequest(`megcredit_service_agreements?client_account_id=eq.${clientId}&select=id,payment_plan_id,title,body_text,status,signed_full_name,signed_at,signature_image_path,pdf_storage_path,pdf_original_filename,created_at`, { method: 'GET' }),
     ]);
 
     const documents = documentsResult.ok ? await documentsResult.json() : [];
@@ -34,9 +34,10 @@ export default async function handler(request, response) {
     const services = servicesResult.ok ? await servicesResult.json() : [];
     const agreements = agreementsResult.ok ? await agreementsResult.json() : [];
 
-    const safeAgreements = agreements.map(({ signature_image_path: signatureImagePath, ...agreement }) => ({
+    const safeAgreements = agreements.map(({ signature_image_path: signatureImagePath, pdf_storage_path: pdfPath, ...agreement }) => ({
       ...agreement,
       has_signature: Boolean(signatureImagePath),
+      has_pdf: Boolean(pdfPath),
     }));
     const enrichedPlans = plans.map((plan) => ({
       ...plan,

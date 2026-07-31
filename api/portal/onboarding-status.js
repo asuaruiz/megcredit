@@ -17,7 +17,7 @@ export default async function handler(request, response) {
     const clientId = active.account.id;
     const [agreement, creditMonitoring, documentsResult] = await Promise.all([
       supabaseOne(
-        `megcredit_service_agreements?client_account_id=eq.${clientId}&status=neq.void&select=id,title,body_text,status&order=created_at.desc&limit=1`,
+        `megcredit_service_agreements?client_account_id=eq.${clientId}&status=neq.void&select=id,title,body_text,status,pdf_storage_path,pdf_original_filename&order=created_at.desc&limit=1`,
         { method: 'GET' },
       ),
       supabaseOne(
@@ -33,7 +33,7 @@ export default async function handler(request, response) {
     );
 
     return json(response, 200, {
-      agreement,
+      agreement: agreement ? { ...agreement, has_pdf: Boolean(agreement.pdf_storage_path), pdf_storage_path: undefined } : null,
       creditMonitoringSaved: Boolean(creditMonitoring),
       documentsStatus,
     });

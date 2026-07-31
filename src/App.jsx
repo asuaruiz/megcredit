@@ -19,6 +19,7 @@ import AdminLogin from './pages/admin/Login.jsx';
 import AdminDashboard from './pages/admin/Dashboard.jsx';
 import AdminClientDetail from './pages/admin/ClientDetail.jsx';
 import AdminCatalog from './pages/admin/Catalog.jsx';
+import AdminContracts from './pages/admin/Contracts.jsx';
 import './styles/portal.css';
 
 function ScrollToTop() {
@@ -71,6 +72,7 @@ function AppContent() {
           <Route path="/admin/clientes" element={<AdminDashboard />} />
           <Route path="/admin/clientes/:id" element={<AdminClientDetail />} />
           <Route path="/admin/catalogo" element={<AdminCatalog />} />
+          <Route path="/admin/contratos" element={<AdminContracts />} />
           <Route path="*" element={<AdminDashboard />} />
         </Routes>
       </>
