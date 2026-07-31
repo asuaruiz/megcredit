@@ -35,6 +35,27 @@ const staticPages = {
   },
 };
 
+// Portal/admin routes are private (behind auth) and excluded from the sitemap,
+// but SEO still owns document.title for them — without an entry here they fall
+// through to the 404 title below, which is what the browser tab shows while
+// logged into the dashboard.
+const internalPages = {
+  '/portal/login': { title: 'Iniciar sesión | Portal de clientes MEG Credit', description: 'Accede a tu portal de clientes de MEG Credit.' },
+  '/portal/activar': { title: 'Activar tu cuenta | Portal de clientes MEG Credit', description: 'Activa tu cuenta para comenzar a usar tu portal de clientes.' },
+  '/portal/dashboard': { title: 'Tu portal | MEG Credit', description: 'Revisa el estado de tu caso y tus puntajes de crédito.' },
+  '/portal/disputas': { title: 'Disputas | Portal MEG Credit', description: 'Estado de tus disputas por buró de crédito.' },
+  '/portal/mensajes': { title: 'Mensajes | Portal MEG Credit', description: 'Tus mensajes con el equipo de MEG Credit.' },
+  '/portal/finanzas': { title: 'Finanzas | Portal MEG Credit', description: 'Tus planes de servicio y facturación.' },
+  '/portal/facturas': { title: 'Facturas | Portal MEG Credit', description: 'Tu historial de facturas y pagos.' },
+  '/portal/credito': { title: 'Información de crédito | Portal MEG Credit', description: 'Tus credenciales de monitoreo de crédito.' },
+  '/portal/recursos': { title: 'Recursos | Portal MEG Credit', description: 'Recursos educativos sobre crédito.' },
+  '/portal/configuracion': { title: 'Configuración | Portal MEG Credit', description: 'Ajustes de tu cuenta.' },
+  '/admin/login': { title: 'Iniciar sesión | Panel de administración MEG Credit', description: 'Acceso para el equipo de MEG Credit.' },
+  '/admin/clientes': { title: 'Clientes | Panel de administración MEG Credit', description: 'Administra las cuentas de clientes de MEG Credit.' },
+  '/admin/catalogo': { title: 'Catálogo de servicios | Panel de administración MEG Credit', description: 'Administra el catálogo de servicios.' },
+  '/admin/contratos': { title: 'Plantillas de contrato | Panel de administración MEG Credit', description: 'Administra las plantillas de contrato.' },
+};
+
 export const ROUTES = [
   ...Object.keys(staticPages),
   ...posts.map((post) => `/blog/${post.slug}`),
@@ -51,6 +72,26 @@ export function getPageMeta(pathname) {
       canonical: `${SITE_URL}${cleanPath}`,
       type: 'article',
       post,
+    };
+  }
+
+  if (cleanPath.startsWith('/admin/clientes/')) {
+    return {
+      title: 'Detalle de cliente | Panel de administración MEG Credit',
+      description: 'Detalle de cuenta, documentos y planes del cliente.',
+      noindex: true,
+      canonical: `${SITE_URL}${cleanPath}`,
+      type: 'website',
+    };
+  }
+
+  const internalPage = internalPages[cleanPath];
+  if (internalPage) {
+    return {
+      ...internalPage,
+      noindex: true,
+      canonical: `${SITE_URL}${cleanPath}`,
+      type: 'website',
     };
   }
 

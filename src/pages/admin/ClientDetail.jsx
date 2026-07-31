@@ -6,6 +6,8 @@ import ConfirmDialog from '../../components/ConfirmDialog.jsx';
 import { archiveAgreement, assignPlan, cancelPlan, confirmBureauReport, deleteBureauReport, fetchAgreementPdf, fetchAgreementSignature, fetchBureauLink, fetchBureauReports, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchContractTemplates, fetchDocumentFile, fetchPaymentHistory, fetchStaffMe, lookupBureauCustomer, parseBureauReport, resendPaymentLink, reviewDocument, saveBureauLink, sendPaymentReminder, staffLogout, syncBureauReport, unlinkBureauAccount, uploadAgreementPdf, uploadBureauReportPdf } from '../../lib/adminApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
+const STATUS_BADGE = { invited: 'pending', active: 'approved', suspended: 'rejected' };
+
 const BUREAUS_ADMIN = [
   { label: 'Equifax', key: 'equifax' },
   { label: 'Experian', key: 'experian' },
@@ -737,7 +739,10 @@ export default function AdminClientDetail() {
   return (
     <AdminLayout title={detail.account.full_name} onLogout={handleLogout}>
       <div className="portal-card wide">
-        <p className="portal-sub">{detail.account.email} · {t('adminClientDetail.statusLabel')}: {detail.account.status}</p>
+        <div className="cluster-3">
+          <span className={`status-badge ${STATUS_BADGE[detail.account.status] || 'missing'}`}>{detail.account.status}</span>
+          <p className="portal-sub">{detail.account.email}</p>
+        </div>
 
         <section className="admin-block">
           <h2>{t('adminClientDetail.documentsTitle')}</h2>
@@ -760,7 +765,7 @@ export default function AdminClientDetail() {
                     <span className={`status-badge ${doc.status}`}>{doc.status}</span>
                     {doc.status !== 'approved' && (
                       <button
-                        className="btn btn-outline"
+                        className="btn btn-primary"
                         type="button"
                         disabled={reviewingId === doc.id}
                         onClick={() => handleReview(doc.id, 'approved')}
@@ -770,7 +775,7 @@ export default function AdminClientDetail() {
                     )}
                     {doc.status !== 'rejected' && (
                       <button
-                        className="btn btn-outline"
+                        className="btn btn-outline danger"
                         type="button"
                         disabled={reviewingId === doc.id}
                         onClick={() => handleReview(doc.id, 'rejected')}
