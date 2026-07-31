@@ -33,11 +33,16 @@ function IconLogout() {
   );
 }
 
+function IconContracts() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 11h6M9 15h6"/></svg>;
+}
+
 export default function AdminLayout({ children, onLogout, title }) {
   const { t } = useLanguage();
   const NAV_ITEMS = [
     { to: '/admin/clientes', label: t('adminLayout.navClients'), Icon: IconUsers },
     { to: '/admin/catalogo', label: t('adminLayout.navCatalog'), Icon: IconCatalog },
+    { to: '/admin/contratos', label: t('adminLayout.navContracts'), Icon: IconContracts },
   ];
   return (
     <div className="admin-shell">

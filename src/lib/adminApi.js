@@ -72,3 +72,25 @@ export async function fetchAgreementSignature(agreementId) {
 export function resendPaymentLink(paymentPlanId) {
   return request('/api/admin/resend-payment-link', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ paymentPlanId }) });
 }
+
+export function fetchContracts() {
+  return request('/api/admin/contracts');
+}
+
+export async function uploadAgreementPdf(clientId, file) {
+  if (file.type !== 'application/pdf' || file.size > 15 * 1024 * 1024) throw new Error('Selecciona un PDF de hasta 15 MB.');
+  const prepared = await request('/api/admin/agreement-upload-url', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ clientId, filename: file.name, sizeBytes: file.size }) });
+  const uploaded = await fetch(prepared.uploadUrl, { method: 'PUT', headers: { 'Content-Type': 'application/pdf' }, body: file });
+  if (!uploaded.ok) throw new Error('No pudimos subir el PDF.');
+  return { path: prepared.path, filename: prepared.filename, sizeBytes: file.size };
+}
+
+export function attachAgreementPdf(agreementId, uploaded) {
+  return request('/api/admin/attach-agreement-pdf', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ agreementId, ...uploaded }) });
+}
+
+export async function fetchAgreementPdf(agreementId) {
+  const response = await fetch(`/api/admin/view-agreement-pdf?id=${encodeURIComponent(agreementId)}`, { credentials: 'include' });
+  if (!response.ok) throw new Error('No pudimos abrir el PDF.');
+  return response.blob();
+}

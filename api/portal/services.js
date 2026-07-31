@@ -16,12 +16,13 @@ export default async function handler(request, response) {
     const [plansResult, servicesResult, agreementsResult] = await Promise.all([
       supabaseRequest(`megcredit_payment_plans?client_account_id=eq.${clientId}&select=id,billing_type,recurring_interval,status,created_at&order=created_at.desc`, { method: 'GET' }),
       supabaseRequest(`megcredit_client_services?client_account_id=eq.${clientId}&select=id,payment_plan_id,name,description,price_cents`, { method: 'GET' }),
-      supabaseRequest(`megcredit_service_agreements?client_account_id=eq.${clientId}&select=id,payment_plan_id,title,body_text,status,signed_full_name,signed_at`, { method: 'GET' }),
+      supabaseRequest(`megcredit_service_agreements?client_account_id=eq.${clientId}&select=id,payment_plan_id,title,body_text,status,signed_full_name,signed_at,pdf_storage_path,pdf_original_filename`, { method: 'GET' }),
     ]);
 
     const plans = plansResult.ok ? await plansResult.json() : [];
     const services = servicesResult.ok ? await servicesResult.json() : [];
-    const agreements = agreementsResult.ok ? await agreementsResult.json() : [];
+    const rawAgreements = agreementsResult.ok ? await agreementsResult.json() : [];
+    const agreements = rawAgreements.map(({ pdf_storage_path: pdfPath, ...agreement }) => ({ ...agreement, has_pdf: Boolean(pdfPath) }));
 
     const enrichedPlans = plans.map((plan) => ({
       ...plan,

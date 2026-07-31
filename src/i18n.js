@@ -307,6 +307,7 @@ export const translations = {
     adminLayout: {
       navClients: 'Clients',
       navCatalog: 'Catalog',
+      navContracts: 'Contracts',
       logout: 'Log out',
     },
     portalLayout: {
@@ -363,6 +364,9 @@ export const translations = {
       status: 'Status',
       documents: 'Documents',
       plan: 'Plan',
+    },
+    adminContracts: {
+      title: 'Contracts', allContracts: 'All contracts', description: 'Review every client contract and upload or replace its private PDF.', empty: 'No contracts yet.', contract: 'Contract', client: 'Client', status: 'Status', actions: 'Actions', noPdf: 'No PDF', viewPdf: 'View PDF', uploadPdf: 'Upload PDF', replacePdf: 'Replace PDF', uploading: 'Uploading…',
     },
     adminCatalog: {
       catalogTitle: 'Catalog',
@@ -429,6 +433,10 @@ export const translations = {
       agreementTitleLabel: 'Contract title',
       agreementTitleDefault: 'MEG Credit Service Agreement',
       agreementTextLabel: 'Contract text',
+      agreementSourceLabel: 'Contract format',
+      agreementSourceText: 'Write or generate text',
+      agreementSourcePdf: 'Upload PDF',
+      agreementPdfLabel: 'Contract PDF (maximum 15 MB)',
       generateSuggested: 'Generate suggested',
       submitPlan: 'Send plan and contract to client',
       sendingPlan: 'Sending…',
@@ -766,6 +774,7 @@ export const translations = {
     adminLayout: {
       navClients: 'Clientes',
       navCatalog: 'Catálogo',
+      navContracts: 'Contratos',
       logout: 'Cerrar sesión',
     },
     portalLayout: {
@@ -822,6 +831,9 @@ export const translations = {
       status: 'Estado',
       documents: 'Documentos',
       plan: 'Plan',
+    },
+    adminContracts: {
+      title: 'Contratos', allContracts: 'Todos los contratos', description: 'Revisa todos los contratos y sube o reemplaza su PDF privado.', empty: 'Todavía no hay contratos.', contract: 'Contrato', client: 'Cliente', status: 'Estado', actions: 'Acciones', noPdf: 'Sin PDF', viewPdf: 'Ver PDF', uploadPdf: 'Subir PDF', replacePdf: 'Reemplazar PDF', uploading: 'Subiendo…',
     },
     adminCatalog: {
       catalogTitle: 'Catálogo',
@@ -888,6 +900,10 @@ export const translations = {
       agreementTitleLabel: 'Título del contrato',
       agreementTitleDefault: 'Acuerdo de servicios MEG Credit',
       agreementTextLabel: 'Texto del contrato',
+      agreementSourceLabel: 'Formato del contrato',
+      agreementSourceText: 'Escribir o generar texto',
+      agreementSourcePdf: 'Subir PDF',
+      agreementPdfLabel: 'PDF del contrato (máximo 15 MB)',
       generateSuggested: 'Generar sugerido',
       submitPlan: 'Enviar plan y contrato al cliente',
       sendingPlan: 'Enviando…',

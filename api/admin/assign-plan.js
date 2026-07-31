@@ -30,6 +30,9 @@ export default async function handler(request, response) {
   const recurringInterval = clean(body.recurringInterval, 20) || null;
   const agreementTitle = clean(body.agreementTitle, 200) || 'Acuerdo de servicios';
   const agreementText = clean(body.agreementText, 20000);
+  const agreementPdfPath = clean(body.agreementPdfPath, 500);
+  const agreementPdfFilename = clean(body.agreementPdfFilename, 255);
+  const agreementPdfSizeBytes = Number(body.agreementPdfSizeBytes) || null;
   const services = Array.isArray(body.services) ? body.services.map(validService) : [];
   const firstPaymentCentsRaw = body.firstPaymentCents;
   const hasFirstPayment = firstPaymentCentsRaw !== undefined && firstPaymentCentsRaw !== null && firstPaymentCentsRaw !== '';
@@ -44,7 +47,11 @@ export default async function handler(request, response) {
   if (services.some((service) => service === null) || services.length === 0) {
     return json(response, 400, { error: 'Revisa los servicios: cada uno necesita nombre y precio.' });
   }
-  if (agreementText.length < 10) return json(response, 400, { error: 'El texto del contrato es demasiado corto.' });
+  const hasPdf = Boolean(agreementPdfPath);
+  if (!hasPdf && agreementText.length < 10) return json(response, 400, { error: 'Escribe el contrato o sube un PDF.' });
+  if (hasPdf && (!agreementPdfPath.startsWith(`${clientId}/contracts/`) || !agreementPdfFilename.toLowerCase().endsWith('.pdf'))) {
+    return json(response, 400, { error: 'El PDF del contrato no es válido.' });
+  }
   if (hasFirstPayment && (!Number.isInteger(firstPaymentCents) || firstPaymentCents < 0)) {
     return json(response, 400, { error: 'El primer pago no es válido.' });
   }
@@ -99,7 +106,8 @@ export default async function handler(request, response) {
         client_account_id: clientId,
         payment_plan_id: plan.id,
         title: agreementTitle,
-        body_text: agreementText,
+        body_text: agreementText.length >= 10 ? agreementText : 'Contrato proporcionado como documento PDF adjunto.',
+        ...(hasPdf ? { pdf_storage_path: agreementPdfPath, pdf_original_filename: agreementPdfFilename, pdf_size_bytes: agreementPdfSizeBytes } : {}),
         created_by_staff_id: active.staff.id,
       }),
     });
