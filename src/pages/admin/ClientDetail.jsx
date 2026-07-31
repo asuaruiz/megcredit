@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
+import Modal from '../../components/portal/Modal.jsx';
 import { assignPlan, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchDocumentUrl, fetchStaffMe, resendPaymentLink, reviewDocument, staffLogout } from '../../lib/adminApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
@@ -71,6 +72,7 @@ export default function AdminClientDetail() {
   const [reviewError, setReviewError] = useState('');
   const [viewingId, setViewingId] = useState(null);
   const [documentError, setDocumentError] = useState('');
+  const [documentPreview, setDocumentPreview] = useState(null);
   const [sendingPaymentId, setSendingPaymentId] = useState(null);
   const [paymentMessage, setPaymentMessage] = useState('');
   const [paymentError, setPaymentError] = useState('');
@@ -180,17 +182,16 @@ export default function AdminClientDetail() {
     }
   };
 
-  const handleViewDocument = async (documentId) => {
-    const documentWindow = window.open('', '_blank');
-    if (documentWindow) documentWindow.opener = null;
-    setViewingId(documentId);
+  const handleViewDocument = async (doc) => {
+    setViewingId(doc.id);
     setDocumentError('');
     try {
-      const { url } = await fetchDocumentUrl(documentId);
-      if (documentWindow) documentWindow.location.replace(url);
-      else window.location.assign(url);
+      const { url } = await fetchDocumentUrl(doc.id);
+      setDocumentPreview({
+        url,
+        title: DOCUMENT_LABEL[doc.document_type] || doc.original_filename || doc.document_type,
+      });
     } catch (viewError) {
-      if (documentWindow) documentWindow.close();
       setDocumentError(viewError.message);
     } finally {
       setViewingId(null);
@@ -237,7 +238,7 @@ export default function AdminClientDetail() {
                     className="btn btn-outline"
                     type="button"
                     disabled={viewingId === doc.id}
-                    onClick={() => handleViewDocument(doc.id)}
+                    onClick={() => handleViewDocument(doc)}
                   >
                     {viewingId === doc.id ? t('adminClientDetail.openingDocument') : t('adminClientDetail.viewDocument')}
                   </button>
@@ -310,6 +311,16 @@ export default function AdminClientDetail() {
         {paymentMessage && <p className="form-success" role="status">{paymentMessage}</p>}
         {paymentError && <p className="form-error" role="alert">{paymentError}</p>}
       </div>
+
+      {documentPreview && (
+        <Modal title={documentPreview.title} onClose={() => setDocumentPreview(null)} maxWidth={1000}>
+          <iframe
+            src={documentPreview.url}
+            title={documentPreview.title}
+            style={{ display: 'block', width: '100%', height: '72vh', border: '1px solid var(--border)', borderRadius: 8, background: '#fff' }}
+          />
+        </Modal>
+      )}
 
       <div className="portal-card wide">
         <h2>{t('adminClientDetail.buildPlanTitle')}</h2>
