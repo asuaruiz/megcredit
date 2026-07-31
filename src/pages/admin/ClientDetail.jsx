@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
-import { assignPlan, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchStaffMe, reviewDocument, staffLogout } from '../../lib/adminApi.js';
+import { assignPlan, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchDocumentUrl, fetchStaffMe, resendPaymentLink, reviewDocument, staffLogout } from '../../lib/adminApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 function CreditMonitoringSection({ clientId }) {
@@ -69,6 +69,11 @@ export default function AdminClientDetail() {
   const [error, setError] = useState('');
   const [reviewingId, setReviewingId] = useState(null);
   const [reviewError, setReviewError] = useState('');
+  const [viewingId, setViewingId] = useState(null);
+  const [documentError, setDocumentError] = useState('');
+  const [sendingPaymentId, setSendingPaymentId] = useState(null);
+  const [paymentMessage, setPaymentMessage] = useState('');
+  const [paymentError, setPaymentError] = useState('');
 
   const DOCUMENT_LABEL = {
     id_front: t('adminClientDetail.documentIdFront'),
@@ -175,6 +180,37 @@ export default function AdminClientDetail() {
     }
   };
 
+  const handleViewDocument = async (documentId) => {
+    const documentWindow = window.open('', '_blank');
+    if (documentWindow) documentWindow.opener = null;
+    setViewingId(documentId);
+    setDocumentError('');
+    try {
+      const { url } = await fetchDocumentUrl(documentId);
+      if (documentWindow) documentWindow.location.replace(url);
+      else window.location.assign(url);
+    } catch (viewError) {
+      if (documentWindow) documentWindow.close();
+      setDocumentError(viewError.message);
+    } finally {
+      setViewingId(null);
+    }
+  };
+
+  const handleResendPayment = async (paymentPlanId) => {
+    setSendingPaymentId(paymentPlanId);
+    setPaymentMessage('');
+    setPaymentError('');
+    try {
+      await resendPaymentLink(paymentPlanId);
+      setPaymentMessage(t('adminClientDetail.paymentLinkSent'));
+    } catch (paymentErr) {
+      setPaymentError(paymentErr.message);
+    } finally {
+      setSendingPaymentId(null);
+    }
+  };
+
   if (loading || !detail) {
     return (
       <AdminLayout title={t('adminClientDetail.clientTitle')}>
@@ -197,6 +233,14 @@ export default function AdminClientDetail() {
               <li key={doc.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10, fontSize: 14, marginBottom: 8 }}>
                 <span>{DOCUMENT_LABEL[doc.document_type] || doc.document_type}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    className="btn btn-outline"
+                    type="button"
+                    disabled={viewingId === doc.id}
+                    onClick={() => handleViewDocument(doc.id)}
+                  >
+                    {viewingId === doc.id ? t('adminClientDetail.openingDocument') : t('adminClientDetail.viewDocument')}
+                  </button>
                   <span className={`status-badge ${doc.status}`}>{doc.status}</span>
                   {doc.status !== 'approved' && (
                     <button
@@ -223,6 +267,7 @@ export default function AdminClientDetail() {
             ))}
           </ul>
         )}
+        {documentError && <p className="form-error" role="alert">{documentError}</p>}
         {reviewError && <p className="form-error" role="alert">{reviewError}</p>}
 
         <CreditMonitoringSection clientId={id} />
@@ -249,9 +294,21 @@ export default function AdminClientDetail() {
               {plan.billing_type === 'recurring' && (
                 <p className="doc-hint" style={{ marginTop: 4 }}>{t('adminClientDetail.serviceValueHint')}</p>
               )}
+              {plan.status === 'awaiting_payment' && plan.agreement?.status === 'signed' && (
+                <button
+                  className="btn btn-outline"
+                  type="button"
+                  disabled={sendingPaymentId === plan.id}
+                  onClick={() => handleResendPayment(plan.id)}
+                >
+                  {sendingPaymentId === plan.id ? t('adminClientDetail.sendingPaymentLink') : t('adminClientDetail.resendPaymentLink')}
+                </button>
+              )}
             </div>
           ))
         )}
+        {paymentMessage && <p className="form-success" role="status">{paymentMessage}</p>}
+        {paymentError && <p className="form-error" role="alert">{paymentError}</p>}
       </div>
 
       <div className="portal-card wide">

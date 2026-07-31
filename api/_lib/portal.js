@@ -147,6 +147,25 @@ export async function uploadBufferToStorage(bucket, path, buffer, contentType) {
   if (!result.ok) throw new Error(`Storage upload failed: ${result.status} ${await result.text()}`);
 }
 
+export async function createSignedStorageUrl(bucket, path, expiresIn = 300) {
+  const { url, key } = supabaseEnv();
+  const encodedPath = String(path).split('/').map(encodeURIComponent).join('/');
+  const result = await fetch(`${url}/storage/v1/object/sign/${encodeURIComponent(bucket)}/${encodedPath}`, {
+    method: 'POST',
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ expiresIn }),
+  });
+  if (!result.ok) throw new Error(`Storage signed URL failed: ${result.status} ${await result.text()}`);
+  const data = await result.json();
+  if (!data.signedURL && !data.signedUrl) throw new Error('Storage signed URL response is missing the URL');
+  const signedPath = data.signedURL || data.signedUrl;
+  return signedPath.startsWith('http') ? signedPath : `${url}/storage/v1${signedPath.startsWith('/') ? '' : '/'}${signedPath}`;
+}
+
 export async function getActiveSession(request) {
   const token = sessionToken(request);
   if (!token) return null;
@@ -209,6 +228,13 @@ export function agreementReadyEmailHtml({ fullName, loginUrl }) {
   return portalEmailLayout(
     `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Portal de clientes</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hola, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">Tu asesor preparó tu plan de servicios y contrato en el portal de MEG Credit. Inicia sesión para revisarlo y firmarlo.</p><p style="margin:0 0 26px"><a href="${loginUrl}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">Revisar mi contrato</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">Si no esperabas este correo, contacta a tu asesor de MEG Credit.</p>`,
     'Tu contrato de servicios está listo para firmar',
+  );
+}
+
+export function paymentLinkEmailHtml({ fullName, paymentUrl }) {
+  return portalEmailLayout(
+    `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Portal de clientes</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hola, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">Tu enlace seguro para completar el pago de los servicios de MEG Credit está listo.</p><p style="margin:0 0 26px"><a href="${escapeHtml(paymentUrl)}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">Completar mi pago</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">Este enlace es personal. Si no esperabas este correo, contacta a tu asesor de MEG Credit.</p>`,
+    'Completa tu pago de MEG Credit',
   );
 }
 

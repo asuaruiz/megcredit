@@ -50,3 +50,11 @@ export function assignPlan(payload) {
 export function reviewDocument(documentId, status) {
   return request('/api/admin/review-document', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ documentId, status }) });
 }
+
+export function fetchDocumentUrl(documentId) {
+  return request(`/api/admin/view-document?id=${encodeURIComponent(documentId)}`);
+}
+
+export function resendPaymentLink(paymentPlanId) {
+  return request('/api/admin/resend-payment-link', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ paymentPlanId }) });
+}
