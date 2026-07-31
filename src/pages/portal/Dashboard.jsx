@@ -5,11 +5,39 @@ import PortalSidebarLayout from '../../components/portal/PortalSidebarLayout.jsx
 import Modal from '../../components/portal/Modal.jsx';
 import SignaturePad from '../../components/portal/SignaturePad.jsx';
 import ServicesPanel from '../../components/portal/ServicesPanel.jsx';
-import { fetchAgreementPdf, fetchMe, fetchOnboardingStatus, logout, saveCreditMonitoring, signAgreement, uploadDocument } from '../../lib/portalApi.js';
+import { fetchAgreementPdf, fetchBureauSummary, fetchMe, fetchOnboardingStatus, logout, saveCreditMonitoring, signAgreement, uploadDocument } from '../../lib/portalApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
-const BUREAUS = ['Equifax', 'Experian', 'TransUnion'];
-const CASE_STATUS_ROWS = ['rowPositive', 'rowDeleted', 'rowInDispute', 'rowVerified'];
+const BUREAUS = [
+  { label: 'Equifax', key: 'equifax' },
+  { label: 'Experian', key: 'experian' },
+  { label: 'TransUnion', key: 'transunion' },
+];
+
+const CASE_STATUS_ROWS = [
+  { i18nKey: 'rowUnspecified', category: 'unspecified' },
+  { i18nKey: 'rowPositive', category: 'positive' },
+  { i18nKey: 'rowDeleted', category: 'deleted' },
+  { i18nKey: 'rowRepaired', category: 'repaired' },
+  { i18nKey: 'rowUpdated', category: 'updated' },
+  { i18nKey: 'rowInDispute', category: 'in_dispute' },
+  { i18nKey: 'rowVerified', category: 'verified' },
+  { i18nKey: 'rowNegative', category: 'negative' },
+];
+
+function useBureauSummary() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    fetchBureauSummary()
+      .then((result) => { if (active) setData(result); })
+      .catch(() => { if (active) setData({ report: null, scores: [], caseStatus: [] }); });
+    return () => { active = false; };
+  }, []);
+
+  return data;
+}
 
 const TAB_BY_PATH = {
   '/portal/dashboard': 'home',
@@ -32,8 +60,39 @@ function ComingSoonCard({ title }) {
   );
 }
 
+function CaseStatusTable({ bureauData }) {
+  const { t } = useLanguage();
+  const countFor = (bureauKey, category) =>
+    bureauData?.caseStatus.find((row) => row.bureau === bureauKey && row.status_category === category)?.count;
+
+  return (
+    <div className="admin-table-wrap">
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th />
+            {BUREAUS.map(({ label, key }) => <th key={key}>{label}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {CASE_STATUS_ROWS.map(({ i18nKey, category }) => (
+            <tr key={category}>
+              <td>{t(`portalHome.${i18nKey}`)}</td>
+              {BUREAUS.map(({ key }) => <td key={key}>{countFor(key, category) ?? '—'}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function HomeTab({ account }) {
   const { t } = useLanguage();
+  const bureauData = useBureauSummary();
+  const hasData = Boolean(bureauData?.report);
+  const scoreFor = (bureauKey) => bureauData?.scores.find((row) => row.bureau === bureauKey)?.score;
+
   return (
     <>
       <div className="portal-card wide admin-section">
@@ -47,39 +106,38 @@ function HomeTab({ account }) {
       <div className="portal-card wide admin-section">
         <h2>{t('portalHome.scoresTitle')}</h2>
         <div className="admin-stats">
-          {BUREAUS.map((bureau) => (
-            <div className="admin-stat-tile" key={bureau}>
-              <div className="stat-value">—</div>
-              <div className="stat-label">{bureau}</div>
+          {BUREAUS.map(({ label, key }) => (
+            <div className="admin-stat-tile" key={key}>
+              <div className="stat-value">{scoreFor(key) ?? '—'}</div>
+              <div className="stat-label">{label}</div>
             </div>
           ))}
         </div>
-        <p className="portal-sub" style={{ marginTop: 12, marginBottom: 0 }}>{t('portalHome.scoresEmpty')}</p>
+        <p className="portal-sub" style={{ marginTop: 12, marginBottom: 0 }}>
+          {hasData ? `${t('portalHome.asOf')} ${bureauData.report.asOfDate}` : t('portalHome.scoresEmpty')}
+        </p>
       </div>
 
       <div className="portal-card wide">
         <h2>{t('portalHome.caseStatusTitle')}</h2>
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th />
-                {BUREAUS.map((bureau) => <th key={bureau}>{bureau}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {CASE_STATUS_ROWS.map((rowKey) => (
-                <tr key={rowKey}>
-                  <td>{t(`portalHome.${rowKey}`)}</td>
-                  {BUREAUS.map((bureau) => <td key={bureau}>—</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="portal-sub" style={{ marginTop: 12, marginBottom: 0 }}>{t('portalHome.caseStatusEmpty')}</p>
+        <CaseStatusTable bureauData={bureauData} />
+        {!hasData && <p className="portal-sub" style={{ marginTop: 12, marginBottom: 0 }}>{t('portalHome.caseStatusEmpty')}</p>}
       </div>
     </>
+  );
+}
+
+function DisputesTab() {
+  const { t } = useLanguage();
+  const bureauData = useBureauSummary();
+  const hasData = Boolean(bureauData?.report);
+
+  return (
+    <div className="portal-card wide">
+      <h2>{t('portalSidebar.disputes')}</h2>
+      <CaseStatusTable bureauData={bureauData} />
+      {!hasData && <p className="portal-sub" style={{ marginTop: 12, marginBottom: 0 }}>{t('portalHome.caseStatusEmpty')}</p>}
+    </div>
   );
 }
 
@@ -386,7 +444,7 @@ export default function PortalDashboard() {
     return (
       <PortalSidebarLayout title={tabTitle} onLogout={handleLogout}>
         {activeTab === 'home' && <HomeTab account={account} />}
-        {activeTab === 'disputes' && <ComingSoonCard title={t('portalSidebar.disputes')} />}
+        {activeTab === 'disputes' && <DisputesTab />}
         {activeTab === 'messages' && <ComingSoonCard title={t('portalSidebar.messages')} />}
         {activeTab === 'finances' && <ServicesPanel />}
         {activeTab === 'invoices' && <ComingSoonCard title={t('portalSidebar.invoices')} />}

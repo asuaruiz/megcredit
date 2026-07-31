@@ -1,17 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { getActiveStaffSession } from '../_lib/admin.js';
-import {
-  INVITE_TTL_MS,
-  allowedOrigin,
-  clean,
-  inviteEmailHtml,
-  json,
-  newToken,
-  sendPortalEmail,
-  sha256Hex,
-  supabaseOne,
-  supabaseRequest,
-} from '../_lib/portal.js';
+import { allowedOrigin, clean, createClientInvite, json, sha256Hex } from '../_lib/portal.js';
 
 function hasValidBearerToken(request) {
   const expected = process.env.PORTAL_ADMIN_TOKEN;
@@ -47,32 +36,13 @@ export default async function handler(request, response) {
   }
 
   try {
-    const existingAccount = await supabaseOne(
-      `megcredit_client_accounts?email=eq.${encodeURIComponent(email)}&status=eq.active&select=id`,
-      { method: 'GET' },
-    );
-    if (existingAccount) return json(response, 409, { error: 'Ya existe una cuenta activa con ese correo.' });
-
-    const token = newToken();
-    const tokenHash = sha256Hex(token);
-    const expiresAt = new Date(Date.now() + INVITE_TTL_MS).toISOString();
-
-    const insertResult = await supabaseRequest('megcredit_client_invites', {
-      method: 'POST',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ email, full_name: fullName, token_hash: tokenHash, expires_at: expiresAt }),
-    });
-    if (!insertResult.ok) throw new Error(`Supabase insert failed: ${insertResult.status}`);
-
-    const siteUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://www.megcredit.com';
-    const activationUrl = `${siteUrl}/portal/activar?token=${token}`;
-
-    await sendPortalEmail({
-      to: email,
-      subject: 'Create your account on the MEG Credit portal',
-      html: inviteEmailHtml({ fullName, activationUrl }),
-    });
-
+    const result = await createClientInvite({ email, fullName });
+    if (result.status === 'already_active') {
+      return json(response, 409, { error: 'Ya existe una cuenta activa con ese correo.' });
+    }
+    if (result.status === 'already_invited') {
+      return json(response, 409, { error: 'Ya existe una invitación pendiente para ese correo.' });
+    }
     return json(response, 201, { ok: true });
   } catch (error) {
     console.error('Portal invite failed', error instanceof Error ? error.message : 'unknown error');

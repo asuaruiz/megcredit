@@ -66,6 +66,10 @@ export async function uploadDocument(documentType, file) {
   if (!uploadResponse.ok) throw new Error('No pudimos subir el archivo. Intenta nuevamente.');
 }
 
+export function fetchBureauSummary() {
+  return request('/api/portal/bureau-summary');
+}
+
 export async function fetchAgreementPdf(agreementId) {
   const response = await fetch(`/api/portal/view-agreement-pdf?id=${encodeURIComponent(agreementId)}`, { credentials: 'include' });
   if (!response.ok) throw new Error('No pudimos abrir el contrato PDF.');
