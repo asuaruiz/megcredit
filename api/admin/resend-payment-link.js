@@ -77,11 +77,11 @@ export default async function handler(request, response) {
           currency: plan.currency,
           unit_amount: plan.recurring_amount_cents,
           recurring: { interval: plan.recurring_interval },
-          product_data: { name: 'Pago recurrente', description: services.map((service) => service.name).join(', ') },
+          product_data: { name: 'Recurring payment', description: services.map((service) => service.name).join(', ') },
         },
       }];
       if (Number.isInteger(plan.first_payment_cents) && plan.first_payment_cents > 0 && plan.first_payment_cents !== plan.recurring_amount_cents) {
-        lineItems.push({ quantity: 1, price_data: { currency: plan.currency, unit_amount: plan.first_payment_cents, product_data: { name: 'Primer pago' } } });
+        lineItems.push({ quantity: 1, price_data: { currency: plan.currency, unit_amount: plan.first_payment_cents, product_data: { name: 'First payment' } } });
       }
     } else {
       lineItems = services.map((service) => ({
@@ -119,7 +119,7 @@ export default async function handler(request, response) {
 
     await sendPortalEmail({
       to: account.email,
-      subject: 'Tu enlace de pago de MEG Credit',
+      subject: 'Your MEG Credit payment link',
       html: paymentLinkEmailHtml({ fullName: account.full_name, paymentUrl: session.url }),
     });
 

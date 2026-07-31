@@ -69,7 +69,7 @@ export default async function handler(request, response) {
 
     await sendPortalEmail({
       to: email,
-      subject: 'Crea tu cuenta en el portal de MEG Credit',
+      subject: 'Create your account on the MEG Credit portal',
       html: inviteEmailHtml({ fullName, activationUrl }),
     });
 

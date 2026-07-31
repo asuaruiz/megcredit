@@ -31,12 +31,20 @@ export function fetchClientDetail(id) {
   return request(`/api/admin/client-detail?id=${encodeURIComponent(id)}`);
 }
 
-export function fetchCatalog() {
-  return request('/api/admin/services-catalog');
+export function fetchCatalog(includeInactive = false) {
+  return request(`/api/admin/services-catalog${includeInactive ? '?all=1' : ''}`);
 }
 
 export function createCatalogItem(payload) {
   return request('/api/admin/services-catalog', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(payload) });
+}
+
+export function updateCatalogItem(payload) {
+  return request('/api/admin/services-catalog', { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify(payload) });
+}
+
+export function deleteCatalogItem(id) {
+  return request(`/api/admin/services-catalog?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 export function inviteClient(email, fullName) {
@@ -107,6 +115,40 @@ export function attachAgreementPdf(agreementId, uploaded) {
 
 export async function fetchAgreementPdf(agreementId) {
   const response = await fetch(`/api/admin/view-agreement-pdf?id=${encodeURIComponent(agreementId)}`, { credentials: 'include' });
+  if (!response.ok) throw new Error('No pudimos abrir el PDF.');
+  return response.blob();
+}
+
+export function archiveAgreement(agreementId, archived) {
+  return request('/api/admin/archive-agreement', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ agreementId, archived }) });
+}
+
+export function fetchContractTemplates() {
+  return request('/api/admin/contract-templates');
+}
+
+export async function uploadContractTemplate(name, file) {
+  if (file.type !== 'application/pdf' || file.size > 15 * 1024 * 1024) throw new Error('Selecciona un PDF de hasta 15 MB.');
+  const prepared = await request('/api/admin/contract-template-upload-url', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ filename: file.name, sizeBytes: file.size }) });
+  const uploaded = await fetch(prepared.uploadUrl, { method: 'PUT', headers: { 'Content-Type': 'application/pdf' }, body: file });
+  if (!uploaded.ok) throw new Error('No pudimos subir el PDF.');
+  return request('/api/admin/contract-templates', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ name, path: prepared.path, filename: prepared.filename, sizeBytes: file.size }),
+  });
+}
+
+export function renameContractTemplate(id, name) {
+  return request(`/api/admin/contract-template-detail?id=${encodeURIComponent(id)}`, { method: 'PATCH', headers: JSON_HEADERS, body: JSON.stringify({ name }) });
+}
+
+export function deleteContractTemplate(id) {
+  return request(`/api/admin/contract-template-detail?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+export async function fetchContractTemplatePdf(id) {
+  const response = await fetch(`/api/admin/view-contract-template-pdf?id=${encodeURIComponent(id)}`, { credentials: 'include' });
   if (!response.ok) throw new Error('No pudimos abrir el PDF.');
   return response.blob();
 }
