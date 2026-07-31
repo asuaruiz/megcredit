@@ -139,6 +139,10 @@ export async function uploadBureauReportPdf(clientAccountId, file, asOfDate) {
   return { reportId: prepared.reportId };
 }
 
+export function deleteBureauReport(reportId) {
+  return request(`/api/admin/bureau-reports?id=${encodeURIComponent(reportId)}`, { method: 'DELETE' });
+}
+
 export function parseBureauReport(reportId) {
   return request('/api/admin/bureau-report-parse', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ reportId }) });
 }

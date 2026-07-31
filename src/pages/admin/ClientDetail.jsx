@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
 import Modal from '../../components/portal/Modal.jsx';
 import ConfirmDialog from '../../components/ConfirmDialog.jsx';
-import { archiveAgreement, assignPlan, cancelPlan, confirmBureauReport, fetchAgreementPdf, fetchAgreementSignature, fetchBureauReports, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchContractTemplates, fetchDocumentFile, fetchPaymentHistory, fetchStaffMe, parseBureauReport, resendPaymentLink, reviewDocument, sendPaymentReminder, staffLogout, uploadAgreementPdf, uploadBureauReportPdf } from '../../lib/adminApi.js';
+import { archiveAgreement, assignPlan, cancelPlan, confirmBureauReport, deleteBureauReport, fetchAgreementPdf, fetchAgreementSignature, fetchBureauReports, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchContractTemplates, fetchDocumentFile, fetchPaymentHistory, fetchStaffMe, parseBureauReport, resendPaymentLink, reviewDocument, sendPaymentReminder, staffLogout, uploadAgreementPdf, uploadBureauReportPdf } from '../../lib/adminApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 const BUREAUS_ADMIN = [
@@ -53,6 +53,8 @@ function BureauReportsSection({ clientId }) {
   const [reviewingReport, setReviewingReport] = useState(null);
   const [reviewDraft, setReviewDraft] = useState(null);
   const [confirming, setConfirming] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   const loadReports = async () => {
     try {
@@ -100,6 +102,22 @@ function BureauReportsSection({ clientId }) {
   const openReview = (report) => {
     setReviewDraft(emptyReviewDraft(report));
     setReviewingReport(report);
+  };
+
+  const confirmDelete = async () => {
+    const report = deleteTarget;
+    if (!report) return;
+    setDeletingId(report.id);
+    setActionError('');
+    setDeleteTarget(null);
+    try {
+      await deleteBureauReport(report.id);
+      await loadReports();
+    } catch (deleteError) {
+      setActionError(deleteError.message);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const submitConfirm = async (event) => {
@@ -167,12 +185,33 @@ function BureauReportsSection({ clientId }) {
                     {report.parse_status === 'confirmed' ? t('adminClientDetail.bureauEditButton') : t('adminClientDetail.bureauReviewButton')}
                   </button>
                 )}
+                <button
+                  className="btn btn-outline"
+                  type="button"
+                  disabled={deletingId === report.id}
+                  onClick={() => setDeleteTarget(report)}
+                  style={{ borderColor: '#b94a48', color: '#d97975' }}
+                >
+                  {deletingId === report.id ? t('adminClientDetail.bureauDeleting') : t('adminClientDetail.bureauDeleteButton')}
+                </button>
               </div>
             </li>
           ))}
         </ul>
       )}
       {actionError && <p className="form-error" role="alert">{actionError}</p>}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title={t('adminClientDetail.bureauDeleteTitle')}
+          message={t('adminClientDetail.bureauDeleteConfirm')}
+          confirmLabel={t('adminClientDetail.bureauDeleteButton')}
+          danger
+          busy={deletingId === deleteTarget.id}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
 
       {reviewingReport && reviewDraft && (
         <Modal title={t('adminClientDetail.bureauReviewTitle')} onClose={() => setReviewingReport(null)} maxWidth={720}>
@@ -210,7 +249,6 @@ function BureauReportsSection({ clientId }) {
                           <input
                             type="number"
                             min="0"
-                            style={{ width: 64 }}
                             value={reviewDraft.caseStatus[category][key]}
                             onChange={(event) => setReviewDraft((prev) => ({
                               ...prev,

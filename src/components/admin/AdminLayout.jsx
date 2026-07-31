@@ -45,7 +45,7 @@ export default function AdminLayout({ children, onLogout, title }) {
     { to: '/admin/contratos', label: t('adminLayout.navContracts'), Icon: IconContracts },
   ];
   return (
-    <div className="admin-shell">
+    <div className="admin-shell admin-workspace">
       <aside className="admin-sidebar">
         <div className="admin-sidebar-logo">
           <Lockup vertical onNavy markSize={30} />

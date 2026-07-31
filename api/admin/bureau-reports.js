@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { getActiveStaffSession } from '../_lib/admin.js';
-import { allowedOrigin, clean, isUuid, json, supabaseOne, supabaseRequest } from '../_lib/portal.js';
+import { allowedOrigin, clean, deleteStorageObject, isUuid, json, supabaseOne, supabaseRequest } from '../_lib/portal.js';
 
 const BUCKET = 'megcredit-bureau-reports';
 
@@ -110,6 +110,38 @@ export default async function handler(request, response) {
     }
   }
 
-  response.setHeader('Allow', 'GET, POST');
+  if (request.method === 'DELETE') {
+    const reportId = request.query?.id || request.body?.id;
+    if (!isUuid(reportId)) return json(response, 400, { error: 'Reporte inválido.' });
+
+    try {
+      const report = await supabaseOne(
+        `megcredit_client_bureau_reports?id=eq.${reportId}&select=id,storage_path`,
+        { method: 'GET' },
+      );
+      if (!report) return json(response, 404, { error: 'Reporte no encontrado.' });
+
+      const result = await supabaseRequest(`megcredit_client_bureau_reports?id=eq.${reportId}`, {
+        method: 'DELETE',
+        headers: { Prefer: 'return=minimal' },
+      });
+      if (!result.ok) throw new Error(`Report delete failed: ${result.status}`);
+
+      if (report.storage_path) {
+        try {
+          await deleteStorageObject(BUCKET, report.storage_path);
+        } catch (storageError) {
+          console.error('Bureau report storage cleanup failed', storageError instanceof Error ? storageError.message : 'unknown error');
+        }
+      }
+
+      return json(response, 200, { ok: true });
+    } catch (error) {
+      console.error('Delete bureau report failed', error instanceof Error ? error.message : 'unknown error');
+      return json(response, 500, { error: 'No pudimos eliminar el reporte.' });
+    }
+  }
+
+  response.setHeader('Allow', 'GET, POST, DELETE');
   return json(response, 405, { error: 'Método no permitido.' });
 }
