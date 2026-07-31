@@ -42,7 +42,7 @@ function EditForm({ item, onCancel, onSaved }) {
         <input type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} required />
       </div>
       {error && <p className="form-error" role="alert">{error}</p>}
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div className="cluster-2">
         <button className="btn btn-primary" type="submit" disabled={saving}>{saving ? t('adminCatalog.savingButton') : t('adminCatalog.save')}</button>
         <button className="btn btn-outline" type="button" onClick={onCancel} disabled={saving}>{t('adminCatalog.cancel')}</button>
       </div>
@@ -146,7 +146,7 @@ export default function AdminCatalog() {
 
   return (
     <AdminLayout title={t('adminCatalog.catalogTitle')} onLogout={handleLogout}>
-      <div className="portal-card wide admin-section">
+      <div className="portal-card wide">
         <h2>{t('adminCatalog.newServiceTitle')}</h2>
         <form onSubmit={submit}>
           <div className="form-group">
@@ -169,8 +169,8 @@ export default function AdminCatalog() {
       </div>
 
       <div className="portal-card wide">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-          <h2 style={{ margin: 0 }}>{t('adminCatalog.catalogListTitle')}</h2>
+        <div className="block-header">
+          <h2>{t('adminCatalog.catalogListTitle')}</h2>
           <button className="btn btn-outline" type="button" onClick={() => setShowArchived((prev) => !prev)}>
             {showArchived ? t('adminCatalog.hideArchived') : t('adminCatalog.showArchived')}
           </button>
@@ -183,21 +183,21 @@ export default function AdminCatalog() {
               editingId === item.id ? (
                 <EditForm key={item.id} item={item} onCancel={() => setEditingId(null)} onSaved={() => { setEditingId(null); load(); }} />
               ) : (
-                <div className="doc-tile" key={item.id} style={{ opacity: item.is_active ? 1 : 0.6 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                    <h3 style={{ margin: 0 }}>{item.name}</h3>
+                <div className={`doc-tile${item.is_active ? '' : ' dimmed'}`} key={item.id}>
+                  <div className="tile-header">
+                    <h3>{item.name}</h3>
                     <span className={`status-badge ${item.is_active ? 'approved' : 'missing'}`}>
                       {item.is_active ? t('adminCatalog.active') : t('adminCatalog.archived')}
                     </span>
                   </div>
                   <p className="doc-hint">{item.description || t('adminCatalog.noDescription')}</p>
-                  <p style={{ fontWeight: 600 }}>{(item.default_price_cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</p>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                  <p className="plan-total">{(item.default_price_cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</p>
+                  <div className="cluster-2">
                     <button className="btn btn-outline" type="button" disabled={busyId === item.id} onClick={() => setEditingId(item.id)}>{t('adminCatalog.edit')}</button>
                     <button className="btn btn-outline" type="button" disabled={busyId === item.id} onClick={() => toggleActive(item)}>
                       {item.is_active ? t('adminCatalog.archive') : t('adminCatalog.activate')}
                     </button>
-                    <button className="btn btn-outline" type="button" disabled={busyId === item.id} onClick={() => setDeleteTarget(item)} style={{ borderColor: '#b94a48', color: '#d97975' }}>
+                    <button className="btn btn-outline danger" type="button" disabled={busyId === item.id} onClick={() => setDeleteTarget(item)}>
                       {t('adminCatalog.delete')}
                     </button>
                   </div>

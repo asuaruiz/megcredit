@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 28px;
+  padding: var(--space-4) var(--space-5);
   background: var(--navy-700);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -19,7 +19,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 56px 20px;
+  padding: var(--space-7) var(--space-5);
 }
 
 .portal-card {
@@ -28,7 +28,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
   border-radius: 12px;
-  padding: 36px;
+  padding: var(--space-6);
 }
 
 .portal-card.wide {
@@ -37,46 +37,143 @@
 
 .portal-card h1 {
   font-size: 26px;
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
 }
 
-.portal-card p.portal-sub {
+/* Base look for secondary/supporting copy — usable anywhere, not just
+   inside .portal-card, so it can't silently lose its styling. */
+.portal-sub {
   color: var(--text-2);
-  margin: 0 0 28px;
   font-size: 14px;
   line-height: 1.6;
+}
+
+.portal-card p.portal-sub,
+.services-panel p.portal-sub {
+  margin: 0 0 var(--space-2);
+}
+
+.portal-card p.portal-sub:last-child { margin-bottom: 0; }
+
+/* Below a heading, a sub line acts as intro copy and wants more air before
+   whatever follows it; mid-stack (e.g. stacked account detail lines) it
+   should read as one tight group instead. */
+.portal-card h1 + p.portal-sub,
+.portal-card h2 + p.portal-sub,
+.services-panel-title + p.portal-sub {
+  margin-bottom: var(--space-5);
 }
 
 .doc-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  margin-top: 8px;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
 }
 
 .doc-tile {
   border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
   border-radius: 10px;
-  padding: 18px;
+  padding: var(--space-4);
   background: var(--bg-inset);
 }
 
 .doc-tile h3 {
   font-size: 15px;
-  margin: 0 0 4px;
+  margin: 0 0 var(--space-1);
 }
 
-.doc-tile .doc-hint {
+.doc-hint {
   font-size: 12px;
   color: var(--text-3);
-  margin: 0 0 14px;
   line-height: 1.5;
 }
+
+.doc-tile .doc-hint { margin: 0 0 var(--space-3); }
+.doc-tile .doc-hint:last-child { margin-bottom: 0; }
 
 .doc-tile input[type='file'] {
   font-size: 12px;
   width: 100%;
 }
+
+/* Tight stack of label/value lines (account summary, key details) — distinct
+   from .portal-sub, which is intro copy and carries more vertical weight. */
+.field-list { display: flex; flex-direction: column; gap: var(--space-1); }
+.field-list p { margin: 0; color: var(--text-2); font-size: 14px; line-height: 1.6; }
+
+/* A note trailing a data block (stat row or table) reads as a caption for
+   that block, so it sits close beneath it rather than using the heading
+   spacing rule above. */
+.admin-stats + p.portal-sub,
+.admin-table-wrap + p.portal-sub {
+  margin-top: var(--space-3);
+}
+
+/* ---------- Onboarding progress + checklist ---------- */
+
+.progress-track {
+  background: var(--bg-inset);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.progress-caption {
+  margin: var(--space-2) 0 var(--space-5);
+}
+
+/* Generic "row of tiles" list — the onboarding checklist, the documents
+   list, bureau reports, signed agreements... anywhere a set of doc-tile
+   rows is stacked, use this instead of a per-item marginBottom. */
+.tile-list { display: flex; flex-direction: column; gap: var(--space-2); list-style: none; margin: 0; padding: 0; }
+
+.tile-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: 14px;
+}
+
+.tile-row-label { display: flex; align-items: center; gap: var(--space-2); }
+
+.tile-row.archived { opacity: 0.65; }
+
+.doc-tile strong + .doc-hint { margin-top: var(--space-1); }
+
+/* The list a toggle reveals (e.g. "show archived") stays close to the
+   toggle; see .admin-block > .tile-list + .list-toggle in admin.css for
+   the toggle's own spacing relative to the list above it. */
+.list-toggle + .tile-list { margin-top: var(--space-2); }
+
+.checklist-item-mark { font-size: 18px; color: var(--text-3); }
+.checklist-item-mark.done { color: #2E8555; }
+
+/* ---------- Services / plans panel ---------- */
+
+.tile-list + .services-panel { margin-top: var(--space-6); }
+
+.services-panel-title { font-size: 20px; margin-bottom: var(--space-1); }
+
+.plan-service-list { margin: var(--space-3) 0; padding-left: 18px; }
+.plan-service-list li { font-size: 14px; }
+.plan-service-list li + li { margin-top: var(--space-1); }
+
+.plan-total { font-weight: 600; margin-top: var(--space-2); }
+
+/* A plan/service tile (status badge, details, service list, actions)
+   stacks tightly — used both in the client portal and the admin view. */
+.plan-card > * + * { margin-top: var(--space-2); }
+.plan-card .cluster-2 { margin-top: var(--space-3); }
+.plan-card > .status-badge:first-child { margin-bottom: 0; }
 
 .status-badge {
   display: inline-block;
@@ -86,8 +183,11 @@
   text-transform: uppercase;
   padding: 3px 10px;
   border-radius: 999px;
-  margin-bottom: 10px;
 }
+
+/* Badge as the lead element of a tile (before a heading) wants trailing
+   space; inline next to text or inside a table cell it should not. */
+.doc-tile > .status-badge:first-child { margin-bottom: var(--space-2); }
 
 .status-badge.pending { background: rgba(166, 124, 27, 0.14); color: var(--accent-strong); }
 .status-badge.approved { background: rgba(46, 133, 85, 0.14); color: #2E8555; }

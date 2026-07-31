@@ -59,6 +59,17 @@
 
   --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-body: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+
+  /* Spacing scale — base 4px. Toda separación en dashboards/producto debe
+     tomarse de aquí; no introducir valores sueltos en px. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -237,6 +248,9 @@ img, svg { max-width: 100%; }
 }
 .btn-outline:hover { border-color: var(--accent); color: var(--accent-strong); }
 
+.btn-outline.danger { border-color: #b94a48; color: #d97975; }
+.btn-outline.danger:hover { border-color: #d97975; color: #d97975; }
+
 /* Sobre fondo navy (hero, banners) */
 .on-navy .btn-primary { background: var(--gold-500); color: var(--navy-900); }
 .on-navy .btn-primary:hover { background: var(--gold-300); }
@@ -383,6 +397,32 @@ img, svg { max-width: 100%; }
   .nav-burger { display: flex; }
   .nav-mobile { display: flex; }
 }
+
+/* ---------- Utilidades de espaciado (dashboards / producto) ----------
+   Ritmo vertical explícito para reemplazar `style={{ marginBottom }}` ad-hoc:
+   agrupa elementos hermanos y separa el conjunto usando `gap`, en vez de que
+   cada elemento cargue su propio margen. */
+
+.stack-1 { display: flex; flex-direction: column; gap: var(--space-1); }
+.stack-2 { display: flex; flex-direction: column; gap: var(--space-2); }
+.stack-3 { display: flex; flex-direction: column; gap: var(--space-3); }
+.stack-4 { display: flex; flex-direction: column; gap: var(--space-4); }
+.stack-5 { display: flex; flex-direction: column; gap: var(--space-5); }
+
+/* Flex `gap` doesn't collapse with a child's own margin the way block flow
+   does, so a form-group's default margin-bottom would double up with the
+   stack's gap. Neutralize it — the stack alone governs the rhythm. */
+[class^='stack-'] > .form-group,
+[class*=' stack-'] > .form-group { margin-bottom: 0; }
+
+.cluster-1 { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-1); }
+.cluster-2 { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+.cluster-3 { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
+
+/* Two-step type scale for dashboard meta copy, replacing one-off
+   `style={{ fontSize: N }}` values scattered per row/field. */
+.text-sm { font-size: 14px; }
+.text-xs { font-size: 13px; }
 
 /* ---------- Utilidades de sección ---------- */
 

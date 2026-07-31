@@ -4,10 +4,12 @@
   background: var(--bg);
 }
 
-/* Editorial workspace: calm, precise and intentionally unboxed. */
+/* Editorial workspace: calm, precise and intentionally unboxed. Spacing
+   throughout this file is drawn from the --space-* scale (global.css) so the
+   sidebar, topbar, cards and lists all sit on the same 4px rhythm. */
 .admin-workspace,
 .portal-workspace {
-  --workspace-gutter: clamp(24px, 4vw, 64px);
+  --workspace-gutter: clamp(var(--space-5), 4vw, var(--space-8));
 }
 
 .admin-sidebar {
@@ -16,27 +18,27 @@
   display: flex;
   flex-direction: column;
   background: var(--navy-900);
-  padding: 28px 18px 22px;
-  gap: 34px;
+  padding: var(--space-6) var(--space-4) var(--space-5);
+  gap: var(--space-6);
   border-right: 1px solid rgba(248, 246, 242, 0.08);
 }
 
 .admin-sidebar-logo {
-  padding: 0 8px;
+  padding: 0 var(--space-2);
 }
 
 .admin-nav {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
   flex: 1;
 }
 
 .admin-nav-link {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 8px;
+  gap: var(--space-3);
+  padding: var(--space-2);
   border-radius: 0;
   font-size: 13px;
   font-weight: 500;
@@ -66,14 +68,14 @@
 .admin-logout {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   background: none;
   border: none;
   border-top: 1px solid rgba(248, 246, 242, 0.1);
   color: rgba(248, 246, 242, 0.6);
   font-size: 13px;
   font-family: var(--font-body, inherit);
-  padding: 16px 12px 0;
+  padding: var(--space-4) var(--space-3) 0;
   cursor: pointer;
   text-align: left;
 }
@@ -90,7 +92,7 @@
 }
 
 .admin-topbar {
-  padding: 30px var(--workspace-gutter) 22px;
+  padding: var(--space-6) var(--workspace-gutter) var(--space-5);
   border-bottom: 1px solid var(--border-soft);
   background: var(--bg);
 }
@@ -103,35 +105,38 @@
 
 .admin-main {
   flex: 1;
-  padding: 38px var(--workspace-gutter) 72px;
+  padding: var(--space-7) var(--workspace-gutter) var(--space-8);
   max-width: 1240px;
   width: 100%;
 }
 
-.admin-section {
-  margin-bottom: 24px;
+/* Any two stacked top-level blocks in a dashboard workspace (stat rows,
+   cards, editorial sections) share this gap automatically — no per-usage
+   margin class needed, so pages can't drift out of rhythm. */
+.admin-main > * + * {
+  margin-top: var(--space-7);
+}
+
+.portal-card > .plan-builder-form {
+  margin-top: var(--space-6);
 }
 
 .portal-card h2 {
   font-size: 21px;
-  margin: 0 0 20px;
+  margin: 0 0 var(--space-5);
   letter-spacing: -0.018em;
 }
 
 /* Quiet, editorial section dividers for secondary info blocks (documents,
    bureau reports, contracts...) so they read as reference material rather
-   than competing with the page's primary action. */
-.admin-block {
-  max-width: 720px;
-  margin-top: 36px;
-  padding-top: 28px;
+   than competing with the page's primary action. Spacing above each block
+   comes from `.admin-main > * + *`; this only owns the divider + the gap
+   between blocks nested one level in (e.g. inside a single card). */
+.admin-block + .admin-block,
+.portal-card > p + .admin-block {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
   border-top: 1px solid var(--border-soft);
-}
-
-.admin-block:first-child {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: 0;
 }
 
 .admin-block > h2 {
@@ -141,18 +146,30 @@
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-3);
-  margin: 0 0 18px;
+  margin: 0 0 var(--space-4);
+}
+
+/* Everything inside a block (link status, upload form, list, error text...)
+   shares one gap by default — no per-element margin needed. */
+.admin-block > * + * {
+  margin-top: var(--space-5);
+}
+
+/* A control directly acting on the list above it (e.g. "show archived")
+   reads as attached to that list, not as the start of a new group. */
+.admin-block > ul + .list-toggle,
+.admin-block > .tile-list + .list-toggle {
+  margin-top: var(--space-2);
 }
 
 .admin-row-tile {
-  padding: 13px 16px;
+  padding: var(--space-3) var(--space-4);
 }
 
 .admin-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 0;
-  margin-bottom: 34px;
   border-top: 1px solid var(--border-soft);
   border-bottom: 1px solid var(--border-soft);
 }
@@ -161,8 +178,8 @@
   border: 0;
   border-right: 1px solid var(--border-soft);
   border-radius: 0;
-  padding: 22px 24px 24px 0;
-  margin-right: 24px;
+  padding: var(--space-5) var(--space-5) var(--space-5) 0;
+  margin-right: var(--space-5);
   background: transparent;
 }
 
@@ -178,13 +195,14 @@
 .admin-stat-tile .stat-label {
   font-size: 12px;
   color: var(--text-3);
-  margin-top: 7px;
+  margin-top: var(--space-2);
   letter-spacing: 0.035em;
 }
 
 .admin-form-row {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: var(--space-4);
 }
 
 .admin-form-row .form-group { flex: 1; }
@@ -199,7 +217,7 @@
 
 .admin-table th {
   text-align: left;
-  padding: 11px 10px;
+  padding: var(--space-3) var(--space-2);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -209,7 +227,7 @@
 }
 
 .admin-table td {
-  padding: 15px 10px;
+  padding: var(--space-4) var(--space-2);
   border-bottom: 1px solid var(--border-soft);
 }
 
@@ -221,7 +239,7 @@
 .admin-workspace .portal-card,
 .portal-workspace .portal-card {
   max-width: none;
-  padding: 28px 0 34px;
+  padding: var(--space-6) 0;
   border: 0;
   border-top: 1px solid var(--border-soft);
   border-radius: 0;
@@ -262,7 +280,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(16px, 4vw, 48px);
+  padding: clamp(var(--space-4), 4vw, var(--space-7));
   background: rgba(5, 17, 29, 0.76);
   backdrop-filter: blur(5px);
 }
@@ -271,7 +289,7 @@
   width: min(100%, var(--modal-max-width, 560px));
   max-height: min(86vh, 820px);
   overflow-y: auto;
-  padding: clamp(22px, 3vw, 34px);
+  padding: clamp(var(--space-5), 3vw, var(--space-6));
   border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--bg-card);
@@ -282,9 +300,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 22px;
-  padding-bottom: 15px;
+  gap: var(--space-5);
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--border-soft);
 }
 
@@ -306,6 +323,51 @@
 }
 
 .app-modal-close:hover { color: var(--accent-strong); transform: scale(1.04); }
+
+/* Same "one shared gap" rhythm as .admin-block, applied to modal bodies. */
+.app-modal form > * + *,
+.app-modal > * + * {
+  margin-top: var(--space-5);
+}
+
+/* Title + action button sharing one line, e.g. a card header with a
+   trailing "show archived" toggle. */
+.block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.block-header h2 { margin: 0; }
+
+.tile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.tile-header > h3, .tile-header > h2 { margin: 0; }
+
+.plan-total + .cluster-2 { margin-top: var(--space-2); }
+
+.dimmed { opacity: 0.6; }
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-2) var(--space-5);
+}
+
+.raw-payload {
+  font-size: 11px;
+  max-height: 240px;
+  overflow: auto;
+  padding: var(--space-3);
+  background: var(--bg-inset);
+  border-radius: 6px;
+  margin-top: var(--space-2);
+}
 
 .admin-table input[type='number'] {
   width: 64px;
@@ -333,27 +395,29 @@
     width: 100%;
     flex-direction: row;
     align-items: center;
-    padding: 12px 16px;
-    gap: 20px;
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-5);
   }
 
   .admin-sidebar-logo { padding: 0; }
 
   .admin-nav { flex-direction: row; flex: 1; }
 
-  .admin-nav-link { border-left: none; border-bottom: 3px solid transparent; padding: 8px 10px; }
+  .admin-nav-link { border-left: none; border-bottom: 3px solid transparent; padding: var(--space-2) var(--space-3); }
 
   .admin-nav-link.active { border-left-color: transparent; border-bottom-color: var(--gold-500); }
 
   .admin-logout { border-top: none; padding: 0; }
 
-  .admin-topbar, .admin-main { padding-left: 20px; padding-right: 20px; }
+  .admin-topbar, .admin-main { padding-left: var(--space-5); padding-right: var(--space-5); }
+
+  .admin-main > * + * { margin-top: var(--space-6); }
 }
 
 @media (max-width: 620px) {
   .admin-stats { grid-template-columns: 1fr; }
   .admin-stat-tile { border-right: 0; border-bottom: 1px solid var(--border-soft); margin-right: 0; padding-right: 0; }
   .admin-stat-tile:last-child { border-bottom: 0; }
-  .admin-form-row { flex-direction: column; gap: 4px; }
+  .admin-form-row { flex-direction: column; gap: var(--space-1); }
   .app-modal { max-height: 90vh; }
 }

@@ -136,7 +136,7 @@ export default function AdminContracts() {
 
   return (
     <AdminLayout title={t('adminContracts.title')} onLogout={logout}>
-      <div className="portal-card wide admin-section">
+      <div className="portal-card wide">
         <h2>{t('adminContracts.uploadTitle')}</h2>
         <p className="portal-sub">{t('adminContracts.uploadDescription')}</p>
         <form onSubmit={submit}>
@@ -177,7 +177,7 @@ export default function AdminContracts() {
                   <tr key={template.id}>
                     <td>
                       {renamingId === template.id ? (
-                        <form onSubmit={(event) => submitRename(event, template.id)} style={{ display: 'flex', gap: 6 }}>
+                        <form onSubmit={(event) => submitRename(event, template.id)} className="cluster-2">
                           <input value={renameValue} onChange={(event) => setRenameValue(event.target.value)} required minLength="2" maxLength="160" style={{ minWidth: 160 }} />
                           <button className="btn btn-outline" type="submit" disabled={busyId === template.id}>{t('general.save')}</button>
                           <button className="btn btn-outline" type="button" onClick={() => setRenamingId(null)}>{t('general.cancel')}</button>
@@ -187,7 +187,7 @@ export default function AdminContracts() {
                     <td>{template.original_filename}</td>
                     <td>{formatSize(template.size_bytes)}</td>
                     <td>{new Date(template.created_at).toLocaleDateString(language === 'es' ? 'es-US' : 'en-US')}</td>
-                    <td style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <td className="cluster-2">
                       <button className="btn btn-outline" type="button" disabled={busyId === template.id} onClick={() => open(template)}>
                         {t('adminContracts.viewPdf')}
                       </button>
@@ -196,7 +196,7 @@ export default function AdminContracts() {
                           {t('adminContracts.rename')}
                         </button>
                       )}
-                      <button className="btn btn-outline" type="button" disabled={busyId === template.id} onClick={() => setDeleteTarget(template)} style={{ borderColor: '#b94a48', color: '#d97975' }}>
+                      <button className="btn btn-outline danger" type="button" disabled={busyId === template.id} onClick={() => setDeleteTarget(template)}>
                         {t('general.delete')}
                       </button>
                     </td>
