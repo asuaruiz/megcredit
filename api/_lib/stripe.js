@@ -22,13 +22,15 @@ function toFormBody(fields) {
 async function stripeRequest(path, fields, method = 'POST') {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) throw new Error('Missing STRIPE_SECRET_KEY');
-  const result = await fetch(`https://api.stripe.com/v1/${path}`, {
+  const formBody = toFormBody(fields);
+  const requestUrl = method === 'GET' && formBody ? `https://api.stripe.com/v1/${path}?${formBody}` : `https://api.stripe.com/v1/${path}`;
+  const result = await fetch(requestUrl, {
     method,
     headers: {
       Authorization: `Bearer ${secretKey}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    ...(method === 'DELETE' ? {} : { body: toFormBody(fields) }),
+    ...(method === 'POST' ? { body: formBody } : {}),
   });
   if (!result.ok) throw new Error(`Stripe request failed: ${result.status} ${await result.text()}`);
   return result.json();
@@ -53,6 +55,14 @@ export function createCheckoutSession({ customerId, mode, lineItems, metadata, s
 
 export function cancelStripeSubscription(subscriptionId) {
   return stripeRequest(`subscriptions/${encodeURIComponent(subscriptionId)}`, {}, 'DELETE');
+}
+
+export function listStripeInvoices({ subscriptionId, customerId, limit = 25 }) {
+  return stripeRequest('invoices', {
+    ...(subscriptionId ? { subscription: subscriptionId } : {}),
+    ...(!subscriptionId && customerId ? { customer: customerId } : {}),
+    limit,
+  }, 'GET');
 }
 
 export function verifyStripeSignature(rawBody, signatureHeader, secret) {
