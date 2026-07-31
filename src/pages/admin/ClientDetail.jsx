@@ -3,8 +3,239 @@ import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
 import Modal from '../../components/portal/Modal.jsx';
 import ConfirmDialog from '../../components/ConfirmDialog.jsx';
-import { archiveAgreement, assignPlan, cancelPlan, fetchAgreementPdf, fetchAgreementSignature, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchContractTemplates, fetchDocumentFile, fetchPaymentHistory, fetchStaffMe, resendPaymentLink, reviewDocument, sendPaymentReminder, staffLogout, uploadAgreementPdf } from '../../lib/adminApi.js';
+import { archiveAgreement, assignPlan, cancelPlan, confirmBureauReport, fetchAgreementPdf, fetchAgreementSignature, fetchBureauReports, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchContractTemplates, fetchDocumentFile, fetchPaymentHistory, fetchStaffMe, parseBureauReport, resendPaymentLink, reviewDocument, sendPaymentReminder, staffLogout, uploadAgreementPdf, uploadBureauReportPdf } from '../../lib/adminApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
+
+const BUREAUS_ADMIN = [
+  { label: 'Equifax', key: 'equifax' },
+  { label: 'Experian', key: 'experian' },
+  { label: 'TransUnion', key: 'transunion' },
+];
+
+const CASE_STATUS_ROWS_ADMIN = [
+  { i18nKey: 'rowUnspecified', category: 'unspecified' },
+  { i18nKey: 'rowPositive', category: 'positive' },
+  { i18nKey: 'rowDeleted', category: 'deleted' },
+  { i18nKey: 'rowRepaired', category: 'repaired' },
+  { i18nKey: 'rowUpdated', category: 'updated' },
+  { i18nKey: 'rowInDispute', category: 'in_dispute' },
+  { i18nKey: 'rowVerified', category: 'verified' },
+  { i18nKey: 'rowNegative', category: 'negative' },
+];
+
+function emptyReviewDraft(report) {
+  const scores = {};
+  BUREAUS_ADMIN.forEach(({ key }) => {
+    const existing = report.scores.find((row) => row.bureau === key)?.score;
+    scores[key] = existing ?? '';
+  });
+  const caseStatus = {};
+  CASE_STATUS_ROWS_ADMIN.forEach(({ category }) => {
+    caseStatus[category] = {};
+    BUREAUS_ADMIN.forEach(({ key }) => {
+      const existing = report.caseStatus.find((row) => row.bureau === key && row.status_category === category)?.count;
+      caseStatus[category][key] = existing ?? 0;
+    });
+  });
+  return { scores, caseStatus };
+}
+
+function BureauReportsSection({ clientId }) {
+  const { t } = useLanguage();
+  const [reports, setReports] = useState([]);
+  const [loadError, setLoadError] = useState('');
+  const [file, setFile] = useState(null);
+  const [asOfDate, setAsOfDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [parsingId, setParsingId] = useState(null);
+  const [actionError, setActionError] = useState('');
+  const [reviewingReport, setReviewingReport] = useState(null);
+  const [reviewDraft, setReviewDraft] = useState(null);
+  const [confirming, setConfirming] = useState(false);
+
+  const loadReports = async () => {
+    try {
+      const result = await fetchBureauReports(clientId);
+      setReports(result.reports || []);
+    } catch (fetchError) {
+      setLoadError(fetchError.message);
+    }
+  };
+
+  useEffect(() => {
+    loadReports();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientId]);
+
+  const handleUpload = async (event) => {
+    event.preventDefault();
+    if (!file) return;
+    setUploading(true);
+    setUploadError('');
+    try {
+      await uploadBureauReportPdf(clientId, file, asOfDate);
+      setFile(null);
+      await loadReports();
+    } catch (submissionError) {
+      setUploadError(submissionError.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleParse = async (reportId) => {
+    setParsingId(reportId);
+    setActionError('');
+    try {
+      await parseBureauReport(reportId);
+      await loadReports();
+    } catch (parseError) {
+      setActionError(parseError.message);
+    } finally {
+      setParsingId(null);
+    }
+  };
+
+  const openReview = (report) => {
+    setReviewDraft(emptyReviewDraft(report));
+    setReviewingReport(report);
+  };
+
+  const submitConfirm = async (event) => {
+    event.preventDefault();
+    setConfirming(true);
+    setActionError('');
+    try {
+      const scoresPayload = BUREAUS_ADMIN.filter(({ key }) => reviewDraft.scores[key] !== '').map(({ key }) => ({
+        bureau: key,
+        score: Number(reviewDraft.scores[key]),
+      }));
+      const caseStatusPayload = [];
+      CASE_STATUS_ROWS_ADMIN.forEach(({ category }) => {
+        BUREAUS_ADMIN.forEach(({ key }) => {
+          caseStatusPayload.push({ bureau: key, statusCategory: category, count: Number(reviewDraft.caseStatus[category][key]) || 0 });
+        });
+      });
+      await confirmBureauReport(reviewingReport.id, scoresPayload, caseStatusPayload);
+      setReviewingReport(null);
+      await loadReports();
+    } catch (confirmError) {
+      setActionError(confirmError.message);
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  return (
+    <>
+      <h2 style={{ fontSize: 16, marginTop: 24 }}>{t('adminClientDetail.bureauReportsTitle')}</h2>
+      <form onSubmit={handleUpload} className="admin-form-row" style={{ alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <div className="form-group">
+          <label htmlFor="bureauAsOfDate">{t('adminClientDetail.bureauAsOfDateLabel')}</label>
+          <input id="bureauAsOfDate" type="date" value={asOfDate} onChange={(event) => setAsOfDate(event.target.value)} />
+        </div>
+        <div className="form-group">
+          <label htmlFor="bureauPdf">{t('adminClientDetail.bureauUploadLabel')}</label>
+          <input id="bureauPdf" type="file" accept="application/pdf" onChange={(event) => setFile(event.target.files?.[0] || null)} />
+        </div>
+        <button className="btn btn-outline" type="submit" disabled={!file || uploading}>
+          {uploading ? t('adminClientDetail.bureauUploading') : t('adminClientDetail.bureauUploadButton')}
+        </button>
+      </form>
+      {uploadError && <p className="form-error" role="alert">{uploadError}</p>}
+      {loadError && <p className="form-error" role="alert">{loadError}</p>}
+
+      {reports.length === 0 ? (
+        <p className="portal-sub">{t('adminClientDetail.bureauNoReports')}</p>
+      ) : (
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          {reports.map((report) => (
+            <li key={report.id} className="doc-tile" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 14 }}>
+                {report.source === 'api' ? t('adminClientDetail.bureauSourceApi') : t('adminClientDetail.bureauSourcePdf')} · {report.as_of_date}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className={`status-badge ${report.parse_status}`}>{report.parse_status}</span>
+                {report.parse_status === 'pending' && (
+                  <button className="btn btn-outline" type="button" disabled={parsingId === report.id} onClick={() => handleParse(report.id)}>
+                    {parsingId === report.id ? t('adminClientDetail.bureauParsing') : t('adminClientDetail.bureauParseButton')}
+                  </button>
+                )}
+                {report.parse_status !== 'pending' && (
+                  <button className="btn btn-outline" type="button" onClick={() => openReview(report)}>
+                    {report.parse_status === 'confirmed' ? t('adminClientDetail.bureauEditButton') : t('adminClientDetail.bureauReviewButton')}
+                  </button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {actionError && <p className="form-error" role="alert">{actionError}</p>}
+
+      {reviewingReport && reviewDraft && (
+        <Modal title={t('adminClientDetail.bureauReviewTitle')} onClose={() => setReviewingReport(null)} maxWidth={720}>
+          <form onSubmit={submitConfirm}>
+            <p className="portal-sub">{t('adminClientDetail.bureauReviewHint')}</p>
+            <div className="admin-form-row" style={{ flexWrap: 'wrap' }}>
+              {BUREAUS_ADMIN.map(({ key, label }) => (
+                <div className="form-group" key={key}>
+                  <label htmlFor={`score-${key}`}>{label} {t('adminClientDetail.bureauScoreLabel')}</label>
+                  <input
+                    id={`score-${key}`}
+                    type="number"
+                    min="300"
+                    max="850"
+                    value={reviewDraft.scores[key]}
+                    onChange={(event) => setReviewDraft((prev) => ({ ...prev, scores: { ...prev.scores, [key]: event.target.value } }))}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th />
+                    {BUREAUS_ADMIN.map(({ key, label }) => <th key={key}>{label}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {CASE_STATUS_ROWS_ADMIN.map(({ category, i18nKey }) => (
+                    <tr key={category}>
+                      <td>{t(`portalHome.${i18nKey}`)}</td>
+                      {BUREAUS_ADMIN.map(({ key }) => (
+                        <td key={key}>
+                          <input
+                            type="number"
+                            min="0"
+                            style={{ width: 64 }}
+                            value={reviewDraft.caseStatus[category][key]}
+                            onChange={(event) => setReviewDraft((prev) => ({
+                              ...prev,
+                              caseStatus: {
+                                ...prev.caseStatus,
+                                [category]: { ...prev.caseStatus[category], [key]: event.target.value },
+                              },
+                            }))}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <button className="btn btn-primary submit-btn" type="submit" disabled={confirming} style={{ marginTop: 16 }}>
+              {confirming ? t('adminClientDetail.bureauConfirming') : t('adminClientDetail.bureauConfirmButton')}
+            </button>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
+}
 
 function CreditMonitoringSection({ clientId }) {
   const { t } = useLanguage();
@@ -386,6 +617,7 @@ export default function AdminClientDetail() {
         {reviewError && <p className="form-error" role="alert">{reviewError}</p>}
 
         <CreditMonitoringSection clientId={id} />
+        <BureauReportsSection clientId={id} />
 
         <h2 style={{ fontSize: 16, marginTop: 24 }}>{t('adminClientDetail.signedContractsTitle')}</h2>
         {(detail.signedAgreements || []).filter((agreement) => !agreement.archived).length === 0 ? (

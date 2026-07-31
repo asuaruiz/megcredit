@@ -123,6 +123,34 @@ export function archiveAgreement(agreementId, archived) {
   return request('/api/admin/archive-agreement', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ agreementId, archived }) });
 }
 
+export function fetchBureauReports(clientAccountId) {
+  return request(`/api/admin/bureau-reports?clientAccountId=${encodeURIComponent(clientAccountId)}`);
+}
+
+export async function uploadBureauReportPdf(clientAccountId, file, asOfDate) {
+  if (file.type !== 'application/pdf' || file.size > 20 * 1024 * 1024) throw new Error('Selecciona un PDF de hasta 20 MB.');
+  const prepared = await request('/api/admin/bureau-reports', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ clientAccountId, filename: file.name, mimeType: file.type, sizeBytes: file.size, asOfDate }),
+  });
+  const uploaded = await fetch(prepared.uploadUrl, { method: 'PUT', headers: { 'Content-Type': 'application/pdf' }, body: file });
+  if (!uploaded.ok) throw new Error('No pudimos subir el PDF.');
+  return { reportId: prepared.reportId };
+}
+
+export function parseBureauReport(reportId) {
+  return request('/api/admin/bureau-report-parse', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ reportId }) });
+}
+
+export function confirmBureauReport(reportId, scores, caseStatus) {
+  return request('/api/admin/bureau-report-confirm', {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ reportId, scores, caseStatus }),
+  });
+}
+
 export function fetchContractTemplates() {
   return request('/api/admin/contract-templates');
 }
