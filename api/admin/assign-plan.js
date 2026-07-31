@@ -1,6 +1,8 @@
+import { randomUUID } from 'node:crypto';
 import { getActiveStaffSession } from '../_lib/admin.js';
-import { agreementReadyEmailHtml, allowedOrigin, clean, isUuid, json, sendPortalEmail, supabaseOne, supabaseRequest } from '../_lib/portal.js';
+import { agreementReadyEmailHtml, allowedOrigin, clean, copyStorageObject, isUuid, json, sendPortalEmail, supabaseOne, supabaseRequest } from '../_lib/portal.js';
 
+const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'megcredit-client-documents';
 const BILLING_TYPES = new Set(['one_time', 'recurring']);
 const RECURRING_INTERVALS = new Set(['week', 'month', 'year']);
 
@@ -33,6 +35,7 @@ export default async function handler(request, response) {
   const agreementPdfPath = clean(body.agreementPdfPath, 500);
   const agreementPdfFilename = clean(body.agreementPdfFilename, 255);
   const agreementPdfSizeBytes = Number(body.agreementPdfSizeBytes) || null;
+  const contractTemplateId = body.contractTemplateId;
   const services = Array.isArray(body.services) ? body.services.map(validService) : [];
   const firstPaymentCentsRaw = body.firstPaymentCents;
   const hasFirstPayment = firstPaymentCentsRaw !== undefined && firstPaymentCentsRaw !== null && firstPaymentCentsRaw !== '';
@@ -48,9 +51,12 @@ export default async function handler(request, response) {
   if (services.some((service) => service === null) || services.length === 0) {
     return json(response, 400, { error: 'Revisa los servicios: cada uno necesita nombre y precio.' });
   }
-  const hasPdf = Boolean(agreementPdfPath);
-  if (!hasPdf && agreementText.length < 10) return json(response, 400, { error: 'Escribe el contrato o sube un PDF.' });
-  if (hasPdf && (!agreementPdfPath.startsWith(`${clientId}/contracts/`) || !agreementPdfFilename.toLowerCase().endsWith('.pdf'))) {
+  const hasUploadedPdf = Boolean(agreementPdfPath);
+  const hasTemplate = isUuid(contractTemplateId);
+  if (!hasUploadedPdf && !hasTemplate && agreementText.length < 10) {
+    return json(response, 400, { error: 'Escribe el contrato, sube un PDF o elige una plantilla.' });
+  }
+  if (hasUploadedPdf && (!agreementPdfPath.startsWith(`${clientId}/contracts/`) || !agreementPdfFilename.toLowerCase().endsWith('.pdf'))) {
     return json(response, 400, { error: 'El PDF del contrato no es válido.' });
   }
   if (hasFirstPayment && (!Number.isInteger(firstPaymentCents) || firstPaymentCents < 0)) {
@@ -107,6 +113,25 @@ export default async function handler(request, response) {
     });
     if (!servicesInsert.ok) throw new Error(`Supabase services insert failed: ${servicesInsert.status}`);
 
+    let finalPdfPath = hasUploadedPdf ? agreementPdfPath : null;
+    let finalPdfFilename = hasUploadedPdf ? agreementPdfFilename : null;
+    let finalPdfSizeBytes = hasUploadedPdf ? agreementPdfSizeBytes : null;
+
+    if (hasTemplate) {
+      const template = await supabaseOne(
+        `megcredit_contract_templates?id=eq.${contractTemplateId}&select=storage_path,original_filename,size_bytes`,
+        { method: 'GET' },
+      );
+      if (!template) return json(response, 404, { error: 'La plantilla de contrato seleccionada no existe.' });
+      const destinationPath = `${clientId}/contracts/${randomUUID()}-${template.original_filename}`;
+      await copyStorageObject(BUCKET, template.storage_path, destinationPath);
+      finalPdfPath = destinationPath;
+      finalPdfFilename = template.original_filename;
+      finalPdfSizeBytes = template.size_bytes;
+    }
+
+    const hasPdf = Boolean(finalPdfPath);
+
     const agreementInsert = await supabaseRequest('megcredit_service_agreements', {
       method: 'POST',
       headers: { Prefer: 'return=minimal' },
@@ -115,7 +140,7 @@ export default async function handler(request, response) {
         payment_plan_id: plan.id,
         title: agreementTitle,
         body_text: agreementText.length >= 10 ? agreementText : 'Contrato proporcionado como documento PDF adjunto.',
-        ...(hasPdf ? { pdf_storage_path: agreementPdfPath, pdf_original_filename: agreementPdfFilename, pdf_size_bytes: agreementPdfSizeBytes } : {}),
+        ...(hasPdf ? { pdf_storage_path: finalPdfPath, pdf_original_filename: finalPdfFilename, pdf_size_bytes: finalPdfSizeBytes } : {}),
         created_by_staff_id: active.staff.id,
       }),
     });
@@ -125,7 +150,7 @@ export default async function handler(request, response) {
       const siteUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://www.megcredit.com';
       await sendPortalEmail({
         to: client.email,
-        subject: 'Tu contrato de servicios está listo para firmar',
+        subject: 'Your service agreement is ready to sign',
         html: agreementReadyEmailHtml({ fullName: client.full_name, loginUrl: `${siteUrl}/portal/dashboard` }),
       });
     } catch (emailError) {

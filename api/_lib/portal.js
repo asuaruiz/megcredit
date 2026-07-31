@@ -161,6 +161,34 @@ export async function downloadStorageObject(bucket, path) {
   return result;
 }
 
+export async function copyStorageObject(bucket, fromPath, toPath) {
+  const { url, key } = supabaseEnv();
+  const result = await fetch(`${url}/storage/v1/object/copy`, {
+    method: 'POST',
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ bucketId: bucket, sourceKey: fromPath, destinationKey: toPath }),
+  });
+  if (!result.ok) throw new Error(`Storage copy failed: ${result.status} ${await result.text()}`);
+}
+
+export async function deleteStorageObject(bucket, path) {
+  const { url, key } = supabaseEnv();
+  const result = await fetch(`${url}/storage/v1/object/${encodeURIComponent(bucket)}`, {
+    method: 'DELETE',
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ prefixes: [path] }),
+  });
+  if (!result.ok) throw new Error(`Storage delete failed: ${result.status} ${await result.text()}`);
+}
+
 export async function getActiveSession(request) {
   const token = sessionToken(request);
   if (!token) return null;
@@ -209,40 +237,40 @@ function escapeHtml(value) {
 }
 
 function portalEmailLayout(content, previewText) {
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHtml(previewText)}</title></head><body style="margin:0;background:#F1EDE4;font-family:Arial,sans-serif;color:#1A1A1A"><div style="display:none;max-height:0;overflow:hidden">${escapeHtml(previewText)}</div><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F1EDE4;padding:28px 12px"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#FFFFFF;border-radius:8px;overflow:hidden;border:1px solid #E9E5DC"><tr><td style="background:#163A5F;padding:30px 36px"><div style="font-family:Georgia,serif;color:#D2AE5C;font-size:24px;font-weight:bold;letter-spacing:6px">MAGIC</div><div style="color:#F8F6F2;font-size:10px;font-weight:bold;letter-spacing:4px;margin-top:5px">ENTERPRISE GROUP</div></td></tr><tr><td style="padding:38px 36px">${content}</td></tr><tr><td style="background:#0E2740;padding:24px 36px;color:#BCC7D4;font-size:12px;line-height:1.7">Magic Enterprise Group · Orlando, Florida<br><a href="https://www.megcredit.com" style="color:#D2AE5C">megcredit.com</a></td></tr></table></td></tr></table></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHtml(previewText)}</title></head><body style="margin:0;background:#F1EDE4;font-family:Arial,sans-serif;color:#1A1A1A"><div style="display:none;max-height:0;overflow:hidden">${escapeHtml(previewText)}</div><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F1EDE4;padding:28px 12px"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#FFFFFF;border-radius:8px;overflow:hidden;border:1px solid #E9E5DC"><tr><td style="background:#163A5F;padding:30px 36px"><div style="font-family:Georgia,serif;color:#D2AE5C;font-size:24px;font-weight:bold;letter-spacing:6px">MAGIC</div><div style="color:#F8F6F2;font-size:10px;font-weight:bold;letter-spacing:4px;margin-top:5px">ENTERPRISE GROUP</div></td></tr><tr><td style="padding:38px 36px">${content}</td></tr><tr><td style="background:#0E2740;padding:24px 36px;color:#BCC7D4;font-size:12px;line-height:1.7">Magic Enterprise Group · Orlando, Florida<br><a href="https://www.megcredit.com" style="color:#D2AE5C">megcredit.com</a></td></tr></table></td></tr></table></body></html>`;
 }
 
 export function inviteEmailHtml({ fullName, activationUrl }) {
   return portalEmailLayout(
-    `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Portal de clientes</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hola, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">Crea tu cuenta en el portal seguro de MEG Credit para completar tu verificación de identidad.</p><p style="margin:0 0 26px"><a href="${activationUrl}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">Crear mi cuenta</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">Este enlace es personal, expira en 7 días y solo puede usarse una vez. Si no solicitaste esto, ignora este correo.</p>`,
-    'Crea tu cuenta en el portal de MEG Credit',
+    `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Client portal</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hi, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">Create your account on the secure MEG Credit portal to complete your identity verification.</p><p style="margin:0 0 26px"><a href="${activationUrl}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">Create my account</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">This link is personal, expires in 7 days, and can only be used once. If you did not request this, please ignore this email.</p>`,
+    'Create your account on the MEG Credit portal',
   );
 }
 
 export function agreementReadyEmailHtml({ fullName, loginUrl }) {
   return portalEmailLayout(
-    `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Portal de clientes</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hola, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">Tu asesor preparó tu plan de servicios y contrato en el portal de MEG Credit. Inicia sesión para revisarlo y firmarlo.</p><p style="margin:0 0 26px"><a href="${loginUrl}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">Revisar mi contrato</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">Si no esperabas este correo, contacta a tu asesor de MEG Credit.</p>`,
-    'Tu contrato de servicios está listo para firmar',
+    `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Client portal</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hi, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">Your advisor prepared your service plan and agreement on the MEG Credit portal. Sign in to review and sign it.</p><p style="margin:0 0 26px"><a href="${loginUrl}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">Review my agreement</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">If you were not expecting this email, contact your MEG Credit advisor.</p>`,
+    'Your service agreement is ready to sign',
   );
 }
 
 export function paymentLinkEmailHtml({ fullName, paymentUrl }) {
   return portalEmailLayout(
-    `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Portal de clientes</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hola, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">Tu enlace seguro para completar el pago de los servicios de MEG Credit está listo.</p><p style="margin:0 0 26px"><a href="${escapeHtml(paymentUrl)}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">Completar mi pago</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">Este enlace es personal. Si no esperabas este correo, contacta a tu asesor de MEG Credit.</p>`,
-    'Completa tu pago de MEG Credit',
+    `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Client portal</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hi, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">Your secure link to complete payment for your MEG Credit services is ready.</p><p style="margin:0 0 26px"><a href="${escapeHtml(paymentUrl)}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">Complete my payment</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">This link is personal. If you were not expecting this email, contact your MEG Credit advisor.</p>`,
+    'Complete your MEG Credit payment',
   );
 }
 
 export function recurringPaymentReminderEmailHtml({ fullName, amount, interval, loginUrl }) {
   return portalEmailLayout(
-    `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Recordatorio de pago</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hola, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">Te recordamos que tu plan tiene un pago recurrente de <strong>${escapeHtml(amount)}</strong> con frecuencia ${escapeHtml(interval)}. El cobro se procesa automáticamente con el método registrado.</p><p style="margin:0 0 26px"><a href="${escapeHtml(loginUrl)}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">Ver mi plan</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">Si tienes preguntas sobre este cobro, contacta a tu asesor de MEG Credit.</p>`,
-    'Recordatorio de tu pago recurrente',
+    `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Payment reminder</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hi, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">This is a reminder that your plan has a recurring payment of <strong>${escapeHtml(amount)}</strong>, billed ${escapeHtml(interval)}. The charge is processed automatically with your saved payment method.</p><p style="margin:0 0 26px"><a href="${escapeHtml(loginUrl)}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">View my plan</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">If you have questions about this charge, contact your MEG Credit advisor.</p>`,
+    'Reminder: your recurring payment',
   );
 }
 
 export async function sendPortalEmail({ to, subject, html }) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.CONTACT_FROM_EMAIL || 'MEG Credit <notificaciones@megcredit.com>';
+  const from = process.env.CONTACT_FROM_EMAIL || 'MEG Credit <notifications@megcredit.com>';
   if (!apiKey) throw new Error('Missing RESEND_API_KEY');
   const result = await fetch('https://api.resend.com/emails', {
     method: 'POST',

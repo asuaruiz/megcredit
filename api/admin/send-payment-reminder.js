@@ -1,7 +1,7 @@
 import { getActiveStaffSession } from '../_lib/admin.js';
 import { allowedOrigin, isUuid, json, recurringPaymentReminderEmailHtml, sendPortalEmail, supabaseOne } from '../_lib/portal.js';
 
-const INTERVAL_LABEL = { week: 'semanal', month: 'mensual', year: 'anual' };
+const INTERVAL_LABEL = { week: 'weekly', month: 'monthly', year: 'yearly' };
 
 export default async function handler(request, response) {
   if (request.method !== 'POST') return json(response, 405, { error: 'Método no permitido.' });
@@ -18,7 +18,7 @@ export default async function handler(request, response) {
     const loginUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:5173/portal/dashboard' : 'https://www.megcredit.com/portal/dashboard';
     await sendPortalEmail({
       to: client.email,
-      subject: 'Recordatorio de tu pago recurrente de MEG Credit',
+      subject: 'Reminder: your MEG Credit recurring payment',
       html: recurringPaymentReminderEmailHtml({ fullName: client.full_name, amount, interval: INTERVAL_LABEL[plan.recurring_interval] || plan.recurring_interval, loginUrl }),
     });
     return json(response, 200, { ok: true });

@@ -1,21 +1,71 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
-import { createCatalogItem, fetchCatalog, fetchStaffMe, staffLogout } from '../../lib/adminApi.js';
+import ConfirmDialog from '../../components/ConfirmDialog.jsx';
+import { createCatalogItem, deleteCatalogItem, fetchCatalog, fetchStaffMe, staffLogout, updateCatalogItem } from '../../lib/adminApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
+
+function EditForm({ item, onCancel, onSaved }) {
+  const { t } = useLanguage();
+  const [name, setName] = useState(item.name);
+  const [description, setDescription] = useState(item.description || '');
+  const [price, setPrice] = useState(item.default_price_cents / 100);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setError('');
+    try {
+      await updateCatalogItem({ id: item.id, name, description, defaultPriceCents: Math.round(Number(price) * 100) });
+      onSaved();
+    } catch (saveError) {
+      setError(saveError.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="doc-tile">
+      <div className="form-group">
+        <label>{t('adminCatalog.nameLabel')}</label>
+        <input value={name} onChange={(event) => setName(event.target.value)} required minLength="2" maxLength="160" />
+      </div>
+      <div className="form-group">
+        <label>{t('adminCatalog.descriptionLabel')}</label>
+        <textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength="1000" />
+      </div>
+      <div className="form-group">
+        <label>{t('adminCatalog.priceLabel')}</label>
+        <input type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} required />
+      </div>
+      {error && <p className="form-error" role="alert">{error}</p>}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button className="btn btn-primary" type="submit" disabled={saving}>{saving ? t('adminCatalog.savingButton') : t('adminCatalog.save')}</button>
+        <button className="btn btn-outline" type="button" onClick={onCancel} disabled={saving}>{t('adminCatalog.cancel')}</button>
+      </div>
+    </form>
+  );
+}
 
 export default function AdminCatalog() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [catalog, setCatalog] = useState([]);
+  const [showArchived, setShowArchived] = useState(false);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const load = async () => {
     try {
       await fetchStaffMe();
-      const data = await fetchCatalog();
+      const data = await fetchCatalog(true);
       setCatalog(data.catalog || []);
     } catch {
       navigate('/admin/login', { replace: true });
@@ -50,6 +100,35 @@ export default function AdminCatalog() {
     }
   };
 
+  const toggleActive = async (item) => {
+    setBusyId(item.id);
+    setError('');
+    try {
+      await updateCatalogItem({ id: item.id, isActive: !item.is_active });
+      await load();
+    } catch (toggleError) {
+      setError(toggleError.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const confirmDelete = async () => {
+    const target = deleteTarget;
+    if (!target) return;
+    setBusyId(target.id);
+    setDeleteTarget(null);
+    setError('');
+    try {
+      await deleteCatalogItem(target.id);
+      await load();
+    } catch (deleteError) {
+      setError(deleteError.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const handleLogout = async () => {
     await staffLogout();
     navigate('/admin/login', { replace: true });
@@ -62,6 +141,8 @@ export default function AdminCatalog() {
       </AdminLayout>
     );
   }
+
+  const visibleCatalog = catalog.filter((item) => (showArchived ? true : item.is_active));
 
   return (
     <AdminLayout title={t('adminCatalog.catalogTitle')} onLogout={handleLogout}>
@@ -88,21 +169,57 @@ export default function AdminCatalog() {
       </div>
 
       <div className="portal-card wide">
-        <h2>{t('adminCatalog.catalogListTitle')}</h2>
-        {catalog.length === 0 ? (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+          <h2 style={{ margin: 0 }}>{t('adminCatalog.catalogListTitle')}</h2>
+          <button className="btn btn-outline" type="button" onClick={() => setShowArchived((prev) => !prev)}>
+            {showArchived ? t('adminCatalog.hideArchived') : t('adminCatalog.showArchived')}
+          </button>
+        </div>
+        {visibleCatalog.length === 0 ? (
           <p className="portal-sub">{t('adminCatalog.noServices')}</p>
         ) : (
           <div className="doc-grid">
-            {catalog.map((item) => (
-              <div className="doc-tile" key={item.id}>
-                <h3>{item.name}</h3>
-                <p className="doc-hint">{item.description || t('adminCatalog.noDescription')}</p>
-                <p style={{ fontWeight: 600 }}>{(item.default_price_cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</p>
-              </div>
+            {visibleCatalog.map((item) => (
+              editingId === item.id ? (
+                <EditForm key={item.id} item={item} onCancel={() => setEditingId(null)} onSaved={() => { setEditingId(null); load(); }} />
+              ) : (
+                <div className="doc-tile" key={item.id} style={{ opacity: item.is_active ? 1 : 0.6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                    <h3 style={{ margin: 0 }}>{item.name}</h3>
+                    <span className={`status-badge ${item.is_active ? 'approved' : 'missing'}`}>
+                      {item.is_active ? t('adminCatalog.active') : t('adminCatalog.archived')}
+                    </span>
+                  </div>
+                  <p className="doc-hint">{item.description || t('adminCatalog.noDescription')}</p>
+                  <p style={{ fontWeight: 600 }}>{(item.default_price_cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                    <button className="btn btn-outline" type="button" disabled={busyId === item.id} onClick={() => setEditingId(item.id)}>{t('adminCatalog.edit')}</button>
+                    <button className="btn btn-outline" type="button" disabled={busyId === item.id} onClick={() => toggleActive(item)}>
+                      {item.is_active ? t('adminCatalog.archive') : t('adminCatalog.activate')}
+                    </button>
+                    <button className="btn btn-outline" type="button" disabled={busyId === item.id} onClick={() => setDeleteTarget(item)} style={{ borderColor: '#b94a48', color: '#d97975' }}>
+                      {t('adminCatalog.delete')}
+                    </button>
+                  </div>
+                </div>
+              )
             ))}
           </div>
         )}
+        {error && <p className="form-error" role="alert">{error}</p>}
       </div>
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title={t('adminCatalog.deleteTitle')}
+          message={t('adminCatalog.deleteConfirm')}
+          confirmLabel={t('adminCatalog.delete')}
+          danger
+          busy={busyId === deleteTarget.id}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </AdminLayout>
   );
 }
