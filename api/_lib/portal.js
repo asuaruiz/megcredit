@@ -147,23 +147,18 @@ export async function uploadBufferToStorage(bucket, path, buffer, contentType) {
   if (!result.ok) throw new Error(`Storage upload failed: ${result.status} ${await result.text()}`);
 }
 
-export async function createSignedStorageUrl(bucket, path, expiresIn = 300) {
+export async function downloadStorageObject(bucket, path) {
   const { url, key } = supabaseEnv();
   const encodedPath = String(path).split('/').map(encodeURIComponent).join('/');
-  const result = await fetch(`${url}/storage/v1/object/sign/${encodeURIComponent(bucket)}/${encodedPath}`, {
-    method: 'POST',
+  const result = await fetch(`${url}/storage/v1/object/${encodeURIComponent(bucket)}/${encodedPath}`, {
+    method: 'GET',
     headers: {
       apikey: key,
       Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ expiresIn }),
   });
-  if (!result.ok) throw new Error(`Storage signed URL failed: ${result.status} ${await result.text()}`);
-  const data = await result.json();
-  if (!data.signedURL && !data.signedUrl) throw new Error('Storage signed URL response is missing the URL');
-  const signedPath = data.signedURL || data.signedUrl;
-  return signedPath.startsWith('http') ? signedPath : `${url}/storage/v1${signedPath.startsWith('/') ? '' : '/'}${signedPath}`;
+  if (!result.ok) throw new Error(`Storage download failed: ${result.status} ${await result.text()}`);
+  return result;
 }
 
 export async function getActiveSession(request) {

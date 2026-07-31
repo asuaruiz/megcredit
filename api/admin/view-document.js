@@ -1,5 +1,5 @@
 import { getActiveStaffSession } from '../_lib/admin.js';
-import { allowedOrigin, createSignedStorageUrl, isUuid, json, supabaseOne } from '../_lib/portal.js';
+import { allowedOrigin, downloadStorageObject, isUuid, json, supabaseOne } from '../_lib/portal.js';
 
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'megcredit-client-documents';
 
@@ -17,12 +17,18 @@ export default async function handler(request, response) {
 
   try {
     const document = await supabaseOne(
-      `megcredit_client_documents?id=eq.${documentId}&select=id,storage_path`,
+      `megcredit_client_documents?id=eq.${documentId}&select=id,storage_path,original_filename,mime_type`,
       { method: 'GET' },
     );
     if (!document) return json(response, 404, { error: 'Documento no encontrado.' });
-    const url = await createSignedStorageUrl(BUCKET, document.storage_path, 300);
-    return json(response, 200, { url });
+    const storageResponse = await downloadStorageObject(BUCKET, document.storage_path);
+    const file = Buffer.from(await storageResponse.arrayBuffer());
+    const safeFilename = (document.original_filename || 'documento').replace(/["\r\n]/g, '_');
+    response.status(200);
+    response.setHeader('Cache-Control', 'private, no-store');
+    response.setHeader('Content-Type', document.mime_type || storageResponse.headers.get('content-type') || 'application/octet-stream');
+    response.setHeader('Content-Disposition', `inline; filename="${safeFilename}"`);
+    return response.send(file);
   } catch (error) {
     console.error('View document failed', error instanceof Error ? error.message : 'unknown error');
     return json(response, 500, { error: 'No pudimos abrir el documento.' });

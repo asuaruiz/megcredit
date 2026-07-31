@@ -26,7 +26,7 @@ export default async function handler(request, response) {
       supabaseRequest(`megcredit_client_documents?client_account_id=eq.${clientId}&select=id,document_type,status,original_filename,created_at&order=created_at.desc`, { method: 'GET' }),
       supabaseRequest(`megcredit_payment_plans?client_account_id=eq.${clientId}&select=*&order=created_at.desc`, { method: 'GET' }),
       supabaseRequest(`megcredit_client_services?client_account_id=eq.${clientId}&select=*`, { method: 'GET' }),
-      supabaseRequest(`megcredit_service_agreements?client_account_id=eq.${clientId}&select=id,payment_plan_id,title,status,signed_full_name,signed_at,created_at`, { method: 'GET' }),
+      supabaseRequest(`megcredit_service_agreements?client_account_id=eq.${clientId}&select=id,payment_plan_id,title,body_text,status,signed_full_name,signed_at,signature_image_path,created_at`, { method: 'GET' }),
     ]);
 
     const documents = documentsResult.ok ? await documentsResult.json() : [];
@@ -34,13 +34,22 @@ export default async function handler(request, response) {
     const services = servicesResult.ok ? await servicesResult.json() : [];
     const agreements = agreementsResult.ok ? await agreementsResult.json() : [];
 
+    const safeAgreements = agreements.map(({ signature_image_path: signatureImagePath, ...agreement }) => ({
+      ...agreement,
+      has_signature: Boolean(signatureImagePath),
+    }));
     const enrichedPlans = plans.map((plan) => ({
       ...plan,
       services: services.filter((service) => service.payment_plan_id === plan.id),
-      agreement: agreements.find((agreement) => agreement.payment_plan_id === plan.id) || null,
+      agreement: safeAgreements.find((agreement) => agreement.payment_plan_id === plan.id) || null,
     }));
 
-    return json(response, 200, { account, documents, plans: enrichedPlans });
+    return json(response, 200, {
+      account,
+      documents,
+      plans: enrichedPlans,
+      signedAgreements: safeAgreements.filter((agreement) => agreement.status === 'signed'),
+    });
   } catch (error) {
     console.error('Admin client detail failed', error instanceof Error ? error.message : 'unknown error');
     return json(response, 500, { error: 'No pudimos cargar el cliente.' });
