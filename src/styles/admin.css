@@ -247,9 +247,11 @@
   box-shadow: none;
 }
 
-.admin-workspace .portal-card:first-child,
-.portal-workspace .portal-card:first-child {
-  border-top-color: var(--border);
+/* The topbar's own border-bottom already closes off the page; a card
+   sitting directly under it doesn't need a second, redundant divider
+   floating above it with nothing between the two lines. */
+.admin-main > .portal-card:first-child {
+  border-top: 0;
 }
 
 .admin-workspace .doc-tile,
