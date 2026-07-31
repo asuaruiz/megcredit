@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
 import Modal from '../../components/portal/Modal.jsx';
-import { assignPlan, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchDocumentUrl, fetchStaffMe, resendPaymentLink, reviewDocument, staffLogout } from '../../lib/adminApi.js';
+import { assignPlan, fetchAgreementSignature, fetchCatalog, fetchClientCreditMonitoring, fetchClientDetail, fetchDocumentFile, fetchStaffMe, resendPaymentLink, reviewDocument, staffLogout } from '../../lib/adminApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 function CreditMonitoringSection({ clientId }) {
@@ -53,7 +53,7 @@ function formatCents(cents) {
 }
 
 export default function AdminClientDetail() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -73,6 +73,9 @@ export default function AdminClientDetail() {
   const [viewingId, setViewingId] = useState(null);
   const [documentError, setDocumentError] = useState('');
   const [documentPreview, setDocumentPreview] = useState(null);
+  const [agreementPreview, setAgreementPreview] = useState(null);
+  const [agreementError, setAgreementError] = useState('');
+  const [openingAgreementId, setOpeningAgreementId] = useState(null);
   const [sendingPaymentId, setSendingPaymentId] = useState(null);
   const [paymentMessage, setPaymentMessage] = useState('');
   const [paymentError, setPaymentError] = useState('');
@@ -186,7 +189,8 @@ export default function AdminClientDetail() {
     setViewingId(doc.id);
     setDocumentError('');
     try {
-      const { url } = await fetchDocumentUrl(doc.id);
+      const file = await fetchDocumentFile(doc.id);
+      const url = URL.createObjectURL(file);
       setDocumentPreview({
         url,
         title: DOCUMENT_LABEL[doc.document_type] || doc.original_filename || doc.document_type,
@@ -196,6 +200,33 @@ export default function AdminClientDetail() {
     } finally {
       setViewingId(null);
     }
+  };
+
+  const closeDocumentPreview = () => {
+    if (documentPreview?.url) URL.revokeObjectURL(documentPreview.url);
+    setDocumentPreview(null);
+  };
+
+  const handleViewAgreement = async (agreement) => {
+    setOpeningAgreementId(agreement.id);
+    setAgreementError('');
+    try {
+      let signatureUrl = null;
+      if (agreement.has_signature) {
+        const signature = await fetchAgreementSignature(agreement.id);
+        signatureUrl = URL.createObjectURL(signature);
+      }
+      setAgreementPreview({ ...agreement, signatureUrl });
+    } catch (agreementFetchError) {
+      setAgreementError(agreementFetchError.message);
+    } finally {
+      setOpeningAgreementId(null);
+    }
+  };
+
+  const closeAgreementPreview = () => {
+    if (agreementPreview?.signatureUrl) URL.revokeObjectURL(agreementPreview.signatureUrl);
+    setAgreementPreview(null);
   };
 
   const handleResendPayment = async (paymentPlanId) => {
@@ -273,6 +304,33 @@ export default function AdminClientDetail() {
 
         <CreditMonitoringSection clientId={id} />
 
+        <h2 style={{ fontSize: 16, marginTop: 24 }}>{t('adminClientDetail.signedContractsTitle')}</h2>
+        {(detail.signedAgreements || []).length === 0 ? (
+          <p className="portal-sub">{t('adminClientDetail.noSignedContracts')}</p>
+        ) : (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {detail.signedAgreements.map((agreement) => (
+              <li key={agreement.id} className="doc-tile" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <div>
+                  <strong style={{ fontSize: 14 }}>{agreement.title}</strong>
+                  <p className="doc-hint" style={{ margin: '4px 0 0' }}>
+                    {t('adminClientDetail.signedBy')} {agreement.signed_full_name} · {new Date(agreement.signed_at).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}
+                  </p>
+                </div>
+                <button
+                  className="btn btn-outline"
+                  type="button"
+                  disabled={openingAgreementId === agreement.id}
+                  onClick={() => handleViewAgreement(agreement)}
+                >
+                  {openingAgreementId === agreement.id ? t('adminClientDetail.openingDocument') : t('adminClientDetail.viewSignedContract')}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {agreementError && <p className="form-error" role="alert">{agreementError}</p>}
+
         <h2 style={{ fontSize: 16, marginTop: 24 }}>{t('adminClientDetail.existingPlansTitle')}</h2>
         {detail.plans.length === 0 ? (
           <p className="portal-sub">{t('adminClientDetail.noPlans')}</p>
@@ -313,12 +371,30 @@ export default function AdminClientDetail() {
       </div>
 
       {documentPreview && (
-        <Modal title={documentPreview.title} onClose={() => setDocumentPreview(null)} maxWidth={1000}>
+        <Modal title={documentPreview.title} onClose={closeDocumentPreview} maxWidth={1000}>
           <iframe
             src={documentPreview.url}
             title={documentPreview.title}
             style={{ display: 'block', width: '100%', height: '72vh', border: '1px solid var(--border)', borderRadius: 8, background: '#fff' }}
           />
+        </Modal>
+      )}
+
+      {agreementPreview && (
+        <Modal title={agreementPreview.title} onClose={closeAgreementPreview} maxWidth={800}>
+          <div className="doc-tile" style={{ whiteSpace: 'pre-wrap', fontSize: 14, lineHeight: 1.7, maxHeight: '48vh', overflowY: 'auto' }}>
+            {agreementPreview.body_text}
+          </div>
+          <div style={{ marginTop: 20 }}>
+            <p style={{ margin: '0 0 6px', fontSize: 14 }}><strong>{t('adminClientDetail.signedBy')}:</strong> {agreementPreview.signed_full_name}</p>
+            <p style={{ margin: '0 0 12px', fontSize: 14 }}><strong>{t('adminClientDetail.signedAt')}:</strong> {new Date(agreementPreview.signed_at).toLocaleString(language === 'es' ? 'es-US' : 'en-US')}</p>
+            {agreementPreview.signatureUrl && (
+              <div>
+                <strong style={{ fontSize: 14 }}>{t('adminClientDetail.signature')}</strong>
+                <img src={agreementPreview.signatureUrl} alt={t('adminClientDetail.signature')} style={{ display: 'block', maxWidth: 420, width: '100%', maxHeight: 160, objectFit: 'contain', objectPosition: 'left center', marginTop: 8, padding: 8, borderRadius: 8, background: '#fff', border: '1px solid var(--border)' }} />
+              </div>
+            )}
+          </div>
         </Modal>
       )}
 

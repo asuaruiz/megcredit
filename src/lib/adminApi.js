@@ -51,8 +51,22 @@ export function reviewDocument(documentId, status) {
   return request('/api/admin/review-document', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ documentId, status }) });
 }
 
-export function fetchDocumentUrl(documentId) {
-  return request(`/api/admin/view-document?id=${encodeURIComponent(documentId)}`);
+export async function fetchDocumentFile(documentId) {
+  const response = await fetch(`/api/admin/view-document?id=${encodeURIComponent(documentId)}`, { credentials: 'include' });
+  if (!response.ok) {
+    const result = await response.json().catch(() => ({}));
+    throw new Error(result.error || 'No pudimos abrir el documento.');
+  }
+  return response.blob();
+}
+
+export async function fetchAgreementSignature(agreementId) {
+  const response = await fetch(`/api/admin/view-agreement-signature?id=${encodeURIComponent(agreementId)}`, { credentials: 'include' });
+  if (!response.ok) {
+    const result = await response.json().catch(() => ({}));
+    throw new Error(result.error || 'No pudimos cargar la firma del contrato.');
+  }
+  return response.blob();
 }
 
 export function resendPaymentLink(paymentPlanId) {
