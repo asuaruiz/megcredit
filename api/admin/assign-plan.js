@@ -152,6 +152,7 @@ export default async function handler(request, response) {
         to: client.email,
         subject: 'Your service agreement is ready to sign',
         html: agreementReadyEmailHtml({ fullName: client.full_name, loginUrl: `${siteUrl}/portal/dashboard` }),
+        emailType: 'agreement_ready',
       });
     } catch (emailError) {
       console.error('Assign plan email failed', emailError instanceof Error ? emailError.message : 'unknown error');

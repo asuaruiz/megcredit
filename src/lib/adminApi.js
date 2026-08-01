@@ -27,6 +27,10 @@ export function fetchClients() {
   return request('/api/admin/clients');
 }
 
+export function fetchEmailHistory() {
+  return request('/api/admin/email-history');
+}
+
 export function fetchClientDetail(id) {
   return request(`/api/admin/client-detail?id=${encodeURIComponent(id)}`);
 }

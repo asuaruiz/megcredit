@@ -20,6 +20,7 @@ export default async function handler(request, response) {
       to: client.email,
       subject: 'Reminder: your MEG Credit recurring payment',
       html: recurringPaymentReminderEmailHtml({ fullName: client.full_name, amount, interval: INTERVAL_LABEL[plan.recurring_interval] || plan.recurring_interval, loginUrl }),
+      emailType: 'payment_reminder',
     });
     return json(response, 200, { ok: true });
   } catch (error) {
