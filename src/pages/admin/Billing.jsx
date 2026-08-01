@@ -14,7 +14,7 @@ export default function Billing() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('open');
+  const [filter, setFilter] = useState('all');
   const [expanded, setExpanded] = useState(null);
 
   useEffect(() => {
