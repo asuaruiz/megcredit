@@ -1064,6 +1064,9 @@ img, svg { max-width: 100%; }
 .consent-checkbox { align-items: flex-start; margin: 8px 0 18px; line-height: 1.55; }
 .consent-checkbox a { font-weight: 600; }
 .form-error { color: #A12B2B !important; background: rgba(161, 43, 43, 0.08); border-left: 3px solid #A12B2B; padding: 10px 12px; margin: 14px 0 !important; font-size: 13px !important; }
+.form-success { color: #2E8555 !important; background: rgba(46, 133, 85, 0.08); border-left: 3px solid #2E8555; padding: 10px 12px; margin: 14px 0 !important; font-size: 13px !important; }
+@media (prefers-color-scheme: dark) { .form-success { color: #58B389 !important; background: rgba(88, 179, 137, 0.12); border-left-color: #58B389; } }
+:root[data-theme='dark'] .form-success { color: #58B389 !important; background: rgba(88, 179, 137, 0.12); border-left-color: #58B389; }
 .submit-btn:disabled { cursor: wait; opacity: 0.7; }
 
 .success-state { text-align: center; padding: 48px 24px; }

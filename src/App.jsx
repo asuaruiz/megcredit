@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext.jsx';
 import Nav from './components/Nav.jsx';
 import Footer from './components/Footer.jsx';
@@ -21,6 +21,14 @@ import AdminClientDetail from './pages/admin/ClientDetail.jsx';
 import AdminCatalog from './pages/admin/Catalog.jsx';
 import AdminContracts from './pages/admin/Contracts.jsx';
 import './styles/portal.css';
+
+// Old portal URLs (pre-redesign) redirect here so bookmarks/emailed links
+// still land somewhere useful, instead of 404ing. Preserves the query
+// string — Stripe's checkout redirect still points at /portal/dashboard.
+function PortalRedirect({ to }) {
+  const location = useLocation();
+  return <Navigate to={`${to}${location.search}`} replace />;
+}
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
@@ -48,14 +56,18 @@ function AppContent() {
         <Routes>
           <Route path="/portal/login" element={<PortalLogin />} />
           <Route path="/portal/activar" element={<PortalActivate />} />
-          <Route path="/portal/dashboard" element={<PortalDashboard />} />
-          <Route path="/portal/disputas" element={<PortalDashboard />} />
-          <Route path="/portal/mensajes" element={<PortalDashboard />} />
-          <Route path="/portal/finanzas" element={<PortalDashboard />} />
-          <Route path="/portal/facturas" element={<PortalDashboard />} />
-          <Route path="/portal/credito" element={<PortalDashboard />} />
-          <Route path="/portal/recursos" element={<PortalDashboard />} />
-          <Route path="/portal/configuracion" element={<PortalDashboard />} />
+          <Route path="/portal/inicio" element={<PortalDashboard />} />
+          <Route path="/portal/mi-caso" element={<PortalDashboard />} />
+          <Route path="/portal/servicios" element={<PortalDashboard />} />
+          {/* Retired routes from the pre-redesign sidebar — redirect rather than 404 */}
+          <Route path="/portal/dashboard" element={<PortalRedirect to="/portal/inicio" />} />
+          <Route path="/portal/disputas" element={<PortalRedirect to="/portal/mi-caso" />} />
+          <Route path="/portal/mensajes" element={<PortalRedirect to="/portal/inicio" />} />
+          <Route path="/portal/finanzas" element={<PortalRedirect to="/portal/servicios" />} />
+          <Route path="/portal/facturas" element={<PortalRedirect to="/portal/servicios" />} />
+          <Route path="/portal/credito" element={<PortalRedirect to="/portal/inicio" />} />
+          <Route path="/portal/recursos" element={<PortalRedirect to="/portal/inicio" />} />
+          <Route path="/portal/configuracion" element={<PortalRedirect to="/portal/inicio" />} />
           <Route path="*" element={<PortalLogin />} />
         </Routes>
       </>

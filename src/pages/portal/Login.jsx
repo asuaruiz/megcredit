@@ -17,7 +17,7 @@ export default function PortalLogin() {
     setError('');
     try {
       await login(data.get('email'), data.get('password'));
-      navigate('/portal/dashboard', { replace: true });
+      navigate('/portal/inicio', { replace: true });
     } catch (submissionError) {
       setError(submissionError.message);
       setStatus('error');

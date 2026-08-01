@@ -1,11 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import PortalLayout from '../../components/portal/PortalLayout.jsx';
-import PortalSidebarLayout from '../../components/portal/PortalSidebarLayout.jsx';
+import PortalTopbar from '../../components/portal/PortalTopbar.jsx';
 import Modal from '../../components/portal/Modal.jsx';
 import SignaturePad from '../../components/portal/SignaturePad.jsx';
 import ServicesPanel from '../../components/portal/ServicesPanel.jsx';
-import { fetchAgreementPdf, fetchBureauSummary, fetchMe, fetchOnboardingStatus, logout, saveCreditMonitoring, signAgreement, uploadDocument } from '../../lib/portalApi.js';
+import {
+  fetchAgreementPdf,
+  fetchBureauSummary,
+  fetchMe,
+  fetchOnboardingStatus,
+  fetchServices,
+  logout,
+  payPlan,
+  saveCreditMonitoring,
+  signAgreement,
+  uploadDocument,
+} from '../../lib/portalApi.js';
 import { useLanguage } from '../../contexts/LanguageContext.jsx';
 
 const BUREAUS = [
@@ -25,6 +36,12 @@ const CASE_STATUS_ROWS = [
   { i18nKey: 'rowNegative', category: 'negative' },
 ];
 
+const TAB_BY_PATH = {
+  '/portal/inicio': 'home',
+  '/portal/mi-caso': 'mi-caso',
+  '/portal/servicios': 'servicios',
+};
+
 function useBureauSummary() {
   const [data, setData] = useState(null);
 
@@ -39,25 +56,13 @@ function useBureauSummary() {
   return data;
 }
 
-const TAB_BY_PATH = {
-  '/portal/dashboard': 'home',
-  '/portal/disputas': 'disputes',
-  '/portal/mensajes': 'messages',
-  '/portal/finanzas': 'finances',
-  '/portal/facturas': 'invoices',
-  '/portal/credito': 'credit',
-  '/portal/recursos': 'resources',
-  '/portal/configuracion': 'settings',
-};
-
-function ComingSoonCard({ title }) {
-  const { t } = useLanguage();
-  return (
-    <div className="portal-card wide">
-      <h2>{title}</h2>
-      <p className="portal-sub">{t('portalHome.comingSoon')}</p>
-    </div>
-  );
+function formatShortDate(dateStr, language) {
+  if (!dateStr) return '';
+  try {
+    return new Date(dateStr).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { day: '2-digit', month: 'short' });
+  } catch {
+    return dateStr;
+  }
 }
 
 function CaseStatusTable({ bureauData }) {
@@ -87,17 +92,66 @@ function CaseStatusTable({ bureauData }) {
   );
 }
 
-function HomeTab({ account }) {
-  const { t } = useLanguage();
-  const bureauData = useBureauSummary();
+/* ---------- Home ---------- */
+
+function HomeTab({ bureauData, documents, plans }) {
+  const { t, language } = useLanguage();
   const hasData = Boolean(bureauData?.report);
   const scoreFor = (bureauKey) => bureauData?.scores.find((row) => row.bureau === bureauKey)?.score;
 
+  const DOC_LABELS = {
+    id_front: t('portalDashboard.docIdFrontTitle'),
+    selfie_with_id: t('portalDashboard.docSelfieTitle'),
+    ssn_card: t('portalDashboard.docSsnTitle'),
+    proof_of_residency: t('portalDashboard.docProofTitle'),
+  };
+
+  const hasCategory = (category) => (bureauData?.caseStatus || []).some((row) => row.status_category === category && row.count > 0);
+  let bandState = 'preparing';
+  if (hasData) {
+    if (hasCategory('in_dispute')) bandState = 'inProgress';
+    else if (hasCategory('deleted') || hasCategory('repaired')) bandState = 'advancing';
+    else bandState = 'upToDate';
+  }
+  const BAND_COPY = {
+    preparing: { headline: t('portalHome.bandStatePreparing'), sub: t('portalHome.bandSubPreparing') },
+    inProgress: { headline: t('portalHome.bandStateInProgress'), sub: t('portalHome.bandSubInProgress') },
+    advancing: { headline: t('portalHome.bandStateAdvancing'), sub: t('portalHome.bandSubAdvancing') },
+    upToDate: { headline: t('portalHome.bandStateUpToDate'), sub: t('portalHome.bandSubUpToDate') },
+  };
+
+  const activity = [];
+  (documents || []).forEach((doc) => {
+    if (!doc.created_at) return;
+    activity.push({ date: doc.created_at, desc: `${t('portalHome.activityUploaded')} ${DOC_LABELS[doc.document_type] || doc.document_type}` });
+  });
+  (plans || []).forEach((plan) => {
+    if (plan.agreement?.status === 'signed' && plan.agreement.signed_at) {
+      activity.push({ date: plan.agreement.signed_at, desc: t('portalHome.activityAgreementSigned') });
+    }
+  });
+  if (bureauData?.report?.asOfDate) {
+    activity.push({ date: bureauData.report.asOfDate, desc: t('portalHome.activityReportUpdated') });
+  }
+  activity.sort((a, b) => new Date(b.date) - new Date(a.date));
+  const recentActivity = activity.slice(0, 5);
+
   return (
-    <div className="workspace-split">
-      <div className="col-main">
-        <div className="portal-card wide surface-raised is-metric">
-          <h2>{t('portalHome.scoresTitle')}</h2>
+    <>
+      <div className="portal-band on-navy">
+        <div className="portal-band-inner">
+          <div className="portal-band-hairline" />
+          <p className="portal-band-overline">
+            {t('portalHome.bandOverline')}{hasData ? ` ${bureauData.report.asOfDate}` : ''}
+          </p>
+          <h1 className="portal-band-headline">{BAND_COPY[bandState].headline}</h1>
+          <p className="portal-band-sub">{BAND_COPY[bandState].sub}</p>
+        </div>
+      </div>
+
+      <div className="portal-content">
+        <section className="surface-raised is-metric score-row">
+          <h2 className="portal-section-title">{t('portalHome.scoresTitle')}</h2>
           <div className="admin-stats">
             {BUREAUS.map(({ label, key }) => (
               <div className="admin-stat-tile" key={key}>
@@ -106,63 +160,93 @@ function HomeTab({ account }) {
               </div>
             ))}
           </div>
-          <p className="portal-sub">
-            {hasData ? `${t('portalHome.asOf')} ${bureauData.report.asOfDate}` : t('portalHome.scoresEmpty')}
-          </p>
-        </div>
+          <p className="portal-sub">{hasData ? `${t('portalHome.asOf')} ${bureauData.report.asOfDate}` : t('portalHome.scoresEmpty')}</p>
+        </section>
 
-        <div className="portal-card wide">
-          <h2>{t('portalHome.caseStatusTitle')}</h2>
+        <section>
+          <h2 className="portal-section-title">{t('portalHome.caseStatusTitle')}</h2>
           <CaseStatusTable bureauData={bureauData} />
           {!hasData && <p className="portal-sub">{t('portalHome.caseStatusEmpty')}</p>}
-        </div>
-      </div>
+        </section>
 
-      <div className="col-aside">
-        <div className="portal-card wide">
-          <h2>{t('portalHome.clientCardTitle')}</h2>
-          <div className="field-list">
-            <p>{account.full_name}</p>
-            <p>{account.email}</p>
-            {account.phone && <p>{account.phone}</p>}
-            <p>{t('portalHome.statusLabel')}: {account.status}</p>
-          </div>
-        </div>
+        {recentActivity.length > 0 && (
+          <section>
+            <h2 className="portal-section-title">{t('portalHome.recentActivityTitle')}</h2>
+            <div className="activity-list">
+              {recentActivity.map((row, index) => (
+                <div className="activity-row" key={index}>
+                  <span className="activity-date">{formatShortDate(row.date, language)}</span>
+                  <span className="activity-desc">{row.desc}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
-    </div>
+    </>
   );
 }
 
-function DisputesTab() {
+function MiCasoTab({ bureauData }) {
   const { t } = useLanguage();
-  const bureauData = useBureauSummary();
   const hasData = Boolean(bureauData?.report);
 
   return (
-    <div className="portal-card wide">
-      <h2>{t('portalSidebar.disputes')}</h2>
-      <CaseStatusTable bureauData={bureauData} />
-      {!hasData && <p className="portal-sub">{t('portalHome.caseStatusEmpty')}</p>}
+    <div className="portal-content">
+      <h1 className="portal-page-title">{t('portalTopbar.myCase')}</h1>
+      <section>
+        <h2 className="portal-section-title">{t('portalHome.caseStatusTitle')}</h2>
+        <CaseStatusTable bureauData={bureauData} />
+        {!hasData && <p className="portal-sub">{t('portalHome.caseStatusEmpty')}</p>}
+      </section>
     </div>
   );
 }
 
-function CreditInfoTab({ onUpdateCredentials }) {
+/* ---------- Action banner (unsigned agreement / plan awaiting payment) ---------- */
+
+function ActionBanner({ type, collapsed, onToggle, onAction }) {
   const { t } = useLanguage();
-  return (
-    <div className="portal-card wide">
-      <h2>{t('portalSidebar.creditInfo')}</h2>
-      <p className="portal-sub">{t('portalDashboard.creditMonitoringText')}</p>
-      <button className="btn btn-outline" type="button" onClick={onUpdateCredentials}>
-        {t('portalHome.updateCredentials')}
+  const title = type === 'agreement' ? t('portalBanner.newAgreementTitle') : t('portalBanner.planReadyTitle');
+  const actionLabel = type === 'agreement' ? t('portalBanner.reviewAndSign') : t('portalBanner.payNow');
+
+  if (collapsed) {
+    return (
+      <button type="button" className="action-banner is-collapsed" onClick={onToggle}>
+        <p>{title}</p>
       </button>
+    );
+  }
+
+  return (
+    <div className="action-banner">
+      <p>{title}</p>
+      <div className="cluster-2">
+        <button className="btn btn-primary" type="button" onClick={onAction}>{actionLabel}</button>
+        <button className="action-banner-dismiss" type="button" onClick={onToggle} aria-label={t('general.close')}>×</button>
+      </div>
+    </div>
+  );
+}
+
+function PaymentBanner({ result, onDismiss }) {
+  const { t } = useLanguage();
+  const isSuccess = result === 'success';
+  return (
+    <div className={`action-banner${isSuccess ? '' : ' is-neutral'}`}>
+      <p>
+        {isSuccess ? t('portalBanner.paymentSuccessTitle') : t('portalBanner.paymentCancelledTitle')}
+        {' — '}
+        {isSuccess ? t('portalBanner.paymentSuccessText') : t('portalBanner.paymentCancelledText')}
+      </p>
+      <button className="action-banner-dismiss" type="button" onClick={onDismiss} aria-label={t('general.close')}>×</button>
     </div>
   );
 }
 
 const PHONE_PATTERN = /^\+?[0-9](?:[0-9\s().-]{5,18})[0-9]$/;
 
-function AgreementModal({ agreement, onClose, onDone }) {
+function AgreementModal({ agreement, awaitingPayment, onClose, onDone }) {
   const { t } = useLanguage();
   const signatureRef = useRef(null);
   const [fullName, setFullName] = useState('');
@@ -170,6 +254,7 @@ function AgreementModal({ agreement, onClose, onDone }) {
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const [pdfUrl, setPdfUrl] = useState(null);
+  const [signedAt, setSignedAt] = useState(null);
 
   useEffect(() => {
     if (!agreement.has_pdf) return undefined;
@@ -192,12 +277,28 @@ function AgreementModal({ agreement, onClose, onDone }) {
     setError('');
     try {
       await signAgreement(agreement.id, fullName, signatureRef.current.getDataUrl());
-      onDone();
+      setSignedAt(new Date());
+      setStatus('done');
     } catch (submissionError) {
       setError(submissionError.message);
       setStatus('error');
     }
   };
+
+  if (status === 'done') {
+    return (
+      <Modal title={agreement.title} onClose={onDone}>
+        <div className="success-state">
+          <div className="success-icon">✓</div>
+          <h3>{t('portalDashboard.agreementConfirmTitle')}</h3>
+          <p>{t('portalDashboard.agreementConfirmSignedBy')} {fullName}</p>
+          <p className="portal-sub">{signedAt?.toLocaleString()}</p>
+          {awaitingPayment && <p className="portal-sub">{t('portalDashboard.agreementConfirmNextStepPayment')}</p>}
+          <button className="btn btn-primary" type="button" onClick={onDone}>{t('portalDashboard.continueButton')}</button>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal title={agreement.title} onClose={onClose}>
@@ -333,12 +434,25 @@ function DocumentModal({ tile, onClose, onDone }) {
     setError('');
     try {
       await uploadDocument(tile.type, file);
-      onDone();
+      setStatus('done');
     } catch (uploadError) {
       setError(uploadError.message);
       setStatus('error');
     }
   };
+
+  if (status === 'done') {
+    return (
+      <Modal title={tile.title} onClose={onDone}>
+        <div className="success-state">
+          <div className="success-icon">✓</div>
+          <h3>{t('portalDashboard.uploadConfirmTitle')}</h3>
+          <p>{t('portalDashboard.uploadConfirmText')}</p>
+          <button className="btn btn-primary" type="button" onClick={onDone}>{t('portalDashboard.continueButton')}</button>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal title={tile.title} onClose={onClose}>
@@ -354,10 +468,15 @@ export default function PortalDashboard() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [account, setAccount] = useState(null);
+  const [documents, setDocuments] = useState([]);
   const [status, setStatus] = useState(null);
+  const [plans, setPlans] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
+  const [bannerCollapsed, setBannerCollapsed] = useState(false);
+  const bureauData = useBureauSummary();
 
   const DOCUMENT_TILES = [
     { type: 'id_front', title: t('portalDashboard.docIdFrontTitle'), hint: t('portalDashboard.docIdFrontHint') },
@@ -366,11 +485,22 @@ export default function PortalDashboard() {
     { type: 'proof_of_residency', title: t('portalDashboard.docProofTitle'), hint: t('portalDashboard.docProofHint') },
   ];
 
+  const STEP_META = {
+    id_front: { title: t('portalDashboard.docIdFrontTitle'), heroHeadline: t('portalOnboarding.idFrontHeadline'), heroSentence: t('portalOnboarding.idFrontSentence'), cta: t('portalOnboarding.ctaUpload') },
+    selfie_with_id: { title: t('portalDashboard.docSelfieTitle'), heroHeadline: t('portalOnboarding.selfieHeadline'), heroSentence: t('portalOnboarding.selfieSentence'), cta: t('portalOnboarding.ctaUpload') },
+    ssn_card: { title: t('portalDashboard.docSsnTitle'), heroHeadline: t('portalOnboarding.ssnHeadline'), heroSentence: t('portalOnboarding.ssnSentence'), cta: t('portalOnboarding.ctaUpload') },
+    proof_of_residency: { title: t('portalDashboard.docProofTitle'), heroHeadline: t('portalOnboarding.proofHeadline'), heroSentence: t('portalOnboarding.proofSentence'), cta: t('portalOnboarding.ctaUpload') },
+    creditMonitoring: { title: t('portalDashboard.creditMonitoringLabel'), heroHeadline: t('portalOnboarding.creditMonitoringHeadline'), heroSentence: t('portalOnboarding.creditMonitoringSentence'), cta: t('portalOnboarding.ctaShareCredentials') },
+    agreement: { title: t('portalDashboard.agreementLabel'), heroHeadline: t('portalOnboarding.agreementHeadline'), heroSentence: t('portalOnboarding.agreementSentence'), cta: t('portalOnboarding.ctaReviewAndSign') },
+  };
+
   const load = useCallback(async () => {
     try {
-      const [me, onboarding] = await Promise.all([fetchMe(), fetchOnboardingStatus()]);
+      const [me, onboarding, services] = await Promise.all([fetchMe(), fetchOnboardingStatus(), fetchServices()]);
       setAccount(me.account);
+      setDocuments(me.documents || []);
       setStatus(onboarding);
+      setPlans(services.plans || []);
     } catch {
       navigate('/portal/login', { replace: true });
     } finally {
@@ -382,20 +512,12 @@ export default function PortalDashboard() {
     load();
   }, [load]);
 
-  useEffect(() => {
-    if (!status || location.pathname === '/portal/dashboard' || !TAB_BY_PATH[location.pathname]) return;
-    const documentsComplete = DOCUMENT_TILES.every((tile) => status.documentsStatus[tile.type]);
-    const ready = documentsComplete && status.creditMonitoringSaved && Boolean(status.agreement) && status.agreement.status === 'signed';
-    if (!ready) navigate('/portal/dashboard', { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, location.pathname, navigate]);
-
   const handleLogout = async () => {
     await logout();
     navigate('/portal/login', { replace: true });
   };
 
-  if (loading || !account || !status) {
+  if (loading || !account || !status || !plans) {
     return (
       <PortalLayout>
         <div className="portal-card">
@@ -405,25 +527,39 @@ export default function PortalDashboard() {
     );
   }
 
-  const items = [];
-  if (status.agreement) {
-    items.push({ key: 'agreement', label: t('portalDashboard.agreementLabel'), done: status.agreement.status === 'signed' });
-  }
-  items.push({ key: 'creditMonitoring', label: t('portalDashboard.creditMonitoringLabel'), done: status.creditMonitoringSaved });
-  DOCUMENT_TILES.forEach((tile) => items.push({ key: tile.type, label: tile.title, done: status.documentsStatus[tile.type] }));
-
-  const doneCount = items.filter((item) => item.done).length;
-  const nextIncompleteKey = items.find((item) => !item.done)?.key;
-  const activeDocumentTile = DOCUMENT_TILES.find((tile) => tile.type === activeModal);
-
   const documentsComplete = DOCUMENT_TILES.every((tile) => status.documentsStatus[tile.type]);
   const checklistComplete = documentsComplete && status.creditMonitoringSaved;
-  const readyForHome = checklistComplete && Boolean(status.agreement) && status.agreement.status === 'signed';
+
+  // The API only returns the newest agreement, so gating on "newest signed"
+  // alone locks a returning client back into onboarding the moment their
+  // advisor assigns a second plan (new, unsigned agreement). `plans` (from
+  // /api/portal/services) carries the client's *full* agreement history —
+  // one per plan — so "has ever signed any agreement" is a real signal we
+  // already have, not an approximation.
+  const everSignedAgreement = plans.some((plan) => plan.agreement?.status === 'signed');
+  const readyForHome = everSignedAgreement || (checklistComplete && status.agreement?.status === 'signed');
+
+  const items = [
+    ...DOCUMENT_TILES.map((tile) => ({ key: tile.type, done: Boolean(status.documentsStatus[tile.type]), locked: false })),
+    { key: 'creditMonitoring', done: status.creditMonitoringSaved, locked: false },
+    { key: 'agreement', done: status.agreement?.status === 'signed', locked: !status.agreement },
+  ];
+  const doneCount = items.filter((item) => item.done).length;
+  const nextItem = items.find((item) => !item.done && !item.locked);
+  const activeDocumentTile = DOCUMENT_TILES.find((tile) => tile.type === activeModal);
+
+  const linkedPlan = plans.find((plan) => plan.agreement?.id === status.agreement?.id);
+  const awaitingPaymentForAgreement = linkedPlan?.status === 'awaiting_payment';
 
   const modals = (
     <>
       {activeModal === 'agreement' && status.agreement && (
-        <AgreementModal agreement={status.agreement} onClose={() => setActiveModal(null)} onDone={() => { setActiveModal(null); load(); }} />
+        <AgreementModal
+          agreement={status.agreement}
+          awaitingPayment={awaitingPaymentForAgreement}
+          onClose={() => setActiveModal(null)}
+          onDone={() => { setActiveModal(null); load(); }}
+        />
       )}
       {activeModal === 'creditMonitoring' && (
         <CreditMonitoringModal onClose={() => setActiveModal(null)} onDone={() => { setActiveModal(null); load(); }} />
@@ -436,79 +572,115 @@ export default function PortalDashboard() {
 
   if (readyForHome) {
     const activeTab = TAB_BY_PATH[location.pathname] || 'home';
-    const tabTitle = {
-      home: t('portalSidebar.home'),
-      disputes: t('portalSidebar.disputes'),
-      messages: t('portalSidebar.messages'),
-      finances: t('portalSidebar.finances'),
-      invoices: t('portalSidebar.invoices'),
-      credit: t('portalSidebar.creditInfo'),
-      resources: t('portalSidebar.resources'),
-      settings: t('portalSidebar.settings'),
-    }[activeTab];
+    const paymentParam = searchParams.get('payment');
+    const clearPaymentParam = () => {
+      const next = new URLSearchParams(searchParams);
+      next.delete('payment');
+      setSearchParams(next, { replace: true });
+    };
+
+    const unsignedAgreement = Boolean(status.agreement) && status.agreement.status !== 'signed';
+    const awaitingPaymentPlan = plans.find((plan) => plan.status === 'awaiting_payment' && plan.agreement?.status === 'signed');
+    const bannerType = unsignedAgreement ? 'agreement' : awaitingPaymentPlan ? 'payment' : null;
 
     return (
-      <PortalSidebarLayout title={tabTitle} onLogout={handleLogout}>
-        {activeTab === 'home' && <HomeTab account={account} />}
-        {activeTab === 'disputes' && <DisputesTab />}
-        {activeTab === 'messages' && <ComingSoonCard title={t('portalSidebar.messages')} />}
-        {activeTab === 'finances' && <ServicesPanel />}
-        {activeTab === 'invoices' && <ComingSoonCard title={t('portalSidebar.invoices')} />}
-        {activeTab === 'credit' && <CreditInfoTab onUpdateCredentials={() => setActiveModal('creditMonitoring')} />}
-        {activeTab === 'resources' && <ComingSoonCard title={t('portalSidebar.resources')} />}
-        {activeTab === 'settings' && <ComingSoonCard title={t('portalSidebar.settings')} />}
-        {modals}
-      </PortalSidebarLayout>
-    );
-  }
+      <div className="portal-workspace">
+        <PortalTopbar
+          account={account}
+          onLogout={handleLogout}
+          onOpenCreditMonitoring={() => setActiveModal('creditMonitoring')}
+        />
 
-  return (
-    <PortalLayout onLogout={handleLogout}>
-      <div className="portal-card wide">
-        <h1>{t('portalDashboard.greeting')}, {account.full_name.split(' ')[0]}</h1>
-        <p className="portal-sub">{t('portalDashboard.subtitle')}</p>
+        {paymentParam === 'success' && <PaymentBanner result="success" onDismiss={clearPaymentParam} />}
+        {paymentParam === 'cancelled' && <PaymentBanner result="cancelled" onDismiss={clearPaymentParam} />}
+        {!paymentParam && bannerType && (
+          <ActionBanner
+            type={bannerType}
+            collapsed={bannerCollapsed}
+            onToggle={() => setBannerCollapsed((collapsed) => !collapsed)}
+            onAction={() => {
+              if (bannerType === 'agreement') setActiveModal('agreement');
+              else if (awaitingPaymentPlan) payPlan(awaitingPaymentPlan.id);
+            }}
+          />
+        )}
 
-        <div className="progress-rule">
-          {items.map((item) => (
-            <div key={item.key} className={`progress-seg${item.done ? ' is-done' : ''}`} />
-          ))}
-        </div>
-        <p className="doc-hint progress-caption">{doneCount} {t('portalDashboard.progressText')} {items.length} {t('portalDashboard.completed')}</p>
-
-        <div className="tile-list">
-          {items.map((item) => (
-            <div key={item.key} className="doc-tile tile-row">
-              <div className="tile-row-label">
-                <span className={`checklist-item-mark${item.done ? ' done' : ''}`}>{item.done ? '✓' : '○'}</span>
-                <span>{item.label}</span>
-              </div>
-              {item.key === 'agreement' && item.done ? (
-                <span className="status-badge approved">{t('portalDashboard.signed')}</span>
-              ) : item.done ? (
-                <button className="btn-quiet" type="button" onClick={() => setActiveModal(item.key)}>
-                  {t('portalDashboard.update')}
-                </button>
-              ) : (
-                <button
-                  className={`btn ${item.key === nextIncompleteKey ? 'btn-primary' : 'btn-outline'}`}
-                  type="button"
-                  onClick={() => setActiveModal(item.key)}
-                >
-                  {t('portalDashboard.completeNow')}
-                </button>
-              )}
-            </div>
-          ))}
-
-          {checklistComplete && !status.agreement && (
-            <div className="doc-tile">
-              <h3>{t('portalDashboard.agreementWaitingTitle')}</h3>
-              <p className="doc-hint">{t('portalDashboard.agreementWaitingText')}</p>
+        <div className="portal-main-flex">
+          {activeTab === 'home' && <HomeTab bureauData={bureauData} documents={documents} plans={plans} />}
+          {activeTab === 'mi-caso' && <MiCasoTab bureauData={bureauData} />}
+          {activeTab === 'servicios' && (
+            <div className="portal-content">
+              <ServicesPanel />
             </div>
           )}
         </div>
 
-        <ServicesPanel />
+        {modals}
+      </div>
+    );
+  }
+
+  const heroContent = nextItem
+    ? {
+      headline: STEP_META[nextItem.key].heroHeadline,
+      sentence: STEP_META[nextItem.key].heroSentence,
+      cta: STEP_META[nextItem.key].cta,
+      modalKey: nextItem.key,
+    }
+    : {
+      headline: t('portalDashboard.agreementWaitingTitle'),
+      sentence: t('portalDashboard.agreementWaitingText'),
+      cta: null,
+      modalKey: null,
+    };
+  const heroStepNumber = nextItem ? items.indexOf(nextItem) + 1 : items.length;
+  const heroOverline = t(`portalOnboarding.step${heroStepNumber}Overline`);
+  const heroKey = nextItem?.key ?? 'agreement';
+  const remainingRows = items.filter((item) => !item.done && item.key !== heroKey);
+
+  return (
+    <PortalLayout onLogout={handleLogout}>
+      <div className="portal-main-flex">
+        <div className="portal-band on-navy">
+          <div className="portal-band-inner">
+            <div className="portal-band-hairline" />
+            <p className="portal-band-overline">{heroOverline}</p>
+            <h1 className="portal-band-headline">{heroContent.headline}</h1>
+            <p className="portal-band-sub">{heroContent.sentence}</p>
+            {heroContent.cta && (
+              <button className="btn btn-primary" type="button" onClick={() => setActiveModal(heroContent.modalKey)}>
+                {heroContent.cta}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="portal-content">
+          <div className="progress-rule">
+            {items.map((item) => (
+              <div key={item.key} className={`progress-seg${item.done ? ' is-done' : ''}`} />
+            ))}
+          </div>
+          <p className="doc-hint progress-caption">{doneCount} {t('portalOnboarding.of6Completed')}</p>
+
+          {doneCount > 0 && (
+            <p className="onboarding-summary-line">✓ {doneCount} {t('portalOnboarding.stepsCompletedSuffix')}</p>
+          )}
+
+          {remainingRows.length > 0 && (
+            <div className="tile-list">
+              {remainingRows.map((item) => (
+                <div key={item.key} className="onboarding-row">
+                  <span className="onboarding-row-icon">{item.locked ? '🔒' : '○'}</span>
+                  <div>
+                    <div className="onboarding-row-label">{STEP_META[item.key].title}</div>
+                    {item.locked && <div className="onboarding-row-hint">{t('portalOnboarding.agreementLockedRow')}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {modals}
