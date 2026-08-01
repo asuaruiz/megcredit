@@ -10,6 +10,7 @@ export default function PlanBuilderTab({ clientId, account, catalog, contractTem
   const [lineItems, setLineItems] = useState([]);
   const [billingType, setBillingType] = useState('one_time');
   const [recurringInterval, setRecurringInterval] = useState('month');
+  const [recurringIntervalCount, setRecurringIntervalCount] = useState(1);
   const [recurringAmountCents, setRecurringAmountCents] = useState(0);
   const [firstPaymentCents, setFirstPaymentCents] = useState(0);
   const [agreementTitle, setAgreementTitle] = useState(t('adminClientDetail.agreementTitleDefault'));
@@ -53,7 +54,8 @@ export default function PlanBuilderTab({ clientId, account, catalog, contractTem
   };
 
   const generateAgreementText = () => {
-    setAgreementText(defaultAgreementText(lineItems, billingType, recurringInterval, firstPaymentCents, recurringAmountCents));
+    const cadence = recurringInterval === 'week' && recurringIntervalCount === 2 ? t('adminClientDetail.intervalFortnight') : recurringInterval;
+    setAgreementText(defaultAgreementText(lineItems, billingType, cadence, firstPaymentCents, recurringAmountCents));
   };
 
   const totalCents = lineItems.reduce((sum, item) => sum + (Number(item.priceCents) || 0), 0);
@@ -69,6 +71,7 @@ export default function PlanBuilderTab({ clientId, account, catalog, contractTem
         services: lineItems.map((item) => ({ catalogId: item.catalogId, name: item.name, description: item.description, priceCents: Number(item.priceCents) })),
         billingType,
         recurringInterval: billingType === 'recurring' ? recurringInterval : undefined,
+        recurringIntervalCount: billingType === 'recurring' ? recurringIntervalCount : undefined,
         recurringAmountCents: billingType === 'recurring' ? recurringAmountCents : undefined,
         firstPaymentCents: billingType === 'recurring' && firstPaymentCents > 0 ? firstPaymentCents : undefined,
         agreementTitle,
@@ -100,7 +103,7 @@ export default function PlanBuilderTab({ clientId, account, catalog, contractTem
   };
 
   const billingSummary = billingType === 'recurring'
-    ? `${t('adminClientDetail.billingRecurring')} — ${formatCents(recurringAmountCents)} / ${recurringInterval}`
+    ? `${t('adminClientDetail.billingRecurring')} — ${formatCents(recurringAmountCents)} / ${recurringInterval === 'week' && recurringIntervalCount === 2 ? t('adminClientDetail.intervalFortnight') : recurringInterval}`
     : `${t('adminClientDetail.billingOneTime')} — ${formatCents(totalCents)}`;
 
   return (
@@ -157,8 +160,17 @@ export default function PlanBuilderTab({ clientId, account, catalog, contractTem
               <>
                 <div className="form-group">
                   <label htmlFor="interval">{t('adminClientDetail.intervalLabel')}</label>
-                  <select id="interval" value={recurringInterval} onChange={(event) => setRecurringInterval(event.target.value)}>
+                  <select
+                    id="interval"
+                    value={recurringInterval === 'week' && recurringIntervalCount === 2 ? 'fortnight' : recurringInterval}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setRecurringInterval(value === 'fortnight' ? 'week' : value);
+                      setRecurringIntervalCount(value === 'fortnight' ? 2 : 1);
+                    }}
+                  >
                     <option value="week">{t('adminClientDetail.intervalWeek')}</option>
+                    <option value="fortnight">{t('adminClientDetail.intervalFortnight')}</option>
                     <option value="month">{t('adminClientDetail.intervalMonth')}</option>
                     <option value="year">{t('adminClientDetail.intervalYear')}</option>
                   </select>

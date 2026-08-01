@@ -41,10 +41,15 @@ function IconMail() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="m4 7 8 6 8-6"/></svg>;
 }
 
+function IconBilling() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 9h18M7 15h3"/></svg>;
+}
+
 export default function AdminLayout({ children, onLogout, title }) {
   const { t } = useLanguage();
   const NAV_ITEMS = [
     { to: '/admin/clientes', label: t('adminLayout.navClients'), Icon: IconUsers },
+    { to: '/admin/cobros', label: t('adminLayout.navBilling'), Icon: IconBilling },
     { to: '/admin/emails', label: t('adminLayout.navEmails'), Icon: IconMail },
     { to: '/admin/catalogo', label: t('adminLayout.navCatalog'), Icon: IconCatalog },
     { to: '/admin/contratos', label: t('adminLayout.navContracts'), Icon: IconContracts },

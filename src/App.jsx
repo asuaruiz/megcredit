@@ -21,6 +21,7 @@ import AdminClientDetail from './pages/admin/ClientDetail.jsx';
 import AdminCatalog from './pages/admin/Catalog.jsx';
 import AdminContracts from './pages/admin/Contracts.jsx';
 import AdminEmailHistory from './pages/admin/EmailHistory.jsx';
+import AdminBilling from './pages/admin/Billing.jsx';
 import './styles/portal.css';
 
 // Old portal URLs (pre-redesign) redirect here so bookmarks/emailed links
@@ -85,6 +86,7 @@ function AppContent() {
           <Route path="/admin/clientes" element={<AdminDashboard />} />
           <Route path="/admin/clientes/:id" element={<AdminClientDetail />} />
           <Route path="/admin/emails" element={<AdminEmailHistory />} />
+          <Route path="/admin/cobros" element={<AdminBilling />} />
           <Route path="/admin/catalogo" element={<AdminCatalog />} />
           <Route path="/admin/contratos" element={<AdminContracts />} />
           <Route path="*" element={<AdminDashboard />} />

@@ -146,7 +146,7 @@ export default function ClientPlansTab({ plans, language, t, onReload }) {
       <div className="doc-tile plan-card" key={plan.id}>
         <span className={`status-badge ${PLAN_STATUS_BADGE[plan.status] || 'pending'}`}>{plan.status}</span>
         <p className="ws-body">
-          {plan.billing_type === 'recurring' ? `${t('adminClientDetail.recurring')} (${plan.recurring_interval})` : t('adminClientDetail.oneTime')}
+          {plan.billing_type === 'recurring' ? `${t('adminClientDetail.recurring')} (${plan.recurring_interval === 'week' && plan.recurring_interval_count === 2 ? t('adminClientDetail.intervalFortnight') : plan.recurring_interval})` : t('adminClientDetail.oneTime')}
           {' — '}
           {t('adminClientDetail.contract')}: {agreement?.status || t('adminClientDetail.noContract')}
         </p>

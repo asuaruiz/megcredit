@@ -40,7 +40,7 @@ function PlanCard({ plan }) {
       <span className={`status-badge ${plan.status === 'paid' || plan.status === 'active' ? 'approved' : plan.status === 'past_due' ? 'rejected' : 'pending'}`}>
         {PLAN_STATUS_LABEL[plan.status] || plan.status}
       </span>
-      <h3>{BILLING_LABEL[plan.billing_type]}{plan.recurring_interval ? ` · ${INTERVAL_LABEL[plan.recurring_interval]}` : ''}</h3>
+      <h3>{BILLING_LABEL[plan.billing_type]}{plan.recurring_interval ? ` · ${plan.recurring_interval === 'week' && plan.recurring_interval_count === 2 ? 'Every two weeks' : INTERVAL_LABEL[plan.recurring_interval]}` : ''}</h3>
       <ul className="plan-service-list">
         {plan.services.map((service) => (
           <li key={service.id}>{service.name} — {formatCents(service.price_cents)}</li>
