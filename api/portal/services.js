@@ -14,7 +14,7 @@ export default async function handler(request, response) {
   try {
     const clientId = active.account.id;
     const [plansResult, servicesResult, agreementsResult] = await Promise.all([
-      supabaseRequest(`megcredit_payment_plans?client_account_id=eq.${clientId}&select=id,billing_type,recurring_interval,status,created_at&order=created_at.desc`, { method: 'GET' }),
+      supabaseRequest(`megcredit_payment_plans?client_account_id=eq.${clientId}&select=id,billing_type,recurring_interval,recurring_interval_count,status,created_at&order=created_at.desc`, { method: 'GET' }),
       supabaseRequest(`megcredit_client_services?client_account_id=eq.${clientId}&select=id,payment_plan_id,name,description,price_cents`, { method: 'GET' }),
       supabaseRequest(`megcredit_service_agreements?client_account_id=eq.${clientId}&select=id,payment_plan_id,title,body_text,status,signed_full_name,signed_at,pdf_storage_path,pdf_original_filename`, { method: 'GET' }),
     ]);

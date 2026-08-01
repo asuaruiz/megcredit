@@ -5,11 +5,11 @@ function siteUrl() {
   return process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://www.megcredit.com';
 }
 
-function nextBillingTimestamp(interval) {
+function nextBillingTimestamp(interval, count = 1) {
   const date = new Date();
-  if (interval === 'week') date.setUTCDate(date.getUTCDate() + 7);
-  else if (interval === 'month') date.setUTCMonth(date.getUTCMonth() + 1);
-  else date.setUTCFullYear(date.getUTCFullYear() + 1);
+  if (interval === 'week') date.setUTCDate(date.getUTCDate() + (7 * count));
+  else if (interval === 'month') date.setUTCMonth(date.getUTCMonth() + count);
+  else date.setUTCFullYear(date.getUTCFullYear() + count);
   return Math.floor(date.getTime() / 1000);
 }
 
@@ -29,7 +29,7 @@ export default async function handler(request, response) {
 
   try {
     const plan = await supabaseOne(
-      `megcredit_payment_plans?id=eq.${paymentPlanId}&client_account_id=eq.${active.account.id}&status=eq.awaiting_payment&select=id,billing_type,recurring_interval,currency,first_payment_cents,recurring_amount_cents,total_amount_cents`,
+      `megcredit_payment_plans?id=eq.${paymentPlanId}&client_account_id=eq.${active.account.id}&status=eq.awaiting_payment&select=id,billing_type,recurring_interval,recurring_interval_count,currency,first_payment_cents,recurring_amount_cents,total_amount_cents`,
       { method: 'GET' },
     );
     if (!plan) return json(response, 404, { error: 'Este plan no está listo para pagarse.' });
@@ -76,7 +76,7 @@ export default async function handler(request, response) {
         price_data: {
           currency: plan.currency,
           unit_amount: plan.recurring_amount_cents,
-          recurring: { interval: plan.recurring_interval },
+          recurring: { interval: plan.recurring_interval, interval_count: plan.recurring_interval_count || 1 },
           product_data: { name: 'Pago recurrente', description: services.map((service) => service.name).join(', ') },
         },
       }];
@@ -109,7 +109,7 @@ export default async function handler(request, response) {
       subscriptionData: isRecurring ? {
         metadata: { payment_plan_id: plan.id, total_amount_cents: plan.total_amount_cents },
         ...(plan.first_payment_cents > 0 && plan.first_payment_cents !== plan.recurring_amount_cents
-          ? { trial_end: nextBillingTimestamp(plan.recurring_interval) }
+          ? { trial_end: nextBillingTimestamp(plan.recurring_interval, plan.recurring_interval_count || 1) }
           : {}),
       } : undefined,
       clientReferenceId: plan.id,

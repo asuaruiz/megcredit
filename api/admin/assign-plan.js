@@ -30,6 +30,7 @@ export default async function handler(request, response) {
   const clientId = body.clientId;
   const billingType = clean(body.billingType, 20);
   const recurringInterval = clean(body.recurringInterval, 20) || null;
+  const recurringIntervalCount = billingType === 'recurring' ? Number(body.recurringIntervalCount || 1) : 1;
   const agreementTitle = clean(body.agreementTitle, 200) || 'Acuerdo de servicios';
   const agreementText = clean(body.agreementText, 20000);
   const agreementPdfPath = clean(body.agreementPdfPath, 500);
@@ -47,6 +48,9 @@ export default async function handler(request, response) {
   if (!BILLING_TYPES.has(billingType)) return json(response, 400, { error: 'Tipo de facturación inválido.' });
   if (billingType === 'recurring' && !RECURRING_INTERVALS.has(recurringInterval)) {
     return json(response, 400, { error: 'Selecciona un intervalo de facturación recurrente.' });
+  }
+  if (!Number.isInteger(recurringIntervalCount) || recurringIntervalCount < 1 || recurringIntervalCount > 52) {
+    return json(response, 400, { error: 'La frecuencia de cobro no es válida.' });
   }
   if (services.some((service) => service === null) || services.length === 0) {
     return json(response, 400, { error: 'Revisa los servicios: cada uno necesita nombre y precio.' });
@@ -90,6 +94,7 @@ export default async function handler(request, response) {
         created_by_staff_id: active.staff.id,
         billing_type: billingType,
         recurring_interval: billingType === 'recurring' ? recurringInterval : null,
+        recurring_interval_count: recurringIntervalCount,
         first_payment_cents: billingType === 'recurring' ? firstPaymentCents : null,
         recurring_amount_cents: billingType === 'recurring' ? recurringAmountCents : null,
         total_amount_cents: totalAmountCents,

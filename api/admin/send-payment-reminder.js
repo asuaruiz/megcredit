@@ -10,7 +10,7 @@ export default async function handler(request, response) {
   const planId = request.body?.paymentPlanId;
   if (!isUuid(planId)) return json(response, 400, { error: 'Plan inválido.' });
   try {
-    const plan = await supabaseOne(`megcredit_payment_plans?id=eq.${planId}&billing_type=eq.recurring&status=in.(active,past_due)&select=id,client_account_id,recurring_interval,recurring_amount_cents,currency`, { method: 'GET' });
+    const plan = await supabaseOne(`megcredit_payment_plans?id=eq.${planId}&billing_type=eq.recurring&status=in.(active,past_due)&select=id,client_account_id,recurring_interval,recurring_interval_count,recurring_amount_cents,currency`, { method: 'GET' });
     if (!plan) return json(response, 409, { error: 'Solo puedes recordar pagos de planes recurrentes activos o atrasados.' });
     const client = await supabaseOne(`megcredit_client_accounts?id=eq.${plan.client_account_id}&status=eq.active&select=email,full_name`, { method: 'GET' });
     if (!client) return json(response, 404, { error: 'Cliente no encontrado o inactivo.' });
@@ -19,7 +19,7 @@ export default async function handler(request, response) {
     await sendPortalEmail({
       to: client.email,
       subject: 'Reminder: your MEG Credit recurring payment',
-      html: recurringPaymentReminderEmailHtml({ fullName: client.full_name, amount, interval: INTERVAL_LABEL[plan.recurring_interval] || plan.recurring_interval, loginUrl }),
+      html: recurringPaymentReminderEmailHtml({ fullName: client.full_name, amount, interval: plan.recurring_interval === 'week' && plan.recurring_interval_count === 2 ? 'every two weeks' : INTERVAL_LABEL[plan.recurring_interval] || plan.recurring_interval, loginUrl }),
       emailType: 'payment_reminder',
     });
     return json(response, 200, { ok: true });
