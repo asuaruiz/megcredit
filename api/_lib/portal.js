@@ -258,6 +258,7 @@ export async function createClientInvite({ email, fullName }) {
     to: email,
     subject: 'Create your account on the MEG Credit portal',
     html: inviteEmailHtml({ fullName, activationUrl }),
+    emailType: 'client_invitation',
   });
 
   return { status: 'created' };
@@ -304,14 +305,44 @@ export function recurringPaymentReminderEmailHtml({ fullName, amount, interval, 
   );
 }
 
-export async function sendPortalEmail({ to, subject, html }) {
+async function recordEmailAttempt({ to, subject, emailType, status, providerMessageId = null, errorMessage = null }) {
+  try {
+    const result = await supabaseRequest('megcredit_email_history', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        recipient_email: to,
+        subject,
+        email_type: emailType || 'transactional',
+        status,
+        provider: 'resend',
+        provider_message_id: providerMessageId,
+        error_message: errorMessage ? String(errorMessage).slice(0, 500) : null,
+      }),
+    });
+    if (!result.ok) throw new Error(`Supabase email history insert failed: ${result.status}`);
+  } catch (error) {
+    // Email delivery must not fail just because the audit table is temporarily unavailable.
+    console.error('Email history write failed', error instanceof Error ? error.message : 'unknown error');
+  }
+}
+
+export async function sendPortalEmail({ to, subject, html, emailType = 'transactional' }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.CONTACT_FROM_EMAIL || 'MEG Credit <notifications@megcredit.com>';
-  if (!apiKey) throw new Error('Missing RESEND_API_KEY');
-  const result = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to: [to], subject, html }),
-  });
-  if (!result.ok) throw new Error(`Resend send failed: ${result.status}`);
+  try {
+    if (!apiKey) throw new Error('Missing RESEND_API_KEY');
+    const result = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from, to: [to], subject, html }),
+    });
+    const payload = await result.json().catch(() => ({}));
+    if (!result.ok) throw new Error(`Resend send failed: ${result.status}${payload.message ? ` - ${payload.message}` : ''}`);
+    await recordEmailAttempt({ to, subject, emailType, status: 'sent', providerMessageId: payload.id || null });
+    return payload;
+  } catch (error) {
+    await recordEmailAttempt({ to, subject, emailType, status: 'failed', errorMessage: error instanceof Error ? error.message : 'Unknown error' });
+    throw error;
+  }
 }

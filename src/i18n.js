@@ -379,9 +379,17 @@ export const translations = {
     },
     adminLayout: {
       navClients: 'Clients',
+      navEmails: 'Email history',
       navCatalog: 'Catalog',
       navContracts: 'Contract templates',
       logout: 'Log out',
+    },
+    emailHistory: {
+      title: 'Email history', overline: 'Communications ledger', heading: 'Every message, accounted for.',
+      description: 'Transactional email attempts accepted or rejected by the delivery provider. The message body and secure links are never stored here.',
+      search: 'Search recipient or subject…', filterLabel: 'Filter by status', filter_all: 'All', filter_sent: 'Sent', filter_failed: 'Failed',
+      empty: 'No email attempts match this view.', recipient: 'Recipient', message: 'Message', status: 'Status', date: 'Date', sent: 'Sent', failed: 'Failed',
+      typeInvitation: 'Client invitation', typeAgreement: 'Agreement ready', typePaymentLink: 'Payment link', typeReminder: 'Payment reminder', typeTransactional: 'Transactional email',
     },
     portalLayout: {
       logout: 'Log out',
@@ -1071,9 +1079,17 @@ export const translations = {
     },
     adminLayout: {
       navClients: 'Clientes',
+      navEmails: 'Historial de emails',
       navCatalog: 'Catálogo',
       navContracts: 'Plantillas de contrato',
       logout: 'Cerrar sesión',
+    },
+    emailHistory: {
+      title: 'Historial de emails', overline: 'Registro de comunicaciones', heading: 'Cada mensaje, registrado.',
+      description: 'Intentos de correo transaccional aceptados o rechazados por el proveedor. El contenido y los enlaces seguros nunca se guardan aquí.',
+      search: 'Buscar destinatario o asunto…', filterLabel: 'Filtrar por estado', filter_all: 'Todos', filter_sent: 'Enviados', filter_failed: 'Fallidos',
+      empty: 'No hay intentos de email para esta vista.', recipient: 'Destinatario', message: 'Mensaje', status: 'Estado', date: 'Fecha', sent: 'Enviado', failed: 'Fallido',
+      typeInvitation: 'Invitación de cliente', typeAgreement: 'Contrato listo', typePaymentLink: 'Enlace de pago', typeReminder: 'Recordatorio de pago', typeTransactional: 'Email transaccional',
     },
     portalLayout: {
       logout: 'Cerrar sesión',

@@ -121,6 +121,7 @@ export default async function handler(request, response) {
       to: account.email,
       subject: 'Your MEG Credit payment link',
       html: paymentLinkEmailHtml({ fullName: account.full_name, paymentUrl: session.url }),
+      emailType: 'payment_link',
     });
 
     return json(response, 200, { ok: true });

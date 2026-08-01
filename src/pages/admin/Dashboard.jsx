@@ -19,9 +19,10 @@ function CommandPalette({ clients, onClose }) {
 
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();
+    const activeClients = clients.filter((client) => !client.isInvite);
     const pool = needle
-      ? clients.filter((client) => client.full_name.toLowerCase().includes(needle) || client.email.toLowerCase().includes(needle))
-      : clients;
+      ? activeClients.filter((client) => client.full_name.toLowerCase().includes(needle) || client.email.toLowerCase().includes(needle))
+      : activeClients;
     return pool.slice(0, 8);
   }, [clients, query]);
 
@@ -168,13 +169,13 @@ export default function AdminDashboard() {
 
   const activeCount = clients.filter((c) => c.status === 'active').length;
   const invitedCount = clients.filter((c) => c.status === 'invited').length;
-  const noPlanCount = clients.filter((c) => !c.latestPlanStatus).length;
+  const noPlanCount = clients.filter((c) => !c.isInvite && !c.latestPlanStatus).length;
 
   const filtered = clients
     .filter((client) => {
       if (filter === 'active') return client.status === 'active';
       if (filter === 'invited') return client.status === 'invited';
-      if (filter === 'noplan') return !client.latestPlanStatus;
+      if (filter === 'noplan') return !client.isInvite && !client.latestPlanStatus;
       return true;
     })
     .filter((client) => {
@@ -235,9 +236,9 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {filtered.map((client) => (
-                  <tr key={client.id} className="row-clickable" onClick={() => navigate(`/admin/clientes/${client.id}`)}>
+                  <tr key={client.id} className={client.isInvite ? '' : 'row-clickable'} onClick={() => { if (!client.isInvite) navigate(`/admin/clientes/${client.id}`); }}>
                     <td>
-                      <Link to={`/admin/clientes/${client.id}`} onClick={(event) => event.stopPropagation()}>{client.full_name}</Link>
+                      {client.isInvite ? client.full_name : <Link to={`/admin/clientes/${client.id}`} onClick={(event) => event.stopPropagation()}>{client.full_name}</Link>}
                     </td>
                     <td>{client.email}</td>
                     <td>
