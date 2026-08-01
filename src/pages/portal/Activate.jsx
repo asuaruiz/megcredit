@@ -26,7 +26,7 @@ export default function PortalActivate() {
     setError('');
     try {
       await activateAccount(token, password);
-      navigate('/portal/dashboard', { replace: true });
+      navigate('/portal/inicio', { replace: true });
     } catch (submissionError) {
       setError(submissionError.message);
       setStatus('error');
