@@ -14,6 +14,8 @@ import NotFound from './pages/NotFound.jsx';
 import SEO from './components/SEO.jsx';
 import PortalLogin from './pages/portal/Login.jsx';
 import PortalActivate from './pages/portal/Activate.jsx';
+import PortalForgotPassword from './pages/portal/ForgotPassword.jsx';
+import PortalResetPassword from './pages/portal/ResetPassword.jsx';
 import PortalDashboard from './pages/portal/Dashboard.jsx';
 import AdminLogin from './pages/admin/Login.jsx';
 import AdminDashboard from './pages/admin/Dashboard.jsx';
@@ -58,6 +60,8 @@ function AppContent() {
         <Routes>
           <Route path="/portal/login" element={<PortalLogin />} />
           <Route path="/portal/activar" element={<PortalActivate />} />
+          <Route path="/portal/olvide-contrasena" element={<PortalForgotPassword />} />
+          <Route path="/portal/restablecer" element={<PortalResetPassword />} />
           <Route path="/portal/inicio" element={<PortalDashboard />} />
           <Route path="/portal/mi-caso" element={<PortalDashboard />} />
           <Route path="/portal/servicios" element={<PortalDashboard />} />
