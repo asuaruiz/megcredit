@@ -3,6 +3,7 @@ import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from
 export const SESSION_COOKIE_NAME = 'megcredit_portal_session';
 export const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 export const INVITE_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
+export const PASSWORD_RESET_TTL_MS = 1000 * 60 * 60; // 1 hour
 const MAX_ATTEMPTS_PER_HOUR = 8;
 
 export function json(response, status, body) {
@@ -281,6 +282,13 @@ export function inviteEmailHtml({ fullName, activationUrl }) {
   return portalEmailLayout(
     `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Client portal</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hi, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">Create your account on the secure MEG Credit portal to complete your identity verification.</p><p style="margin:0 0 26px"><a href="${activationUrl}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">Create my account</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">This link is personal, expires in 7 days, and can only be used once. If you did not request this, please ignore this email.</p>`,
     'Create your account on the MEG Credit portal',
+  );
+}
+
+export function resetPasswordEmailHtml({ fullName, resetUrl }) {
+  return portalEmailLayout(
+    `<p style="margin:0 0 8px;color:#A67C1B;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase">Client portal</p><h1 style="margin:0 0 18px;font-family:Georgia,serif;color:#163A5F;font-size:28px;line-height:1.2">Hi, ${escapeHtml(fullName)}.</h1><p style="margin:0 0 22px;color:#4A4A4A;font-size:16px;line-height:1.7">We received a request to reset your MEG Credit portal password. Click below to choose a new one.</p><p style="margin:0 0 26px"><a href="${resetUrl}" style="display:inline-block;background:#163A5F;color:#FFFFFF;text-decoration:none;padding:14px 22px;border-radius:6px;font-size:15px;font-weight:bold">Reset my password</a></p><p style="margin:0;color:#8A8A8A;font-size:13px;line-height:1.6">This link is personal, expires in 1 hour, and can only be used once. If you did not request this, you can safely ignore this email.</p>`,
+    'Reset your MEG Credit portal password',
   );
 }
 

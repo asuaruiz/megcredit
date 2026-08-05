@@ -24,12 +24,20 @@ export default async function handler(request, response) {
         `megcredit_client_credit_monitoring?client_account_id=eq.${clientId}&select=id`,
         { method: 'GET' },
       ),
-      supabaseRequest(`megcredit_client_documents?client_account_id=eq.${clientId}&select=document_type`, { method: 'GET' }),
+      supabaseRequest(
+        `megcredit_client_documents?client_account_id=eq.${clientId}&select=document_type,status,created_at&order=created_at.desc`,
+        { method: 'GET' },
+      ),
     ]);
 
     const documents = documentsResult.ok ? await documentsResult.json() : [];
+    // documents is already newest-first, so the first match per type is the latest submission.
+    // A rejected latest submission must NOT count as done -- the client needs to re-upload it.
     const documentsStatus = Object.fromEntries(
-      REQUIRED_DOCUMENT_TYPES.map((type) => [type, documents.some((doc) => doc.document_type === type)]),
+      REQUIRED_DOCUMENT_TYPES.map((type) => {
+        const latest = documents.find((doc) => doc.document_type === type);
+        return [type, Boolean(latest) && latest.status !== 'rejected'];
+      }),
     );
 
     return json(response, 200, {

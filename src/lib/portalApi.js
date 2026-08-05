@@ -19,6 +19,14 @@ export function activateAccount(token, password) {
   return request('/api/portal/activate', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ token, password }) });
 }
 
+export function forgotPassword(email) {
+  return request('/api/portal/forgot-password', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ email }) });
+}
+
+export function resetPassword(token, password) {
+  return request('/api/portal/reset-password', { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify({ token, password }) });
+}
+
 export function logout() {
   return request('/api/portal/logout', { method: 'POST' });
 }
