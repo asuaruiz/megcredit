@@ -17,7 +17,8 @@ const response = await fetch(`${url}/rest/v1/megcredit_blog_posts?select=slug,ti
 
 if (!response.ok) throw new Error(`Supabase blog sync failed with status ${response.status}`);
 const posts = await response.json();
-if (!posts.length) throw new Error('Supabase blog sync returned no published posts; refusing to erase the snapshot.');
+// megcredit_blog_posts can legitimately be empty now that Indexal articles
+// (synced below) are an independent, primary source of blog content.
 await fs.writeFile(destination, `${JSON.stringify(posts, null, 2)}\n`);
 console.log(`Synced ${posts.length} published posts from Supabase.`);
 

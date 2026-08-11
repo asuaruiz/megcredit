@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { posts } from '../data/posts.jsx';
+import { mergeSpanishBlogCards } from '../data/blogCards.js';
 import { useLanguage } from '../contexts/LanguageContext.jsx';
 
 const smartCreditUrl = 'https://www.smartcredit.com/join/?pid=62622';
@@ -11,6 +12,7 @@ function Orbits() {
 
 export default function Home() {
   const { t } = useLanguage();
+  const guideCards = mergeSpanishBlogCards(posts).slice(0, 3);
   return (
     <>
       <section className="hero on-navy">
@@ -48,7 +50,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section"><div className="container"><div className="section-head"><span className="eyebrow">{t('home.eyebrowLearn')}</span><h2>{t('home.sectionTitleGuides')}</h2><p>{t('home.sectionLeadGuides')}</p></div><div className="post-grid">{posts.map((post) => <Link className="card post-card" to={`/blog/${post.slug}`} key={post.slug}><div className="post-meta"><span className="category">{post.category}</span><span className="dot"/><span>{post.readTime}</span></div><h3>{post.title}</h3><p className="excerpt">{post.excerpt}</p><span className="read-more">{t('home.readGuide')}</span></Link>)}</div></div></section>
+      {guideCards.length ? <section className="section"><div className="container"><div className="section-head"><span className="eyebrow">{t('home.eyebrowLearn')}</span><h2>{t('home.sectionTitleGuides')}</h2><p>{t('home.sectionLeadGuides')}</p></div><div className="post-grid">{guideCards.map((card) => <Link className="card post-card" to={card.href} key={card.key}>{card.imageUrl ? <img className="post-card-image" src={card.imageUrl} alt="" loading="lazy" /> : null}<div className="post-meta">{card.category ? <><span className="category">{card.category}</span><span className="dot"/></> : null}<span>{card.readTime}</span></div><h3>{card.title}</h3><p className="excerpt">{card.excerpt}</p><span className="read-more">{t('home.readGuide')}</span></Link>)}</div></div></section> : null}
     </>
   );
 }
