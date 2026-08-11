@@ -3,7 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext.jsx';
 import { Lockup } from './Logo.jsx';
 
 export default function Footer() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <footer className="site-footer">
@@ -15,7 +15,7 @@ export default function Footer() {
       <div className="footer-links">
         <Link to="/servicios">{t('footer.services')}</Link>
         <Link to="/nosotros">{t('footer.about')}</Link>
-        <Link to="/blog">{t('footer.blog')}</Link>
+        <Link to={language === 'en' ? '/en/blog' : '/blog'}>{t('footer.blog')}</Link>
         <Link to="/contacto">{t('footer.contact')}</Link>
         <Link to="/terminos">{t('footer.terms')}</Link>
         <Link to="/privacidad">{t('footer.privacy')}</Link>

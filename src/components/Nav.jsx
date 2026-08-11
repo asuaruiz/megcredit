@@ -6,7 +6,7 @@ import ThemeToggle from './ThemeToggle.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
 
 export default function Nav() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -14,7 +14,7 @@ export default function Nav() {
     { to: '/', labelKey: 'nav.home', end: true },
     { to: '/servicios', labelKey: 'nav.services' },
     { to: '/nosotros', labelKey: 'nav.about' },
-    { to: '/blog', labelKey: 'nav.blog' },
+    { to: language === 'en' ? '/en/blog' : '/blog', labelKey: 'nav.blog' },
     { to: '/contacto', labelKey: 'nav.contact' },
   ];
 
