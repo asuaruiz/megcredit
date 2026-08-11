@@ -17,6 +17,7 @@ export default function EnBlog() {
         <div className="post-grid">
           {posts.map((post) => (
             <Link className="card post-card" to={`/en/blog/${post.slug}`} key={post.slug}>
+              {post.heroImageUrl ? <img className="post-card-image" src={post.heroImageUrl} alt="" loading="lazy" /> : null}
               <div className="post-meta">
                 <span>{post.date}</span>
                 {post.readingTimeMinutes ? <><span className="dot" />{post.readingTimeMinutes} min</> : null}
