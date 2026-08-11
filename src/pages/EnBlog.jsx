@@ -12,6 +12,7 @@ export default function EnBlog() {
             <span className="eyebrow centered">Learning center</span>
             <h1>Credit explained <em>clearly</em></h1>
             <p className="lead">Practical guides to understand your credit reports and make informed decisions.</p>
+            <p><Link className="btn-quiet" to="/blog" style={{ color: 'inherit' }}>Leer este blog en español →</Link></p>
           </div>
         </div>
         <div className="post-grid">
