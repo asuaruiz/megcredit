@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#163A5F"/>
+      <stop offset="100%" stop-color="#0E2740"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="400" fill="url(#bg3)"/>
+  <circle cx="720" cy="80" r="160" fill="#D2AE5C" opacity="0.06"/>
+  <circle cx="80" cy="330" r="130" fill="#D2AE5C" opacity="0.06"/>
+  <g transform="translate(320,90)">
+    <rect x="-8" y="-14" width="176" height="34" rx="8" fill="#D2AE5C"/>
+    <rect x="0" y="10" width="160" height="210" rx="10" fill="none" stroke="#D2AE5C" stroke-width="4"/>
+    <g stroke="#D2AE5C" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M22 68 l14 14 l26 -30"/>
+      <path d="M22 118 l14 14 l26 -30"/>
+    </g>
+    <line x1="82" y1="76" x2="138" y2="76" stroke="#A67C1B" stroke-width="6" stroke-linecap="round"/>
+    <line x1="82" y1="126" x2="138" y2="126" stroke="#A67C1B" stroke-width="6" stroke-linecap="round"/>
+    <rect x="22" y="160" width="18" height="18" rx="4" fill="none" stroke="#F8F6F2" stroke-width="4" opacity="0.6"/>
+    <line x1="52" y1="169" x2="138" y2="169" stroke="#F8F6F2" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>

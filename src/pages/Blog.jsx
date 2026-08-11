@@ -4,6 +4,12 @@ import { normalizePost, posts as fallbackPosts } from '../data/posts.jsx';
 import { indexalPostsForLanguage } from '../data/indexalPosts.js';
 import { useLanguage } from '../contexts/LanguageContext.jsx';
 
+const AUTHORED_COVER_IMAGES = {
+  'como-leer-reporte-credito': '/blog/como-leer-reporte-credito.svg',
+  'factores-que-influyen-puntaje': '/blog/factores-que-influyen-puntaje.svg',
+  'prepararte-evaluacion-credito': '/blog/prepararte-evaluacion-credito.svg',
+};
+
 function mergeCards(posts) {
   const authored = posts.map((post) => ({
     key: `authored-${post.slug}`,
@@ -14,7 +20,7 @@ function mergeCards(posts) {
     readTime: post.readTime,
     title: post.title,
     excerpt: post.excerpt,
-    imageUrl: null,
+    imageUrl: AUTHORED_COVER_IMAGES[post.slug] || null,
   }));
   const indexal = indexalPostsForLanguage('es').map((post) => ({
     key: `indexal-${post.slug}`,
