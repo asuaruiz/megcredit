@@ -1,4 +1,5 @@
 import { posts } from './data/posts.jsx';
+import { indexalPosts, translationFor } from './data/indexalPosts.js';
 
 export const SITE_URL = 'https://www.megcredit.com';
 export const SITE_NAME = 'Magic Enterprise Group';
@@ -33,6 +34,10 @@ const staticPages = {
     title: 'Política de privacidad | Magic Enterprise Group',
     description: 'Conoce cómo Magic Enterprise Group recopila, utiliza y protege la información que compartes con nosotros.',
   },
+  '/en/blog': {
+    title: 'Credit education blog | MEG Credit',
+    description: 'English-language guides to understand your credit reports, scores, and the credit evaluation process.',
+  },
 };
 
 // Portal/admin routes are private (behind auth) and excluded from the sitemap,
@@ -61,9 +66,14 @@ const internalPages = {
   '/admin/contratos': { title: 'Plantillas de contrato | Panel de administración MEG Credit', description: 'Administra las plantillas de contrato.' },
 };
 
+function indexalPath(post) {
+  return post.languageCode === 'es' ? `/blog/${post.slug}` : `/${post.languageCode}/blog/${post.slug}`;
+}
+
 export const ROUTES = [
   ...Object.keys(staticPages),
   ...posts.map((post) => `/blog/${post.slug}`),
+  ...indexalPosts.map(indexalPath),
 ];
 
 export function getPageMeta(pathname) {
@@ -77,6 +87,22 @@ export function getPageMeta(pathname) {
       canonical: `${SITE_URL}${cleanPath}`,
       type: 'article',
       post,
+    };
+  }
+
+  const indexalPost = indexalPosts.find((item) => indexalPath(item) === cleanPath);
+  if (indexalPost) {
+    const translation = translationFor(indexalPost, indexalPost.languageCode === 'es' ? 'en' : 'es');
+    const alternates = [{ hreflang: indexalPost.languageCode, href: `${SITE_URL}${cleanPath}` }];
+    if (translation) alternates.push({ hreflang: translation.languageCode, href: `${SITE_URL}${indexalPath(translation)}` });
+    return {
+      title: `${indexalPost.title} | MEG Credit`,
+      description: indexalPost.metaDescription || indexalPost.title,
+      canonical: `${SITE_URL}${cleanPath}`,
+      type: 'article',
+      lang: indexalPost.languageCode,
+      alternates,
+      indexalPost,
     };
   }
 
@@ -110,6 +136,7 @@ export function getPageMeta(pathname) {
     ...page,
     canonical: `${SITE_URL}${cleanPath === '/' ? '' : cleanPath}`,
     type: 'website',
+    lang: cleanPath.startsWith('/en/') || cleanPath === '/en' ? 'en' : 'es',
   };
 }
 
@@ -149,6 +176,25 @@ export function getStructuredData(pathname) {
           serviceType: 'Educación, evaluación y estrategia de crédito',
         },
       ],
+    };
+  }
+
+  if (meta.indexalPost) {
+    const langTag = meta.indexalPost.languageCode === 'en' ? 'en-US' : 'es-US';
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: meta.indexalPost.title,
+      description: meta.indexalPost.metaDescription || meta.indexalPost.title,
+      datePublished: meta.indexalPost.publishedAt,
+      dateModified: meta.indexalPost.updatedAt,
+      inLanguage: langTag,
+      mainEntityOfPage: meta.canonical,
+      image: meta.indexalPost.heroImageUrl || DEFAULT_IMAGE,
+      author: meta.indexalPost.authorName
+        ? { '@type': 'Person', name: meta.indexalPost.authorName }
+        : { '@id': `${SITE_URL}/#organization`, name: SITE_NAME },
+      publisher: { '@id': `${SITE_URL}/#organization`, name: SITE_NAME },
     };
   }
 

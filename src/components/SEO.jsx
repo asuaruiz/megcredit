@@ -17,6 +17,7 @@ export default function SEO() {
   useEffect(() => {
     const meta = getPageMeta(pathname);
     document.title = meta.title;
+    if (meta.lang) document.documentElement.lang = meta.lang;
     upsertMeta('meta[name="description"]', { name: 'description', content: meta.description });
     upsertMeta('meta[name="robots"]', { name: 'robots', content: meta.noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large' });
     upsertMeta('meta[property="og:title"]', { property: 'og:title', content: meta.title });
@@ -35,6 +36,15 @@ export default function SEO() {
       document.head.appendChild(canonical);
     }
     canonical.href = meta.canonical;
+
+    document.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((node) => node.remove());
+    (meta.alternates || []).forEach(({ hreflang, href }) => {
+      const link = document.createElement('link');
+      link.rel = 'alternate';
+      link.hreflang = hreflang;
+      link.href = href;
+      document.head.appendChild(link);
+    });
 
     let schema = document.head.querySelector('#page-schema');
     if (!schema) {

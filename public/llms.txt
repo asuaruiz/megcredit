@@ -3,7 +3,7 @@
 > Magic Enterprise Group provides Spanish-language credit education, credit report evaluation, and responsible credit strategy for families and entrepreneurs in Orlando, Florida. The company does not guarantee score increases or removal of accurate, complete, and verifiable information.
 
 Official website: https://www.megcredit.com
-Primary language: Spanish (es-US)
+Primary language: Spanish (es-US), with an English-language blog section
 Service area: Orlando, Florida, United States
 Phone: +1 407-735-8696
 Email: info@magicenterprisegroup.com
@@ -15,12 +15,13 @@ Email: info@magicenterprisegroup.com
 - [About](https://www.megcredit.com/nosotros): The company's educational, transparent, and responsible approach.
 - [Contact](https://www.megcredit.com/contacto): Request an initial credit evaluation. Users should not submit passwords, banking information, full Social Security numbers, or credit reports through the contact form.
 - [Blog](https://www.megcredit.com/blog): Educational articles about credit reports, credit scores, and responsible preparation.
+- [English blog](https://www.megcredit.com/en/blog): English-language translations of selected articles.
 
-## Educational resources
+## Educational resources (Spanish)
 
-- [How to read your credit report](https://www.megcredit.com/blog/como-leer-reporte-credito): How to review personal information, accounts, balances, late payments, and potential errors across Equifax, Experian, and TransUnion.
-- [Factors that may influence a credit score](https://www.megcredit.com/blog/factores-que-influyen-puntaje): Payment history, credit usage, account age, account mix, and recent applications.
-- [How to prepare for a credit evaluation](https://www.megcredit.com/blog/prepararte-evaluacion-credito): Documents, privacy precautions, questions to ask, and realistic expectations.
+- [Cómo leer tu reporte de crédito sin sentirte abrumado](https://www.megcredit.com/blog/como-leer-reporte-credito): Una guía sencilla para reconocer cuentas, balances, pagos tardíos y posibles errores en tus tres reportes.
+- [Cinco factores que pueden influir en tu puntaje de crédito](https://www.megcredit.com/blog/factores-que-influyen-puntaje): Conoce los hábitos que suelen tener mayor peso y dónde enfocar tu atención primero.
+- [Cómo prepararte para una evaluación de crédito](https://www.megcredit.com/blog/prepararte-evaluacion-credito): Lo que debes reunir y las preguntas que conviene tener claras antes de solicitar orientación.
 
 ## Evaluation process
 
