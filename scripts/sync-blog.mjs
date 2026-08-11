@@ -25,7 +25,15 @@ const indexalResponse = await fetch(`${url}/rest/v1/megcredit_indexal_articles?s
   headers: { apikey: key, Authorization: `Bearer ${key}` },
 });
 
-if (!indexalResponse.ok) throw new Error(`Supabase Indexal sync failed with status ${indexalResponse.status}`);
-const indexalPosts = await indexalResponse.json();
-await fs.writeFile(indexalDestination, `${JSON.stringify(indexalPosts, null, 2)}\n`);
-console.log(`Synced ${indexalPosts.length} published Indexal articles from Supabase.`);
+if (indexalResponse.status === 404) {
+  // megcredit_indexal_articles doesn't exist yet (migration not applied). Don't fail
+  // the whole site build over an integration that hasn't been provisioned yet.
+  console.log('Indexal sync skipped: megcredit_indexal_articles table not found yet.');
+  await fs.writeFile(indexalDestination, '[]\n');
+} else if (!indexalResponse.ok) {
+  throw new Error(`Supabase Indexal sync failed with status ${indexalResponse.status}`);
+} else {
+  const indexalPosts = await indexalResponse.json();
+  await fs.writeFile(indexalDestination, `${JSON.stringify(indexalPosts, null, 2)}\n`);
+  console.log(`Synced ${indexalPosts.length} published Indexal articles from Supabase.`);
+}
