@@ -720,12 +720,14 @@ img, svg { max-width: 100%; }
 
 /* ---------- Blog ---------- */
 
-.post-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.post-grid { display: flex; flex-wrap: wrap; gap: 20px; }
 
 .post-card {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1 1 280px;
+  max-width: 560px;
   text-decoration: none;
   transition: border-color 0.2s;
 }
