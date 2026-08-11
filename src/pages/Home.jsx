@@ -50,7 +50,7 @@ export default function Home() {
         </div>
       </section>
 
-      {guideCards.length ? <section className="section"><div className="container"><div className="section-head"><span className="eyebrow">{t('home.eyebrowLearn')}</span><h2>{t('home.sectionTitleGuides')}</h2><p>{t('home.sectionLeadGuides')}</p></div><div className="post-grid">{guideCards.map((card) => <Link className="card post-card" to={card.href} key={card.key}>{card.imageUrl ? <img className="post-card-image" src={card.imageUrl} alt="" loading="lazy" /> : null}<div className="post-meta">{card.category ? <><span className="category">{card.category}</span><span className="dot"/></> : null}<span>{card.readTime}</span></div><h3>{card.title}</h3><p className="excerpt">{card.excerpt}</p><span className="read-more">{t('home.readGuide')}</span></Link>)}</div></div></section> : null}
+      {guideCards.length ? <section className="section"><div className="container"><div className="section-head"><span className="eyebrow">{t('home.eyebrowLearn')}</span><h2>{t('home.sectionTitleGuides')}</h2><p>{t('home.sectionLeadGuides')}</p></div><div className="post-grid">{guideCards.map((card) => <Link className="card post-card" to={card.href} key={card.key}>{card.imageUrl ? <img className="post-card-image" src={card.imageUrl} alt="" loading="eager" /> : null}<div className="post-meta">{card.category ? <><span className="category">{card.category}</span><span className="dot"/></> : null}<span>{card.readTime}</span></div><h3>{card.title}</h3><p className="excerpt">{card.excerpt}</p><span className="read-more">{t('home.readGuide')}</span></Link>)}</div></div></section> : null}
     </>
   );
 }

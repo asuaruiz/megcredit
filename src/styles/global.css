@@ -750,11 +750,11 @@ img, svg { max-width: 100%; }
 
 .post-card-image {
   width: calc(100% + 3.5rem);
-  height: 200px;
+  aspect-ratio: 3 / 2;
   margin: -1.75rem -1.75rem 0;
   border-radius: 8px 8px 0 0;
   object-fit: cover;
-  object-position: 50% 25%;
+  object-position: 50% top;
   display: block;
   background: var(--bg-inset);
 }
