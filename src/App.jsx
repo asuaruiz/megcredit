@@ -8,6 +8,8 @@ import Servicios from './pages/Servicios.jsx';
 import Nosotros from './pages/Nosotros.jsx';
 import Blog from './pages/Blog.jsx';
 import BlogPost from './pages/BlogPost.jsx';
+import EnBlog from './pages/EnBlog.jsx';
+import EnBlogPost from './pages/EnBlogPost.jsx';
 import Contacto from './pages/Contacto.jsx';
 import Legal from './pages/Legal.jsx';
 import NotFound from './pages/NotFound.jsx';
@@ -111,6 +113,8 @@ function AppContent() {
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/en/blog" element={<EnBlog />} />
+          <Route path="/en/blog/:slug" element={<EnBlogPost />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/terminos" element={<Legal tab="terminos" />} />
           <Route path="/privacidad" element={<Legal tab="privacidad" />} />

@@ -17,22 +17,26 @@ try {
   for (const route of ROUTES) {
     const meta = getPageMeta(route);
     const appHtml = render(route);
+    const alternateLinks = (meta.alternates || [])
+      .map(({ hreflang, href }) => `\n    <link rel="alternate" hreflang="${hreflang}" href="${escape(href)}">`)
+      .join('');
     const head = `
     <title>${escape(meta.title)}</title>
     <meta name="description" content="${escape(meta.description)}">
     <meta name="robots" content="index, follow, max-image-preview:large">
-    <link rel="canonical" href="${escape(meta.canonical)}">
+    <link rel="canonical" href="${escape(meta.canonical)}">${alternateLinks}
     <meta property="og:title" content="${escape(meta.title)}">
     <meta property="og:description" content="${escape(meta.description)}">
     <meta property="og:type" content="${meta.type}">
     <meta property="og:url" content="${escape(meta.canonical)}">
     <meta property="og:image" content="${DEFAULT_IMAGE}">
     <meta property="og:site_name" content="${SITE_NAME}">
-    <meta property="og:locale" content="es_US">
+    <meta property="og:locale" content="${meta.lang === 'en' ? 'en_US' : 'es_US'}">
     <meta name="twitter:card" content="summary_large_image">
     <script id="page-schema" type="application/ld+json">${safeJson(getStructuredData(route))}</script>`;
 
     const html = template
+      .replace(/<html lang="[^"]*"/, `<html lang="${meta.lang || 'es'}"`)
       .replace(/<title>[\s\S]*?<\/title>/, '')
       .replace(/<meta\s+name="description"[\s\S]*?>/, '')
       .replace('</head>', `${head}\n  </head>`)

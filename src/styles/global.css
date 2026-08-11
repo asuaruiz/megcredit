@@ -791,10 +791,12 @@ img, svg { max-width: 100%; }
   color: var(--text);
 }
 
-.article-footer { max-width: 680px; margin: 64px auto 0; padding: 32px 24px 0; border-top: 1px solid var(--border-soft); }
+.article-footer { max-width: 680px; margin: 64px auto 0; padding: 32px 24px 0; border-top: 1px solid var(--border-soft); display: flex; gap: 16px; flex-wrap: wrap; }
 .article-sources { margin-top: 3rem; padding: 24px; background: var(--bg-inset); border-radius: 8px; }
 .article-sources h2 { margin: 0 0 12px; padding: 0; border: 0; font-size: 20px; }
 .article-sources p { font-size: 13px; color: var(--text-3); }
+.article-hero-image { width: 100%; height: auto; border-radius: 8px; margin-bottom: 1.5em; }
+.article-cta { text-align: center; }
 
 /* ---------- Legal (tabs) ---------- */
 
