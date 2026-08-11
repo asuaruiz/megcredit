@@ -776,12 +776,12 @@ img, svg { max-width: 100%; }
 /* Artículo */
 
 .article { padding: 72px 0 88px; }
-.article-header { max-width: 720px; margin: 0 auto 48px; padding: 0 24px; text-align: center; }
+.article-header { max-width: 900px; margin: 0 auto 48px; padding: 0 32px; text-align: center; }
 .article-header h1 { font-size: clamp(30px, 5vw, 44px); font-weight: 700; margin: 18px 0 20px; }
 .article-header .post-meta { justify-content: center; }
 .article-header .byline { margin-top: 14px; color: var(--text-3); font-size: 12.5px; }
 
-.article-body { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+.article-body { max-width: 820px; margin: 0 auto; padding: 0 32px; }
 .article-body > * + * { margin-top: 1.25em; }
 .article-body p { font-size: 17px; line-height: 1.85; color: var(--text); }
 .article-body h2 {
@@ -812,12 +812,12 @@ img, svg { max-width: 100%; }
   color: var(--text);
 }
 
-.article-footer { max-width: 680px; margin: 64px auto 0; padding: 32px 24px 0; border-top: 1px solid var(--border-soft); display: flex; gap: 16px; flex-wrap: wrap; }
+.article-footer { max-width: 820px; margin: 64px auto 0; padding: 32px 32px 0; border-top: 1px solid var(--border-soft); display: flex; gap: 16px; flex-wrap: wrap; }
 .article-sources { margin-top: 3rem; padding: 24px; background: var(--bg-inset); border-radius: 8px; }
 .article-sources h2 { margin: 0 0 12px; padding: 0; border: 0; font-size: 20px; }
 .article-sources p { font-size: 13px; color: var(--text-3); }
-.article-media { width: min(880px, calc(100% - 48px)); margin: 0 auto 34px; }
-.article-hero-image { width: 100%; height: auto; max-height: 495px; object-fit: contain; display: block; border-radius: 8px; }
+.article-media { width: min(1040px, calc(100% - 64px)); margin: 0 auto 38px; }
+.article-hero-image { width: 100%; height: auto; max-height: 585px; object-fit: contain; display: block; border-radius: 8px; }
 .article-cta { text-align: center; }
 
 @media (max-width: 600px) {
@@ -826,7 +826,9 @@ img, svg { max-width: 100%; }
   .en-blog-listing > .container > .blog-hero { margin: -32px -24px 32px; }
   .post-card-content { padding: 18px 18px 20px; }
   .article { padding-top: 48px; }
-  .article-header { margin-bottom: 32px; }
+  .article-header { margin-bottom: 32px; padding-inline: 20px; }
+  .article-body { padding-inline: 20px; }
+  .article-footer { padding-inline: 20px; }
   .article-media { width: calc(100% - 32px); margin-bottom: 28px; }
 }
 
