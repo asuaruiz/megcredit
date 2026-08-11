@@ -21,7 +21,7 @@ export default function IndexalArticle({ post, translationHref, blogHref }) {
         {post.authorName ? <p className="byline">{strings.by} {post.authorName}</p> : null}
       </header>
       {post.heroImageUrl ? (
-        <div className="article-body"><img className="article-hero-image" src={post.heroImageUrl} alt={post.title} loading="eager" /></div>
+        <figure className="article-media"><img className="article-hero-image" src={post.heroImageUrl} alt={post.title} loading="eager" /></figure>
       ) : null}
       <div className="article-body">
         <div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
