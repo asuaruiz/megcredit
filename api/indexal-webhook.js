@@ -12,6 +12,18 @@ function articleUrl(languageCode, slug) {
   return `${SITE_URL}${path}`;
 }
 
+// Indexal hard-truncates slugs to 70 characters, which can cut mid-word and leave a
+// trailing hyphen (or other stray punctuation) that the megcredit_indexal_articles_slug_check
+// constraint rejects. Normalize to the shape the table accepts instead of dropping the article.
+function normalizeSlug(rawSlug) {
+  return String(rawSlug)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST');
@@ -46,6 +58,9 @@ export default async function handler(request, response) {
     return json(response, 400, { error: 'Faltan campos obligatorios.' });
   }
 
+  const normalizedSlug = normalizeSlug(slug);
+  if (!normalizedSlug) return json(response, 400, { error: 'Slug inválido.' });
+
   try {
     const result = await supabaseRequest('megcredit_indexal_articles?on_conflict=indexal_article_id', {
       method: 'POST',
@@ -56,7 +71,7 @@ export default async function handler(request, response) {
         translation_group_id: translationGroupId,
         parent_article_id: payload.parentArticleId ?? null,
         is_translation: Boolean(payload.isTranslation),
-        slug,
+        slug: normalizedSlug,
         title,
         meta_description: payload.metaDescription ?? null,
         content_html: contentHtml,
@@ -84,10 +99,18 @@ export default async function handler(request, response) {
 
     const deployHook = process.env.VERCEL_DEPLOY_HOOK_URL;
     if (deployHook && SUPPORTED_LANGUAGES.has(languageCode)) {
-      fetch(deployHook, { method: 'POST' }).catch((error) => console.error('Indexal deploy hook trigger failed', error.message));
+      // Awaited on purpose: a fire-and-forget fetch is killed when the function returns
+      // its response, so the rebuild never actually got triggered. A failed rebuild
+      // trigger must not fail the delivery -- the article is already stored.
+      try {
+        const hookResult = await fetch(deployHook, { method: 'POST', signal: AbortSignal.timeout(10_000) });
+        if (!hookResult.ok) console.error('Indexal deploy hook returned', hookResult.status);
+      } catch (error) {
+        console.error('Indexal deploy hook trigger failed', error instanceof Error ? error.message : 'unknown error');
+      }
     }
 
-    return json(response, 200, { url: articleUrl(languageCode, slug) });
+    return json(response, 200, { url: articleUrl(languageCode, normalizedSlug) });
   } catch (error) {
     console.error('Indexal webhook handling failed', error instanceof Error ? error.message : 'unknown error');
     return json(response, 500, { error: 'No pudimos procesar el artículo.' });
