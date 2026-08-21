@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { indexalPostsForLanguage } from '../data/indexalPosts.js';
+import { cardImageProps } from '../lib/imageUrl.js';
 
 export default function EnBlog() {
   const posts = indexalPostsForLanguage('en');
@@ -16,9 +17,9 @@ export default function EnBlog() {
           </div>
         </div>
         <div className="post-grid">
-          {posts.map((post) => (
+          {posts.map((post, index) => (
             <Link className="card post-card" to={`/en/blog/${post.slug}`} key={post.slug}>
-              {post.heroImageUrl ? <div className="post-card-media"><img className="post-card-image" src={post.heroImageUrl} alt="" loading="eager" /></div> : null}
+              {post.heroImageUrl ? <div className="post-card-media"><img className="post-card-image" alt="" {...cardImageProps(post.heroImageUrl, { eager: index === 0 })} /></div> : null}
               <div className="post-card-content">
                 <div className="post-meta">
                   <span>{post.date}</span>
