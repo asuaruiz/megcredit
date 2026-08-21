@@ -1,5 +1,6 @@
 import DOMPurify from 'isomorphic-dompurify';
 import { Link } from 'react-router-dom';
+import { articleImageProps } from '../lib/imageUrl.js';
 
 const STRINGS = {
   es: { by: 'Por', backToBlog: '← Volver al blog', readTranslation: 'Read in English →' },
@@ -21,7 +22,7 @@ export default function IndexalArticle({ post, translationHref, blogHref }) {
         {post.authorName ? <p className="byline">{strings.by} {post.authorName}</p> : null}
       </header>
       {post.heroImageUrl ? (
-        <figure className="article-media"><img className="article-hero-image" src={post.heroImageUrl} alt={post.title} loading="eager" /></figure>
+        <figure className="article-media"><img className="article-hero-image" alt={post.title} {...articleImageProps(post.heroImageUrl)} /></figure>
       ) : null}
       <div className="article-body">
         <div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />

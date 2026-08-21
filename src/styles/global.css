@@ -15,6 +15,8 @@
   --navy-100: #DCE4EC;
   --gold-700: #7C5C14;
   --gold-500: #A67C1B;
+  /* Fondo dorado para botones sobre navy: contraste AA (5.9:1) con texto navy-900 */
+  --gold-400: #C69B33;
   --gold-300: #D2AE5C;
   --gold-100: #F0E2C0;
   --ivory: #F8F6F2;
@@ -29,7 +31,7 @@
   --bg-inset: #F1EDE4;
   --text: var(--ink);
   --text-2: var(--gray-600);
-  --text-3: #8A8478;
+  --text-3: #6E685B;
   --heading: var(--navy-700);
   --border: var(--gray-300);
   --border-soft: #E9E5DC;
@@ -100,7 +102,7 @@
     --accent-strong: var(--gold-300);
     --accent-soft: rgba(210, 174, 92, 0.12);
     --link: var(--gold-300);
-    --btn-bg: var(--gold-500);
+    --btn-bg: var(--gold-400);
     --btn-text: var(--navy-900);
     --btn-hover: var(--gold-300);
     --input-focus: var(--gold-300);
@@ -127,7 +129,7 @@
   --accent-strong: var(--gold-300);
   --accent-soft: rgba(210, 174, 92, 0.12);
   --link: var(--gold-300);
-  --btn-bg: var(--gold-500);
+  --btn-bg: var(--gold-400);
   --btn-text: var(--navy-900);
   --btn-hover: var(--gold-300);
   --input-focus: var(--gold-300);
@@ -145,7 +147,7 @@
   --bg-inset: #F1EDE4;
   --text: var(--ink);
   --text-2: var(--gray-600);
-  --text-3: #8A8478;
+  --text-3: #6E685B;
   --heading: var(--navy-700);
   --border: var(--gray-300);
   --border-soft: #E9E5DC;
@@ -281,7 +283,7 @@ img, svg { max-width: 100%; }
 @media (prefers-color-scheme: dark) { .btn-quiet.danger:hover { color: #E08A85; } }
 
 /* Sobre fondo navy (hero, banners) */
-.on-navy .btn-primary { background: var(--gold-500); color: var(--navy-900); }
+.on-navy .btn-primary { background: var(--gold-400); color: var(--navy-900); }
 .on-navy .btn-primary:hover { background: var(--gold-300); }
 .on-navy .btn-outline { color: var(--ivory); border-color: rgba(248, 246, 242, 0.35); }
 .on-navy .btn-outline:hover { border-color: var(--gold-300); color: var(--gold-300); }

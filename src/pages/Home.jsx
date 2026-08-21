@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { posts } from '../data/posts.jsx';
 import { mergeSpanishBlogCards } from '../data/blogCards.js';
 import { useLanguage } from '../contexts/LanguageContext.jsx';
+import { cardImageProps } from '../lib/imageUrl.js';
 
 const smartCreditUrl = 'https://www.smartcredit.com/join/?pid=62622';
 const reportEmail = 'mailto:info@magicenterprisegroup.com?subject=Reportes%20para%20evaluaci%C3%B3n%20de%20cr%C3%A9dito';
@@ -50,7 +51,7 @@ export default function Home() {
         </div>
       </section>
 
-      {guideCards.length ? <section className="section"><div className="container"><div className="section-head"><span className="eyebrow">{t('home.eyebrowLearn')}</span><h2>{t('home.sectionTitleGuides')}</h2><p>{t('home.sectionLeadGuides')}</p></div><div className="post-grid">{guideCards.map((card) => <Link className="card post-card" to={card.href} key={card.key}>{card.imageUrl ? <img className="post-card-image" src={card.imageUrl} alt="" loading="eager" /> : null}<div className="post-meta">{card.category ? <><span className="category">{card.category}</span><span className="dot"/></> : null}<span>{card.readTime}</span></div><h3>{card.title}</h3><p className="excerpt">{card.excerpt}</p><span className="read-more">{t('home.readGuide')}</span></Link>)}</div></div></section> : null}
+      {guideCards.length ? <section className="section"><div className="container"><div className="section-head"><span className="eyebrow">{t('home.eyebrowLearn')}</span><h2>{t('home.sectionTitleGuides')}</h2><p>{t('home.sectionLeadGuides')}</p></div><div className="post-grid">{guideCards.map((card) => <Link className="card post-card" to={card.href} key={card.key}>{card.imageUrl ? <img className="post-card-image" alt="" {...cardImageProps(card.imageUrl)} /> : null}<div className="post-meta">{card.category ? <><span className="category">{card.category}</span><span className="dot"/></> : null}<span>{card.readTime}</span></div><h3>{card.title}</h3><p className="excerpt">{card.excerpt}</p><span className="read-more">{t('home.readGuide')}</span></Link>)}</div></div></section> : null}
     </>
   );
 }

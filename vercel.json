@@ -2,6 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
+  "images": {
+    "sizes": [384, 640, 828, 1200, 1500],
+    "formats": ["image/avif", "image/webp"],
+    "minimumCacheTTL": 2678400,
+    "remotePatterns": [
+      { "protocol": "https", "hostname": "mpewwrienpmpagcodhxn.supabase.co", "pathname": "/storage/v1/object/public/**" }
+    ]
+  },
   "rewrites": [
     { "source": "/portal", "destination": "/" },
     { "source": "/portal/(.*)", "destination": "/" },
