@@ -32,7 +32,7 @@ export const translations = {
       phone: '+1 407-735-8696',
       fcraDisclaimer: 'We operate under the Fair Credit Reporting Act (FCRA) and the Credit Repair Organizations Act (CROA).',
       creditDisclaimer: 'No company can legally guarantee the removal of accurate and verifiable information from a credit report.',
-      madeBy: 'Made with ♥ by andflow.cl',
+      madeBy: 'Made with ♥ by thewebsiteboutique.app',
     },
     // Home
     home: {
@@ -766,7 +766,7 @@ export const translations = {
       phone: '+1 407-735-8696',
       fcraDisclaimer: 'Operamos bajo la Fair Credit Reporting Act (FCRA) y la Credit Repair Organizations Act (CROA).',
       creditDisclaimer: 'Ninguna empresa puede garantizar legalmente la eliminación de información correcta y verificable de un reporte de crédito.',
-      madeBy: 'Hecho con ♥ por andflow.cl',
+      madeBy: 'Hecho con ♥ por thewebsiteboutique.app',
     },
     // Home
     home: {
